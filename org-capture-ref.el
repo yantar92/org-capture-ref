@@ -1,4 +1,4 @@
-;;; org-capture-bib.el --- Capture websites based on their bibtex info  -*- lexical-binding: t; -*-
+;;; org-capture-ref.el --- Generate bibtex info for captured websites  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Ihor Radchenko
 
@@ -30,7 +30,7 @@
 (require 'org-capture)
 (require 'org-ref-url-utils)
 
-(defvar org-capture-bib--store-link-plist nil
+(defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
 The following keys are recognized by generic parser (though all
 available keys can be accessed by user-defined parsers):
@@ -43,10 +43,10 @@ available keys can be accessed by user-defined parsers):
   :qutebrowser-fifo   Path to FIFO communicating with qutebrowser instance
   :elfeed-data        Elfeed entry containing the information about captured URL.")
 
-(defvar org-capture-bib--html-buffer nil
+(defvar org-capture-ref--html-buffer nil
   "Buffer containing downloaded webpage being captured.")
 
-(defvar org-capture-bib--bibtex nil
+(defvar org-capture-ref--bibtex nil
   "Alist containing bibtex fields for the webpage being captured.
 The fields include:
 :author       - the author of the URL contents
@@ -57,5 +57,5 @@ The fields include:
 :journal      - journal name (for journal articles and books)
 :howpublished - website name (for generic URLs).")
 
-(provide 'org-capture-bib)
-;;; org-capture-bib.el ends here
+(provide 'org-capture-ref)
+;;; org-capture-ref.el ends here
