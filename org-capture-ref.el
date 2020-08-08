@@ -340,6 +340,10 @@ The generated value will be the website name."
 	    (string-match "[0-9]\\{4\\}" year)
             (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
 
+;; Getting BiBTeX from elfeed entries
+
+;; TODO: TBD
+
 
 (defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
