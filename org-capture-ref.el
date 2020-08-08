@@ -146,6 +146,68 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type 'string)
 
+;;; API
+
+(defun org-capture-ref-get-buffer ()
+  "Return buffer containing contents of the captured link.
+
+Retrieve the contents first if necessary.
+This calls `org-capture-ref-get-buffer-functions'."
+  (let ((buffer (or org-capture-ref--buffer
+		    (run-hook-with-args-until-success 'org-capture-ref-get-buffer-functions))))
+    (unless (buffer-live-p buffer) (error "<org-capture-ref> Failed to get live link buffer. Got %s" buffer))
+    (setq org-capture-ref--buffer buffer)))
+
+(defun org-capture-ref-get-bibtex-field (field)
+  "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
+  
+FIELD must be a symbol like `:author'.
+See `org-capture-ref--bibtex-alist' for common field names."
+  (alist-get field org-capture-ref--bibtex))
+
+(defun org-capture-ref-get-capture-info (key)
+  "Return value of KEY from `org-capture-ref--store-link-plist'.
+  
+See docstring of `org-capture-ref--store-link-plist' for possible KEYs.
+KEY can be a list, which means that the `car' of KEY is a plist
+containing `cdar' of KEY, an so on."
+  (when (symbolp key) (setq key (list key)))
+  (let ((plist org-capture-ref--store-link-plist))
+    (while key
+      (setq plist (plist-get plist (pop key))))
+    plist))
+
+(defun org-capture-ref-set-bibtex-field (field val)
+  "Set BiBTeX FIELD to VAL.
+  
+FIELD must be a symbol like `:author'.
+See `org-capture-ref--bibtex-alist' for common field names."
+  (setf (alist-get field org-capture-ref--bibtex) val))
+
+(defun org-capture-ref-set-capture-info (key val)
+  "Set KEY in capture info to VAL.
+  
+The KEY set here will be passed down to org-capture via
+`org-store-link-plist'.
+See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
+  (plist-put org-capture-ref--store-link-plist key val))
+
+;;; Predefined functions
+
+;; Getting html buffer
+
+(defun org-capture-ref-get-buffer-from-html-file-in-query ()
+  "Use buffer from file defined in `:html' field of `org-protocol' query."
+  (let* ((html (org-capture-ref-get-capture-info '(:query :html))))
+    (when html
+      (find-file-noselect html))))
+
+(defun org-capture-ref-retrieve-url ()
+  "Retrieve html buffer from `:link' field of capture data."
+  (let ((link (org-capture-ref-get-capture-info :link)))
+    (when link
+      (url-retrieve-synchronously link))))
+
 
 (defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
