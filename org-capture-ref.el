@@ -208,6 +208,138 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
     (when link
       (url-retrieve-synchronously link))))
 
+;; Getting BiBTeX
+
+(defun org-capture-ref-get-bibtex-from-elfeed-data ()
+  "Run `org-capture-ref-get-bibtex-from-elfeed-functions'."
+  (require 'elfeed)
+  (let ((elfeed-entry (org-capture-ref-get-capture-info '(:query :elfeed-data))))
+    (when elfeed-entry
+      (run-hook-with-args 'org-capture-ref-get-bibtex-from-elfeed-functions elfeed-entry))))
+
+(defun org-capture-ref-parse-generic ()
+  "Generic parser for the captured html.
+Sets BiBTeX fields according to `org-capture-ref-field-regexps'.
+Existing BiBTeX fields are not modified."
+  (with-current-buffer (org-capture-ref-get-buffer)
+    (dolist (alist-elem org-capture-ref-field-regexps)
+      (let ((key (car alist-elem))
+	    (regexps (cdr alist-elem)))
+        (unless (org-capture-ref-get-bibtex-field key)
+          (catch :found
+            (dolist (regex regexps)
+              (goto-char (point-min))
+              (when (re-search-forward regex  nil t)
+		(org-capture-ref-set-bibtex-field key (match-string 1))
+		(throw :found t)))))))))
+
+(defun org-capture-ref-get-bibtex-from-first-doi ()
+  "Generate BiBTeX using first DOI record found in html.
+Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
+  (when (alist-get :doi org-capture-ref-field-regexps)
+    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
+      (org-capture-ref-parse-generic))
+    (let ((doi (org-capture-ref-get-bibtex-field :doi)))
+      (when doi
+	(let ((bibtex-string (with-demoted-errors
+				 (doi-utils-doi-to-bibtex-string doi))))
+          (when bibtex-string
+	    (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)))))))
+
+(defun org-capture-ref-get-bibtex-url-from-capture-data ()
+  "Get the `:url' using :link data from capture."
+  (let ((url (org-capture-ref-get-capture-info :link)))
+    (when url (org-capture-ref-set-bibtex-field :url url))))
+
+(defun org-capture-ref-get-bibtex-howpublished-from-url ()
+  "Generate `:howpublished' field using `:url' BiBTeX field.
+The generated value will be the website name."
+  (let ((url (or (org-capture-ref-get-bibtex-field :url))))
+    (when url
+      (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
+      (when (match-string 1 url)
+	(org-capture-ref-set-bibtex-field :howpublished (upcase (match-string 1 url)))))))
+
+(defun org-capture-ref-set-default-type ()
+  "Set `:type' of the BiBTeX entry to `org-capture-ref-default-type'."
+  (org-capture-ref-set-bibtex-field :type org-capture-ref-default-type))
+
+(defun org-capture-ref-set-access-date ()
+  "Set `:urldate' field of the BiBTeX entry to now."
+  (org-capture-ref-set-bibtex-field :urldate (format-time-string "%d %B %Y")))
+
+(defun org-capture-ref-get-bibtex-github ()
+  "Parse Github link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "github\\.com" link)
+      (with-current-buffer (org-capture-ref-get-buffer)
+        ;; Fix URL
+        (when (string-match "^\\(.+\\)/tree/[a-zA-Z0-9]+$" link)
+          (org-capture-ref-set-bibtex-field :url (match-string 1 link)))
+	;; Find author
+        (when (string-match "\\(?:https://\\)?github\\.com/\\([^/]+\\)" link)
+          (org-capture-ref-set-bibtex-field :author (match-string 1 link)))
+	;; find title
+	(goto-char (point-min))
+	(when (re-search-forward "<title>\\([^>]+\\)</title>" nil t)
+	  (let ((title (match-string 1)))
+            (when (string-match "^\\(.+\\) at [0-9a-zA-Z]\\{20,\\}$" title)
+	      (setq title (match-string 1 title)))
+            (org-capture-ref-set-bibtex-field :title title)))
+        (org-capture-ref-set-bibtex-field :howpublished "Github")))))
+
+(defun org-capture-ref-get-bibtex-youtube-watch ()
+  "Parse Youtube watch link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "youtube\\.com/watch" link)
+      (with-current-buffer (org-capture-ref-get-buffer)
+	;; Find author
+	(goto-char (point-min))
+	(when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
+	  (let ((channel-name (match-string 1)))
+	    (org-capture-ref-set-bibtex-field :author channel-name)))
+	;; Find title
+	(goto-char (point-min))
+	(when (re-search-forward "title\":\"\\([^\"]+\\)\"" nil t)
+	  (let ((title (match-string 1)))
+	    (org-capture-ref-set-bibtex-field :title title)))
+	;; Find year
+	(goto-char (point-min))
+	(when (re-search-forward "publishDate\":\"\\([^\"]+\\)\"" nil t)
+	  (let ((year (match-string 1)))
+	    (string-match "[0-9]\\{4\\}" year)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
+
+(defun org-capture-ref-get-bibtex-habr ()
+  "Parse Habrahabr link and generate BiBTeX entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "habr\\.com" link)
+      (with-current-buffer (org-capture-ref-get-buffer)
+        ;; Simplify url
+	(goto-char (point-min))
+	(when (re-search-forward "\"page_url_canonical\": \"\\([^\"]+\\)\"" nil t)
+	  (let ((url (s-replace "\n" "" (match-string 1))))
+            (setq url (s-replace "?[^/]+$" "" url))
+            (org-capture-ref-set-bibtex-field :url (s-replace "\\" "" url))))
+	;; Find authors
+	(goto-char (point-min))
+	(when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
+          (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
+            (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
+            (setq authors (s-join ", " authors))
+            (org-capture-ref-set-bibtex-field :author authors)))
+	;; Find title
+	(goto-char (point-min))
+	(when (re-search-forward "\"page_title\": \"\\([^\"]+\\)\"" nil t)
+	  (let ((title (match-string 1)))
+            (org-capture-ref-set-bibtex-field :title title)))
+	;; Find year
+	(goto-char (point-min))
+	(when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
+	  (let ((year (match-string 1)))
+	    (string-match "[0-9]\\{4\\}" year)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
+
 
 (defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
