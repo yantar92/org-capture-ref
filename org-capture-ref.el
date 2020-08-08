@@ -390,6 +390,75 @@ Special field :bibtex-string contains formatted BiBTeX entry as a string.")
 (defvar org-capture-ref--buffer nil
   "Buffer containing downloaded webpage being captured.")
 
+;;; Main capturing routine
+
+(defun org-capture-ref-reset-state ()
+  "Refresh all the internal variables for fresh capture."
+  (setq org-capture-ref--buffer nil
+	org-capture-ref--bibtex-alist nil
+        org-capture-ref--store-link-plist org-store-link-plist))
+
+(defun org-capture-ref-clean-bibtex (string &optional no-hook)
+  "Make sure that BiBTeX entry STRING is a valid BiBTeX.
+Return the new entry string.
+
+This runs `org-capture-ref-clean-bibtex-hook', unless NO-HOOK is non-nil."
+  (with-temp-buffer
+    (bibtex-mode)
+    (bibtex-set-dialect 'BibTeX)
+    (insert string)
+    (goto-char 1)
+    (unless no-hook
+      (run-hooks 'org-capture-ref-clean-bibtex-hook))
+    (goto-char 1)
+    (dolist (field (bibtex-parse-entry))
+      (pcase (intern (concat ":" (car field)))
+	(':=type= (org-capture-ref-set-bibtex-field :type (cdr field)))
+        (':=key= (org-capture-ref-set-bibtex-field :key (cdr field)))
+        (key (org-capture-ref-set-bibtex-field key (cdr field)))))
+    (buffer-string)))
+
+(defun org-capture-ref-format-bibtex ()
+  "Return formatted BiBTeX string."
+  (run-hook-with-args-until-success 'org-capture-ref-get-formatted-bibtex-functions))
+
+(defun org-capture-ref-get-bibtex ()
+  "Parse the capture info and extract BiBTeX."
+  (catch :finish
+    (run-hooks 'org-capture-ref-get-bibtex-functions)))
+
+(defun org-capture-ref-generate-key ()
+  "Generate citation key.
+
+The generated key will ideally be a fingerprint of the captured entry.
+The same article/page should always get the same key (as much as it is
+possible).
+
+This calls `org-capture-ref-generate-key-functions'."
+  (run-hook-with-args-until-success 'org-capture-ref-generate-key-functions))
+
+(defun org-capture-ref-check-bibtex ()
+  "Check if the entry is suitable for capture.
+
+By default, we make sure that the key is unique, for example.
+
+This runs `org-capture-ref-check-bibtex-functions'"
+  (catch :finish
+    (run-hooks 'org-capture-ref-check-bibtex-functions)))
+
+(defun org-capture-ref-process-capture ()
+  "Extract BiBTeX info from currently captured link and generate unique key.
+
+The return value is always empty string, so that this function can be
+used inside capture template."
+  (with-demoted-errors "Error while extracting BiBTeX: %S"
+    (org-capture-ref-reset-state)
+    (org-capture-ref-get-bibtex)
+    (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
+    (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
+    (org-capture-ref-check-bibtex))
+  (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer))
+  "")
 
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
