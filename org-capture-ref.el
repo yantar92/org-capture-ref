@@ -344,6 +344,17 @@ The generated value will be the website name."
 
 ;; TODO: TBD
 
+;; Generating cite key
+
+(defun org-capture-ref-generate-key-from-url ()
+  "Generate citation key from URL."
+  )
+
+(defun org-capture-ref-generate-key-from-doi ()
+  "Generate citation key from DOI."
+  
+  )
+
 
 (defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
