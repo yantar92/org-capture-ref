@@ -355,13 +355,15 @@ The generated value will be the website name."
   
   )
 
+;;; Internal variables
 
 (defvar org-capture-ref--store-link-plist nil
   "A copy of `org-store-link-plist'.
+  
 The following keys are recognized by generic parser (though all
 available keys can be accessed by user-defined parsers):
 :link                 Captured link
-:description          Page title, as given to org-capture
+:description          Page title, as given to `org-capture'
 :query                Query provided to `org-protocol-capture'. The following special fields are recognized:
   :html               Path to html file containing the page. Providing
                       this will speed up processing since there will be no need to download
@@ -369,19 +371,25 @@ available keys can be accessed by user-defined parsers):
   :qutebrowser-fifo   Path to FIFO communicating with qutebrowser instance
   :elfeed-data        Elfeed entry containing the information about captured URL.")
 
-(defvar org-capture-ref--html-buffer nil
-  "Buffer containing downloaded webpage being captured.")
-
-(defvar org-capture-ref--bibtex nil
+(defvar org-capture-ref--bibtex-alist nil
   "Alist containing bibtex fields for the webpage being captured.
+  
 The fields include:
+:type         - bibtex entry type
+:key          - bibtex entry key
 :author       - the author of the URL contents
 :title        - title of the URL contents
 :url          - cleaned-up URL
 :year         - publication year
 :urldate      - capture time
-:journal      - journal name (for journal articles and books)
-:howpublished - website name (for generic URLs).")
+:journal      - journal name (for journal articles)
+:howpublished - website name (for generic URLs)
+
+Special field :bibtex-string contains formatted BiBTeX entry as a string.")
+
+(defvar org-capture-ref--buffer nil
+  "Buffer containing downloaded webpage being captured.")
+
 
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
