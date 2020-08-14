@@ -50,7 +50,15 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-get-bibtex-functions '()
+(defcustom org-capture-ref-get-bibtex-functions '(org-capture-ref-get-bibtex-url-from-capture-data
+				   org-capture-ref-get-bibtex-howpublished-from-url
+                                   org-capture-ref-set-default-type
+                                   org-capture-ref-set-access-date
+				   org-capture-ref-get-bibtex-from-elfeed-data
+				   org-capture-ref-parse-generic
+                                   org-capture-ref-get-bibtex-github
+                                   org-capture-ref-get-bibtex-youtube-watch
+                                   org-capture-ref-get-bibtex-habr)
   "Functions used to generate bibtex entry for captured link.
 
 Each function will be called without arguments in sequence.
@@ -67,7 +75,10 @@ the field will be overwritten by functions from `org-capture-ref-generete-key-fu
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-get-bibtex-from-elfeed-functions '()
+(defcustom org-capture-ref-get-bibtex-from-elfeed-functions '(org-capture-ref-get-bibtex-generic-elfeed
+					       org-capture-ref-get-bibtex-habr-elfeed-fix-title
+                                               org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
+                                               org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished)
   "Functions used to generate BibTeX entry from elfeed entry data defined in `:elfeed-data' field of the `org-protocol' capture query.
 
 This variable is only used if `org-capture-ref-get-bibtex-from-elfeed-data' is listed in `org-capture-ref-get-bibtex-functions'.
@@ -93,7 +104,7 @@ structure, and thus may affect anything set by
   :type 'hook
   'group org-capture-ref)
 
-(defcustom org-capture-ref-get-formatted-bibtex-functions '()
+(defcustom org-capture-ref-get-formatted-bibtex-functions '(org-capture-ref-get-formatted-bibtex-default)
   "Functions used to format BiBTeX entry string.
 
 Each function will be called without arguments in sequence.
@@ -103,7 +114,8 @@ Return value of the first function returning non-nil will be used as final forma
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-generate-key-functions '()
+(defcustom org-capture-ref-generate-key-functions '(org-capture-ref-generate-key-from-doi
+				     org-capture-ref-generate-key-from-url)
   "Functions used to generate citation key.
 The functions will be called in sequence until any of them returns non-nil value."
   :type 'hook
