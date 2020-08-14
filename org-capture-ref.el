@@ -146,6 +146,18 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type 'string)
 
+(defcustom org-capture-ref-default-bibtex-template "@${:type}{${:key},
+      title        = {${:title}},
+      author       = {${:author}},
+      howpublished = {${:howpublished}},
+      url          = {${:url}},
+      year         = {${:year}},
+      keywords     = {${:keywords}},
+      note         = {Online; accessed ${:urldate}}
+      }"
+  "Default template used to format BiBTeX entry.
+If a keyword from the template is missing, it will remain empty.")
+
 ;;; API
 
 (defun org-capture-ref-get-buffer ()
