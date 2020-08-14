@@ -471,7 +471,7 @@ This runs `org-capture-ref-clean-bibtex-hook', unless NO-HOOK is non-nil."
 
 (defun org-capture-ref-format-bibtex ()
   "Return formatted BiBTeX string."
-  (run-hook-with-args-until-success 'org-capture-ref-get-formatted-bibtex-functions))
+  (org-capture-ref-clean-bibtex (run-hook-with-args-until-success 'org-capture-ref-get-formatted-bibtex-functions)))
 
 (defun org-capture-ref-get-bibtex ()
   "Parse the capture info and extract BiBTeX."
