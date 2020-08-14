@@ -223,17 +223,19 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
   "Generic parser for the captured html.
 Sets BiBTeX fields according to `org-capture-ref-field-regexps'.
 Existing BiBTeX fields are not modified."
-  (with-current-buffer (org-capture-ref-get-buffer)
-    (dolist (alist-elem org-capture-ref-field-regexps)
-      (let ((key (car alist-elem))
-	    (regexps (cdr alist-elem)))
-        (unless (org-capture-ref-get-bibtex-field key)
-          (catch :found
-            (dolist (regex regexps)
-              (goto-char (point-min))
-              (when (re-search-forward regex  nil t)
-		(org-capture-ref-set-bibtex-field key (match-string 1))
-		(throw :found t)))))))))
+  ;; Do not bother is everything is already set.
+  (unless (-all-p #'org-capture-ref-get-bibtex-field (mapcar #'car org-capture-ref-field-regexps))
+    (with-current-buffer (org-capture-ref-get-buffer)
+      (dolist (alist-elem org-capture-ref-field-regexps)
+	(let ((key (car alist-elem))
+	      (regexps (cdr alist-elem)))
+          (unless (org-capture-ref-get-bibtex-field key)
+            (catch :found
+              (dolist (regex regexps)
+		(goto-char (point-min))
+		(when (re-search-forward regex  nil t)
+		  (org-capture-ref-set-bibtex-field key (match-string 1))
+		  (throw :found t))))))))))
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html.
