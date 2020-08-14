@@ -200,7 +200,9 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
   "Use buffer from file defined in `:html' field of `org-protocol' query."
   (let* ((html (org-capture-ref-get-capture-info '(:query :html))))
     (when html
-      (find-file-noselect html))))
+      (with-current-buffer (get-buffer-create html)
+	(insert-file-contents html)
+        (current-buffer)))))
 
 (defun org-capture-ref-retrieve-url ()
   "Retrieve html buffer from `:link' field of capture data."
