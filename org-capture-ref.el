@@ -346,7 +346,40 @@ The generated value will be the website name."
 
 ;; Getting BiBTeX from elfeed entries
 
-;; TODO: TBD
+(defun org-capture-ref-get-bibtex-generic-elfeed (entry)
+  "Parse generic elfeed capture and generate bibtex entry."
+  (org-capture-ref-set-bibtex-field :url (elfeed-entry-link entry))
+  (let ((authors (plist-get (elfeed-entry-meta entry) :authors)))
+    (setq authors (mapcar #'cadr authors))
+    (if authors
+	(org-capture-ref-set-bibtex-field :author (s-join ", " authors))
+      ;; fallback to feed title
+      (org-capture-ref-set-bibtex-field :author (elfeed-feed-title (elfeed-entry-feed entry)))))
+  (org-capture-ref-set-bibtex-field :title (elfeed-entry-title elfeed-entry))
+  (org-capture-ref-set-bibtex-field :keywords (s-join ", " (plist-get (elfeed-entry-meta entry) :categories)))
+  (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date elfeed-entry))))
+
+(defun org-capture-ref-get-bibtex-habr-elfeed-fix-title (entry)
+  "Fix title in habr elfeed entries.
+This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed'."
+  ;; Habr RSS adds indication if post is translated or from sandbox,
+  ;; but it is not the case in the website. Unifying to make it
+  ;; consistent.
+  (when (s-match "habr\\.com" (org-capture-ref-get-bibtex-field :url))
+    (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))))
+
+(defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (entry)
+  "Populate author for https://rgoswami.me"
+  (when (s-match "rgoswami\\.me" (org-capture-ref-get-bibtex-field :url))
+    (org-capture-ref-set-bibtex-field :author "Rohit Goswami")))
+
+(defun org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished (entry)
+  "Mention subreddit in :howpublished."
+  (when (s-match "reddit\\.com" (org-capture-ref-get-bibtex-field :url))
+    (org-capture-ref-set-bibtex-field :howpublished
+		       (format "%s:%s"
+			       (org-capture-ref-get-bibtex-field :howpublished)
+                               (org-capture-ref-get-bibtex-field :keywords)))))
 
 ;; Generating cite key
 
