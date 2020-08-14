@@ -457,7 +457,7 @@ This runs `org-capture-ref-clean-bibtex-hook', unless NO-HOOK is non-nil."
   (with-temp-buffer
     (bibtex-mode)
     (bibtex-set-dialect 'BibTeX)
-    (insert string)
+    (when string (insert string))
     (goto-char 1)
     (unless no-hook
       (run-hooks 'org-capture-ref-clean-bibtex-hook))
