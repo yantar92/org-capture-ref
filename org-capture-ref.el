@@ -486,7 +486,8 @@ The same article/page should always get the same key (as much as it is
 possible).
 
 This calls `org-capture-ref-generate-key-functions'."
-  (run-hook-with-args-until-success 'org-capture-ref-generate-key-functions))
+  (unless (run-hook-with-args-until-success 'org-capture-ref-generate-key-functions)
+    (error "Failed to generate BiBTeX key")))
 
 (defun org-capture-ref-check-bibtex ()
   "Check if the entry is suitable for capture.
