@@ -396,6 +396,15 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (when-let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (s-replace "/" "-" doi)))
 
+;; Formatting BibTeX entry
+
+(defun org-capture-ref-get-formatted-bibtex-default ()
+  "Default BiBTeX formatted."
+  (s-format org-capture-ref-default-bibtex-template
+	    (lamdba (key)
+		    (or (org-capture-ref-get-bibtex-field key)
+			""))
+            org-capture-ref--bibtex-alist))
 
 ;;; Internal variables
 
