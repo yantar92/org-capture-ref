@@ -385,12 +385,17 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 (defun org-capture-ref-generate-key-from-url ()
   "Generate citation key from URL."
-  )
+  (when-let (url (org-capture-ref-get-bibtex-field :url))
+    (setq url (s-replace-all '(("https?://\\(www\\.?\\)?" . "")
+			       ("/" . "-"))
+                             url))
+    url))
 
 (defun org-capture-ref-generate-key-from-doi ()
   "Generate citation key from DOI."
-  
-  )
+  (when-let ((doi (org-capture-ref-get-bibtex-field :doi)))
+    (s-replace "/" "-" doi)))
+
 
 ;;; Internal variables
 
