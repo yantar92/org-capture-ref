@@ -131,6 +131,12 @@ this list will not be called then."
   :type 'hook
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-message-functions '(org-capture-ref-message-emacs
+				org-capture-ref-message-qutebrowser)
+  "List of functions used to report the progress/errors during capture.
+The functions must accept one or two arguments: message and severity.
+Severity is one of symbols `info', `warning', `error'.")
+
 ;; Customisation for default functions
 
 (defcustom org-capture-ref-field-regexps '((:doi . ("scheme=\"doi\" content=\"\\([^\"]*\\)\""
@@ -430,6 +436,34 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 			""))
             org-capture-ref--bibtex-alist))
 
+;;; Message functions
+
+(defun org-capture-ref-message-emacs (msg &optional severity)
+  "Show message in Emacs."
+  (pcase severity
+    (`error (error msg))
+    (`warning (warn msg))
+    (_ (message msg))))
+
+(defun org-capture-ref-message-qutebrowser (msg &optional severity)
+  "Show message in qutebrowser assuming that qutebrowser fifo is
+avaible in :query -> :qutebrowser-fifo capture info."
+  (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :html))))
+    (pcase severity
+      (`error (start-process-shell-command "Send message to qutebrowser"
+					   nil
+					   (format "echo 'message-error \"%s\"' >> %s" msg fifo)))
+      (`warning (start-process-shell-command "Send message to qutebrowser"
+					     nil
+					     (format "echo 'message-warning \"%s\"' >> %s" msg fifo)))
+      (_ (start-process-shell-command "Send message to qutebrowser"
+				      nil
+				      (format "echo 'message-info \"%s\"' >> %s" msg fifo))))))
+
+(defun org-capture-ref-message (msg &optional severity)
+  "Send messages via `org-capture-ref-message-functions'."
+  (run-hook-with-args org-capture-ref-message-functions msg severity))
+
 ;;; Internal variables
 
 (defvar org-capture-ref--store-link-plist nil
@@ -527,12 +561,14 @@ This runs `org-capture-ref-check-bibtex-functions'"
 
 The return value is always empty string, so that this function can be
 used inside capture template."
+  (org-capture-ref-message "Capturing BiBTeX...")
   (with-demoted-errors "Error while extracting BiBTeX: %S"
     (org-capture-ref-reset-state)
     (org-capture-ref-get-bibtex)
     (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
     (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
-    (org-capture-ref-check-bibtex))
+    (org-capture-ref-check-bibtex)
+    (org-capture-ref-message "Capturing BiBTeX... done"))
   (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer))
   "")
 
