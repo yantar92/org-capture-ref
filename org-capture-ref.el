@@ -29,6 +29,8 @@
 
 (require 'org-capture)
 (require 'org-ref-url-utils)
+(require 'org-ref-core)
+(require 'org-ref-bibtex)
 (require 'bibtex)
 
 ;;; Customization:
@@ -84,9 +86,20 @@ the field will be overwritten by functions from `org-capture-ref-generete-key-fu
 This variable is only used if `org-capture-ref-get-bibtex-from-elfeed-data' is listed in `org-capture-ref-get-bibtex-functions'.
 The functions must follow the same rules as `org-capture-ref-get-bibtex-functions', but will be called with a single argument - efleed entry object.
 
-These functions will only be called if `:elfeed-data' field is present in `:query' field of the `org-store-link-plist'.")
+These functions will only be called if `:elfeed-data' field is present in `:query' field of the `org-store-link-plist'."
+  :type 'hook
+  :group 'org-capture-ref)
 
-(defcustom org-capture-ref-clean-bibtex-hook '()
+(defcustom org-capture-ref-clean-bibtex-hook '(org-ref-bibtex-format-url-if-doi
+				orcb-key-comma
+				orcb-&
+				orcb-%
+				orcb-clean-year
+				orcb-clean-doi
+				orcb-clean-pages
+				orcb-check-journal
+				org-ref-sort-bibtex-entry
+				orcb-fix-spacing)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
 Each function is called with point at undefined position inside buffer
@@ -102,7 +115,7 @@ The new BiBTeX string will be parsed back into the BiBTeX data
 structure, and thus may affect anything set by
 `org-capture-ref-set-bibtex-field'."
   :type 'hook
-  'group org-capture-ref)
+  :group 'org-capture-ref)
 
 (defcustom org-capture-ref-get-formatted-bibtex-functions '(org-capture-ref-get-formatted-bibtex-default)
   "Functions used to format BiBTeX entry string.
@@ -136,7 +149,9 @@ this list will not be called then."
 				org-capture-ref-message-qutebrowser)
   "List of functions used to report the progress/errors during capture.
 The functions must accept one or two arguments: message and severity.
-Severity is one of symbols `info', `warning', `error'.")
+Severity is one of symbols `info', `warning', `error'."
+  :type 'hook
+  :group 'org-capture-ref)
 
 ;; Customisation for default functions
 
@@ -175,7 +190,9 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
       note         = {Online; accessed ${:urldate}}
       }"
   "Default template used to format BiBTeX entry.
-If a keyword from the template is missing, it will remain empty.")
+If a keyword from the template is missing, it will remain empty."
+  :type 'string
+  :group 'org-capture-ref)
 
 ;;; API
 
@@ -194,7 +211,7 @@ This calls `org-capture-ref-get-buffer-functions'."
   
 FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names."
-  (alist-get field org-capture-ref--bibtex))
+  (alist-get field org-capture-ref--bibtex-alist))
 
 (defun org-capture-ref-get-capture-info (key)
   "Return value of KEY from `org-capture-ref--store-link-plist'.
@@ -213,7 +230,7 @@ containing `cdar' of KEY, an so on."
   
 FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names."
-  (setf (alist-get field org-capture-ref--bibtex) val))
+  (setf (alist-get field org-capture-ref--bibtex-alist) val))
 
 (defun org-capture-ref-set-capture-info (key val)
   "Set KEY in capture info to VAL.
@@ -271,15 +288,15 @@ Existing BiBTeX fields are not modified."
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
-  (when (alist-get :doi org-capture-ref-field-regexps)
-    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
-      (org-capture-ref-parse-generic))
-    (let ((doi (org-capture-ref-get-bibtex-field :doi)))
-      (when doi
-	(let ((bibtex-string (with-demoted-errors
-				 (doi-utils-doi-to-bibtex-string doi))))
-          (when bibtex-string
-	    (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)))))))
+  (with-demoted-errors "Failed to fetch DOI record: %S"
+    (when (alist-get :doi org-capture-ref-field-regexps)
+      (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
+	(org-capture-ref-parse-generic))
+      (let ((doi (org-capture-ref-get-bibtex-field :doi)))
+	(when doi
+	  (let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
+            (when bibtex-string
+	      (org-capture-ref-clean-bibtex bibtex-string 'no-hooks))))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
@@ -379,6 +396,7 @@ The generated value will be the website name."
 
 (defun org-capture-ref-get-bibtex-generic-elfeed (entry)
   "Parse generic elfeed capture and generate bibtex entry."
+  (require 'elfeed-db)
   (org-capture-ref-set-bibtex-field :url (elfeed-entry-link entry))
   (let ((authors (plist-get (elfeed-entry-meta entry) :authors)))
     (setq authors (mapcar #'cadr authors))
@@ -386,11 +404,11 @@ The generated value will be the website name."
 	(org-capture-ref-set-bibtex-field :author (s-join ", " authors))
       ;; fallback to feed title
       (org-capture-ref-set-bibtex-field :author (elfeed-feed-title (elfeed-entry-feed entry)))))
-  (org-capture-ref-set-bibtex-field :title (elfeed-entry-title elfeed-entry))
+  (org-capture-ref-set-bibtex-field :title (elfeed-entry-title entry))
   (org-capture-ref-set-bibtex-field :keywords (s-join ", " (plist-get (elfeed-entry-meta entry) :categories)))
-  (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date elfeed-entry))))
+  (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date entry))))
 
-(defun org-capture-ref-get-bibtex-habr-elfeed-fix-title (entry)
+(defun org-capture-ref-get-bibtex-habr-elfeed-fix-title (_)
   "Fix title in habr elfeed entries.
 This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed'."
   ;; Habr RSS adds indication if post is translated or from sandbox,
@@ -399,12 +417,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (when (s-match "habr\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))))
 
-(defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (entry)
+(defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (_)
   "Populate author for https://rgoswami.me"
   (when (s-match "rgoswami\\.me" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :author "Rohit Goswami")))
 
-(defun org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished (entry)
+(defun org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished (_)
   "Mention subreddit in :howpublished."
   (when (s-match "reddit\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :howpublished
@@ -430,11 +448,11 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 ;; Formatting BibTeX entry
 
 (defun org-capture-ref-get-formatted-bibtex-default ()
-  "Default BiBTeX formatted."
+  "Default BiBTeX formatter."
   (s-format org-capture-ref-default-bibtex-template
-	    (lamdba (key)
-		    (or (org-capture-ref-get-bibtex-field key)
-			""))
+	    (lambda (key)
+	      (or (org-capture-ref-get-bibtex-field key)
+		  ""))
             org-capture-ref--bibtex-alist))
 
 ;;; Message functions
@@ -477,15 +495,17 @@ If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
     (while (< (point) (point-max))
       (when (get-text-property (point) 'org-hd-marker) (push (get-text-property (point) 'org-hd-marker) headlines))
       (goto-char (next-single-char-property-change (point) 'org-hd-marker)))
-    (cond (length headlines)
-	  (0 t)
-          (1 (when show-match-p
-               (switch-to-buffer (marker-buffer (car headlines)))
-               (goto-char (car headlines))
-               (org-reveal))
-             (org-capture-ref-message (format "%s found in org files" search-string) 'error))
-          (_ (unless show-match-p (kill-buffer))
-             (org-capture-ref-message (format "%s found in org files" search-string) 'error)))))
+    (pcase (length headlines)
+      (0 t)
+      (1 (when show-match-p
+	   (switch-to-buffer (marker-buffer (car headlines)))
+	   (goto-char (car headlines))
+           (if (functionp #'org-fold-reveal)
+               (org-fold-reveal)
+	     (org-reveal)))
+         (org-capture-ref-message (format "%s found in org files" search-string) 'error))
+      (_ (unless show-match-p (kill-buffer))
+         (org-capture-ref-message (format "%s found in org files" search-string) 'error)))))
 
 (defun org-capture-ref-check-key ()
   "Check if `:key' already exists.
