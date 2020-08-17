@@ -121,7 +121,8 @@ The functions will be called in sequence until any of them returns non-nil value
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-check-bibtex-functions '()
+(defcustom org-capture-ref-check-bibtex-functions '(org-capture-ref-check-url
+				     org-capture-ref-check-key)
   "Functions used to check the validity of generated BiBTeX.
   
 The functions are called in sequence without arguments.
@@ -185,7 +186,7 @@ Retrieve the contents first if necessary.
 This calls `org-capture-ref-get-buffer-functions'."
   (let ((buffer (or org-capture-ref--buffer
 		    (run-hook-with-args-until-success 'org-capture-ref-get-buffer-functions))))
-    (unless (buffer-live-p buffer) (error "<org-capture-ref> Failed to get live link buffer. Got %s" buffer))
+    (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
     (setq org-capture-ref--buffer buffer)))
 
 (defun org-capture-ref-get-bibtex-field (field)
@@ -464,6 +465,41 @@ avaible in :query -> :qutebrowser-fifo capture info."
   "Send messages via `org-capture-ref-message-functions'."
   (run-hook-with-args org-capture-ref-message-functions msg severity))
 
+;;; Verifying BiBTeX to be suitable for Org environment
+
+(defun org-capture-ref-check-regexp (search-string &optional show-match-p)
+  "Check if SEARCH-STRING exists in org files.
+SEARCH-STRING and list of searched files follows the rules for `org-search-view'.
+If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
+  (org-search-view nil search-string)
+  (goto-char (point-min))
+  (let (headlines)
+    (while (< (point) (point-max))
+      (when (get-text-property (point) 'org-hd-marker) (push (get-text-property (point) 'org-hd-marker) headlines))
+      (goto-char (next-single-char-property-change (point) 'org-hd-marker)))
+    (cond (length headlines)
+	  (0 t)
+          (1 (when show-match-p
+               (switch-to-buffer (marker-buffer (car headlines)))
+               (goto-char (car headlines))
+               (org-reveal))
+             (org-capture-ref-message (format "%s found in org files" search-string) 'error))
+          (_ (unless show-match-p (kill-buffer))
+             (org-capture-ref-message (format "%s found in org files" search-string) 'error)))))
+
+(defun org-capture-ref-check-key ()
+  "Check if `:key' already exists.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (org-capture-ref-check-regexp (format "{^:ID:[ \t]+%s}" (org-capture-ref-get-bibtex-field :key)) (org-capture-ref-get-capture-info :immediate-finish)))
+
+(defun org-capture-ref-check-url ()
+  "Check if `:url' already exists.
+It is assumed that `:url' is captured into :SOURCE: property.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (org-capture-ref-check-regexp (format "{^:Source:[ \t]+%s}" (org-capture-ref-get-bibtex-field :url)) (org-capture-ref-get-capture-info :immediate-finish)))
+
 ;;; Internal variables
 
 (defvar org-capture-ref--store-link-plist nil
@@ -545,7 +581,7 @@ possible).
 
 This calls `org-capture-ref-generate-key-functions'."
   (unless (run-hook-with-args-until-success 'org-capture-ref-generate-key-functions)
-    (error "Failed to generate BiBTeX key")))
+    (org-capture-ref-message "Failed to generate BiBTeX key" 'error)))
 
 (defun org-capture-ref-check-bibtex ()
   "Check if the entry is suitable for capture.
