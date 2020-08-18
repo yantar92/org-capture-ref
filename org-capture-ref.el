@@ -317,7 +317,7 @@ The generated value will be the website name."
     (when url
       (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
       (when (match-string 1 url)
-	(org-capture-ref-set-bibtex-field :howpublished (upcase (match-string 1 url)))))))
+	(org-capture-ref-set-bibtex-field :howpublished (capitalize (match-string 1 url)))))))
 
 (defun org-capture-ref-set-default-type ()
   "Set `:type' of the BiBTeX entry to `org-capture-ref-default-type'."
