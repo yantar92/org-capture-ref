@@ -269,9 +269,9 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
 
 (defun org-capture-ref-get-bibtex-from-elfeed-data ()
   "Run `org-capture-ref-get-bibtex-from-elfeed-functions'."
-  (require 'elfeed)
   (let ((elfeed-entry (org-capture-ref-get-capture-info '(:query :elfeed-data))))
     (when elfeed-entry
+      (require 'elfeed)
       (run-hook-with-args 'org-capture-ref-get-bibtex-from-elfeed-functions elfeed-entry))))
 
 (defun org-capture-ref-parse-generic ()
