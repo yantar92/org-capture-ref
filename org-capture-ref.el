@@ -532,6 +532,13 @@ Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (org-capture-ref-check-regexp (format "{^:Source:[ \t]+%s}" (org-capture-ref-get-bibtex-field :url)) (org-capture-ref-get-capture-info :immediate-finish)))
 
+(defun org-capture-ref-check-link ()
+  "Check if captured `:link' already exists.
+It is assumed that `:link' is captured into :SOURCE: property.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (org-capture-ref-check-regexp (format "{^:Source:[ \t]+%s}" (org-capture-ref-get-capture-info :link)) (org-capture-ref-get-capture-info :immediate-finish)))
+
 ;;; Internal variables
 
 (defvar org-capture-ref--store-link-plist nil
