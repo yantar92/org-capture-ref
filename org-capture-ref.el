@@ -595,7 +595,7 @@ This runs `org-capture-ref-clean-bibtex-hook', unless NO-HOOK is non-nil."
     (unless no-hook
       (run-hooks 'org-capture-ref-clean-bibtex-hook))
     (goto-char 1)
-    (dolist (field (bibtex-parse-entry))
+    (dolist (field (bibtex-parse-entry 'content))
       (pcase (intern (concat ":" (car field)))
 	(':=type= (org-capture-ref-set-bibtex-field :type (cdr field)))
         (':=key= (org-capture-ref-set-bibtex-field :key (cdr field)))
