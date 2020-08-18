@@ -457,8 +457,8 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 (defun org-capture-ref-get-formatted-bibtex-default ()
   "Default BiBTeX formatter."
   (s-format org-capture-ref-default-bibtex-template
-	    (lambda (key)
-	      (or (org-capture-ref-get-bibtex-field key)
+	    (lambda (key &optional _)
+	      (or (org-capture-ref-get-bibtex-field (intern key))
 		  ""))
             org-capture-ref--bibtex-alist))
 
