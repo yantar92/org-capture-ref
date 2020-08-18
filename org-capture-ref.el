@@ -57,6 +57,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
 				   org-capture-ref-get-bibtex-from-elfeed-data
+                                   org-capture-ref-get-bibtex-from-first-doi
 				   org-capture-ref-parse-generic
                                    org-capture-ref-get-bibtex-github
                                    org-capture-ref-get-bibtex-youtube-watch
