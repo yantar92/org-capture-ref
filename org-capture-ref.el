@@ -183,11 +183,16 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :type 'string)
 
 (defcustom org-capture-ref-default-bibtex-template "@${:type}{${:key},
-      title        = {${:title}},
       author       = {${:author}},
-      howpublished = {${:howpublished}},
-      url          = {${:url}},
+      title        = {${:title}},
+      journal      = {${:journal}},
+      volume       = {${:volume}},
+      number       = {${:number}},
+      pages        = {${:pages}},
       year         = {${:year}},
+      doi          = {${:doi}},
+      url          = {${:url}},
+      howpublished = {${:howpublished}},
       keywords     = {${:keywords}},
       note         = {Online; accessed ${:urldate}}
       }"
