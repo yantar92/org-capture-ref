@@ -518,7 +518,12 @@ If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
   "Check if `:key' already exists.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "{^:ID:[ \t]+%s}" (org-capture-ref-get-bibtex-field :key)) (org-capture-ref-get-capture-info :immediate-finish)))
+  (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key))))
+    (unless (org-capture-ref-get-capture-info :immediate-finish)
+      (switch-to-buffer (marker-buffer mk))
+      (goto-char mk)
+      (org-show-entry))
+    (org-capture-ref-message (format "Existing :ID: %s" (org-capture-ref-get-bibtex-field :key)) 'error)))
 
 (defun org-capture-ref-check-url ()
   "Check if `:url' already exists.
