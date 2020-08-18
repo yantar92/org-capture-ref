@@ -488,7 +488,7 @@ avaible in :query -> :qutebrowser-fifo capture info."
 
 (defun org-capture-ref-message (msg &optional severity)
   "Send messages via `org-capture-ref-message-functions'."
-  (run-hook-with-args org-capture-ref-message-functions msg severity))
+  (run-hook-with-args 'org-capture-ref-message-functions msg severity))
 
 ;;; Verifying BiBTeX to be suitable for Org environment
 
