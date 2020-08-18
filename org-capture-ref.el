@@ -636,14 +636,13 @@ This runs `org-capture-ref-check-bibtex-functions'"
 
 The return value is always empty string, so that this function can be
 used inside capture template."
+  (org-capture-ref-reset-state)
   (org-capture-ref-message "Capturing BiBTeX...")
-  (with-demoted-errors "Error while extracting BiBTeX: %S"
-    (org-capture-ref-reset-state)
-    (org-capture-ref-get-bibtex)
-    (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
-    (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
-    (org-capture-ref-check-bibtex)
-    (org-capture-ref-message "Capturing BiBTeX... done"))
+  (org-capture-ref-get-bibtex)
+  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
+  (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
+  (org-capture-ref-check-bibtex)
+  (org-capture-ref-message "Capturing BiBTeX... done")
   (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer))
   "")
 
