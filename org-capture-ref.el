@@ -135,8 +135,9 @@ The functions will be called in sequence until any of them returns non-nil value
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-check-bibtex-functions '(org-capture-ref-check-url
-				     org-capture-ref-check-key)
+(defcustom org-capture-ref-check-bibtex-functions '(org-capture-ref-check-key
+				     org-capture-ref-check-url
+				     org-capture-ref-check-link)
   "Functions used to check the validity of generated BiBTeX.
   
 The functions are called in sequence without arguments.
