@@ -474,7 +474,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
   "Show message in qutebrowser assuming that qutebrowser fifo is
 avaible in :query -> :qutebrowser-fifo capture info."
-  (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :html))))
+  (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :qutebrowser-fifo))))
     (pcase severity
       (`error (start-process-shell-command "Send message to qutebrowser"
 					   nil
