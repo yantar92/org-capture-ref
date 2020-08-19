@@ -206,6 +206,13 @@ If a keyword from the template is missing, it will remain empty."
   :type 'string
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-check-regexp-method 'grep
+  "Search method in `org-capture-ref-check-regexp'.
+This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-link'."
+  :type '(choice (const :tag "Use Unix grep" grep)
+		 (const :tag "Use `org-search-view'" org-search-view))
+  :group 'org-capture-ref)
+
 ;;; API
 
 (defun org-capture-ref-get-buffer ()
@@ -498,11 +505,54 @@ avaible in :query -> :qutebrowser-fifo capture info."
 
 ;;; Verifying BiBTeX to be suitable for Org environment
 
-(defun org-capture-ref-check-regexp (search-string &optional show-match-p)
-  "Check if SEARCH-STRING exists in org files.
+(defun org-capture-ref-get-message-string (marker)
+  "Generate message string if a headline at MARKER matches the capture."
+  (org-with-point-at marker
+    (org-back-to-heading t)
+    (format "Already captured into: %s" (org-get-heading 'no-tags nil 'no-priority 'no-comment))))
+
+(defun org-capture-ref-grep (regexp &optional show-match-p)
+  "Check if REGEXP exists in org files.
 SEARCH-STRING and list of searched files follows the rules for `org-search-view'.
 If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
-  (org-search-view nil search-string)
+  (unless (executable-find "grep") (org-capture-ref-message "Cannot find grep executable" 'error))
+  (let (files
+	matches)
+    (setq files (org-agenda-files t t))
+    (when (eq (car org-agenda-text-search-extra-files) 'agenda-archives)
+      (pop org-agenda-text-search-extra-files))
+    (setq files (cl-remove-duplicates
+		 (append files org-agenda-text-search-extra-files)
+		 :test (lambda (a b)
+			 (and (file-exists-p a)
+			      (file-exists-p b)
+			      (file-equal-p a b)))))
+    (dolist (file files)
+      (when (file-exists-p file)
+	(let ((ans (shell-command-to-string (format "grep -nE '%s' '%s'" regexp file))))
+          (unless (string-empty-p ans)
+            (setq matches (append matches
+				  (mapcar (lambda (str)
+					    ;; Line number
+                                            (when (string-match "^\\([0-9]+\\):" str)
+                                              (with-current-buffer (find-file-noselect file 'nowarn)
+						(save-excursion
+						  (goto-line (string-to-number (match-string 1 str)))
+                                                  (point-marker)))))
+					  (s-lines ans))))))))
+    (when matches
+      (when show-match-p
+	(switch-to-buffer (marker-buffer (car matches)))
+	(goto-char (car matches))
+	(org-show-entry))
+      (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error))))
+
+(defun org-capture-ref-check-regexp-search-view (regexp &optional show-match-p)
+  "Check if REGEXP exists in org files (`org-agenda-files' and `org-agenda-text-search-extra-files').
+If SHOW-MATCH-P is non-nil, show the match."
+  (let ((org-agenda-sticky nil)
+	(org-agenda-restrict nil))
+    (org-search-view nil (format "{%s}" search-string)))
   (goto-char (point-min))
   (let (headlines)
     (while (< (point) (point-max))
@@ -516,9 +566,9 @@ If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
            (if (functionp #'org-fold-reveal)
                (org-fold-reveal)
 	     (org-reveal)))
-         (org-capture-ref-message (format "%s found in org files" search-string) 'error))
+         (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))
       (_ (unless show-match-p (kill-buffer))
-         (org-capture-ref-message (format "%s found in org files" search-string) 'error)))))
+         (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))))
 
 (defun org-capture-ref-check-key ()
   "Check if `:key' already exists.
