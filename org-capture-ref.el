@@ -191,6 +191,10 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type 'string)
 
+(defcustom org-capture-ref-placeholder-value "unused"
+  "Key value indicating that this key is not applicable for the captured entry.
+There is no need to attempt finding the value for this key.")
+
 (defcustom org-capture-ref-default-bibtex-template "@${:type}{${:key},
       author       = {${:author}},
       title        = {${:title}},
@@ -229,12 +233,17 @@ This calls `org-capture-ref-get-buffer-functions'."
     (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
     (setq org-capture-ref--buffer buffer)))
 
-(defun org-capture-ref-get-bibtex-field (field)
+(defun org-capture-ref-get-bibtex-field (field &optional return-placeholder-p)
   "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
+Unless RETURN-PLACEHOLDER-P is non-nil, return nil when the value is equal
+to `org-capture-ref-placeholder-value'.
   
 FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names."
-  (alist-get field org-capture-ref--bibtex-alist))
+  (if return-placeholder-p
+      (alist-get field org-capture-ref--bibtex-alist)
+    (let ((res (alist-get field org-capture-ref--bibtex-alist)))
+      (unless (string-equal res org-capture-ref-placeholder-value) res))))
 
 (defun org-capture-ref-get-capture-info (key)
   "Return value of KEY from `org-capture-ref--store-link-plist'.
@@ -300,7 +309,7 @@ Existing BiBTeX fields are not modified."
       (dolist (alist-elem org-capture-ref-field-regexps)
 	(let ((key (car alist-elem))
 	      (regexps (cdr alist-elem)))
-          (unless (org-capture-ref-get-bibtex-field key)
+          (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
             (catch :found
               (dolist (regex regexps)
 		(goto-char (point-min))
@@ -312,14 +321,17 @@ Existing BiBTeX fields are not modified."
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
   (with-demoted-errors "Failed to fetch DOI record: %S"
-    (when (and (not (org-capture-ref-get-bibtex-field :doi))
+    (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
 	       (alist-get :doi org-capture-ref-field-regexps))
       (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
 	(org-capture-ref-parse-generic)))
     (let ((doi (org-capture-ref-get-bibtex-field :doi)))
       (when doi
+	(org-capture-ref-message "Retrieving DOI record...")
 	(let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
-          (when bibtex-string
+          (if (not bibtex-string)
+              (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
+            (org-capture-ref-message "Retrieving DOI record... done")
 	    (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
@@ -361,14 +373,27 @@ The generated value will be the website name."
 	  (let ((title (match-string 1)))
             (when (string-match "^\\(.+\\) at [0-9a-zA-Z]\\{20,\\}$" title)
 	      (setq title (match-string 1 title)))
+            ;; Remove trailing Gitlab in title
+            (setq title (replace-regexp-in-string ".?\\{3\\}Gitlab" "" title))
+            ;; Temove author name from title
+            (setq title (replace-regexp-in-string "^[^/]*/[ \t]*" "" title))
             (org-capture-ref-set-bibtex-field :title title)))
-        (org-capture-ref-set-bibtex-field :howpublished "Github")))))
+        ;; Year has no meaning for repo
+        (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+        (when (string-match-p "github" link)
+          (org-capture-ref-set-bibtex-field :howpublished "Github"))
+        (when (string-match-p "gitlab" link)
+          (org-capture-ref-set-bibtex-field :howpublished "Gitlab"))))))
 
 (defun org-capture-ref-get-bibtex-youtube-watch ()
   "Parse Youtube watch link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "youtube\\.com/watch" link)
       (with-current-buffer (org-capture-ref-get-buffer)
+	;; Remove garbage from the link
+        (setq link (replace-regexp-in-string "&[^/]+$" "" link))
+        (org-capture-ref-set-bibtex-field :url link)
+        (org-capture-ref-set-capture-info :link link)
 	;; Find author
 	(goto-char (point-min))
 	(when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
@@ -459,25 +484,25 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 (defun org-capture-ref-generate-key-from-url ()
   "Generate citation key from URL."
   (when-let (url (org-capture-ref-get-bibtex-field :url))
-    (setq url (s-replace-all '(("https?://\\(www\\.?\\)?" . "")
-			       ("/" . "-"))
-                             url))
+    (setq url (replace-regexp-in-string "https?://\\(www\\.?\\)?" "" url))
+    (setq url (replace-regexp-in-string "[^a-zA-Z0-9/.]" "-" url))
     url))
 
 (defun org-capture-ref-generate-key-from-doi ()
   "Generate citation key from DOI."
   (when-let ((doi (org-capture-ref-get-bibtex-field :doi)))
-    (s-replace "/" "-" doi)))
+    doi))
 
 ;; Formatting BibTeX entry
 
 (defun org-capture-ref-get-formatted-bibtex-default ()
   "Default BiBTeX formatter."
-  (s-format org-capture-ref-default-bibtex-template
-	    (lambda (key &optional _)
-	      (or (org-capture-ref-get-bibtex-field (intern key))
-		  ""))
-            org-capture-ref--bibtex-alist))
+  (replace-regexp-in-string (format "^.+{\\(%s\\)?},$" org-capture-ref-placeholder-value) ""
+			    (s-format org-capture-ref-default-bibtex-template
+				      (lambda (key &optional _)
+					(or (org-capture-ref-get-bibtex-field (intern key))
+					    ""))
+				      org-capture-ref--bibtex-alist)))
 
 ;;; Message functions
 
