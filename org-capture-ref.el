@@ -421,6 +421,10 @@ The generated value will be the website name."
   "Parse Habrahabr link and generate BiBTeX entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (s-match "habr\\.com" link)
+      ;; Unify company blog articles and normal articles
+      (setq link (replace-regexp-in-string "company/[^/]+/blog/" "post/" link))
+      (setq link (replace-regexp-in-string "/\\?[^/]+$" "/" link))
+      (org-capture-ref-set-capture-info :link link)
       (with-current-buffer (org-capture-ref-get-buffer)
         ;; Simplify url
 	(goto-char (point-min))
