@@ -32,6 +32,7 @@
 (require 'org-ref-core)
 (require 'org-ref-bibtex)
 (require 'bibtex)
+(require 's)
 
 ;;; Customization:
 
