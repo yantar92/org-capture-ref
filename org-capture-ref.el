@@ -548,12 +548,8 @@ avaible in :query -> :qutebrowser-fifo capture info."
   "Generate message string if a headline at MARKER matches the capture."
   (org-with-point-at marker
     (org-back-to-heading t)
-    (format "Already captured into: %s" (org-get-heading 'no-tags nil 'no-priority 'no-comment))))
+    (format "Already captured into: %s:%s" (file-name-base (buffer-file-name)) (org-get-heading 'no-tags nil 'no-priority 'no-comment))))
 
-(defun org-capture-ref-grep (regexp &optional show-match-p)
-  "Check if REGEXP exists in org files.
-SEARCH-STRING and list of searched files follows the rules for `org-search-view'.
-If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
 (defun org-capture-ref-check-regexp (regexp &optional dont-show-match-p)
   "Check if REGEXP exists in org files using `org-capture-ref-check-regexp-method'.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
