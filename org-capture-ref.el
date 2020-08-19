@@ -293,17 +293,18 @@ Existing BiBTeX fields are not modified."
 		  (throw :found t))))))))))
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
-  "Generate BiBTeX using first DOI record found in html.
+  "Generate BiBTeX using first DOI record found in html or `:doi' field.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
   (with-demoted-errors "Failed to fetch DOI record: %S"
-    (when (alist-get :doi org-capture-ref-field-regexps)
+    (when (and (not (org-capture-ref-get-bibtex-field :doi))
+	       (alist-get :doi org-capture-ref-field-regexps))
       (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
-	(org-capture-ref-parse-generic))
-      (let ((doi (org-capture-ref-get-bibtex-field :doi)))
-	(when doi
-	  (let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
-            (when bibtex-string
-	      (org-capture-ref-clean-bibtex bibtex-string 'no-hooks))))))))
+	(org-capture-ref-parse-generic)))
+    (let ((doi (org-capture-ref-get-bibtex-field :doi)))
+      (when doi
+	(let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
+          (when bibtex-string
+	    (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
