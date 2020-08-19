@@ -711,7 +711,8 @@ This runs `org-capture-ref-clean-bibtex-hook', unless NO-HOOK is non-nil."
       (pcase (intern (concat ":" (car field)))
 	(':=type= (org-capture-ref-set-bibtex-field :type (cdr field)))
         (':=key= (org-capture-ref-set-bibtex-field :key (cdr field)))
-        (key (org-capture-ref-set-bibtex-field key (cdr field)))))
+        ;; Other fields may contain unwanted newlines.
+        (key (org-capture-ref-set-bibtex-field key (replace-regexp-in-string "\n[ \t]*" " " (cdr field))))))
     (buffer-string)))
 
 (defun org-capture-ref-format-bibtex ()
