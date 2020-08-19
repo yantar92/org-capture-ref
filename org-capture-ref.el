@@ -153,11 +153,14 @@ this list will not be called then."
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-message-functions '(org-capture-ref-message-emacs
-				org-capture-ref-message-qutebrowser)
+(defcustom org-capture-ref-message-functions '(org-capture-ref-message-qutebrowser
+				;; This should be last
+                                org-capture-ref-message-emacs)
   "List of functions used to report the progress/errors during capture.
 The functions must accept one or two arguments: message and severity.
-Severity is one of symbols `info', `warning', `error'."
+Severity is one of symbols `info', `warning', `error'.
+The last default function in this hook `org-capture-ref-message-emacs'
+may throw error and hence prevent any laster function to be executed."
   :type 'hook
   :group 'org-capture-ref)
 
