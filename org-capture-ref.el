@@ -221,6 +221,12 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 		 (const :tag "Use `org-search-view'" org-search-view))
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-check-key-method 'grep
+  "Search method in `org-capture-ref-check-key' when searching for IDs."
+  :type '(choice (const :tag "Use Unix grep" grep)
+		 (const :tag "Use `org-id-find'" org-id-find))
+  :group 'org-capture-ref)
+
 ;;; API
 
 (defun org-capture-ref-get-buffer ()
@@ -544,6 +550,17 @@ avaible in :query -> :qutebrowser-fifo capture info."
   "Check if REGEXP exists in org files.
 SEARCH-STRING and list of searched files follows the rules for `org-search-view'.
 If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
+(defun org-capture-ref-check-regexp (regexp &optional dont-show-match-p)
+  "Check if REGEXP exists in org files using `org-capture-ref-check-regexp-method'.
+If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
+  (pcase org-capture-ref-check-regexp-method
+    (`grep (org-capture-ref-check-regexp-grep regexp dont-show-match-p))
+    (`org-search-view (org-capture-ref-check-regexp-search-view regexp dont-show-match-p))
+    (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-regexp-method: %s" org-capture-ref-check-regexp-method) 'error))))
+
+(defun org-capture-ref-check-regexp-grep (regexp &optional dont-show-match-p)
+  "Check if REGEXP exists in org files using grep.
+If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (unless (executable-find "grep") (org-capture-ref-message "Cannot find grep executable" 'error))
   (let (files
 	matches)
@@ -556,6 +573,8 @@ If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
 			 (and (file-exists-p a)
 			      (file-exists-p b)
 			      (file-equal-p a b)))))
+    ;; Save buffers to make sure that grep can see latest changes.
+    (org-save-all-org-buffers)
     (dolist (file files)
       (when (file-exists-p file)
 	(let ((ans (shell-command-to-string (format "grep -nE '%s' '%s'" regexp file))))
@@ -564,21 +583,24 @@ If SHOW-MATCH-P is non-nil, show the match or agenda search with all matches."
 				  (mapcar (lambda (str)
 					    ;; Line number
                                             (when (string-match "^\\([0-9]+\\):" str)
-                                              (with-current-buffer (find-file-noselect file 'nowarn)
-						(save-excursion
-						  (goto-line (string-to-number (match-string 1 str)))
-                                                  (point-marker)))))
+                                              (let ((line-num (string-to-number (match-string 1 str))))
+						(with-current-buffer (find-file-noselect file 'nowarn)
+						  (save-excursion
+						    (goto-line line-num)
+                                                    (point-marker))))))
 					  (s-lines ans))))))))
+    (setq matches (remove nil matches))
     (when matches
-      (when show-match-p
+      (unless dont-show-match-p
 	(switch-to-buffer (marker-buffer (car matches)))
 	(goto-char (car matches))
+        (org-back-to-heading t)
 	(org-show-entry))
       (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error))))
 
-(defun org-capture-ref-check-regexp-search-view (regexp &optional show-match-p)
-  "Check if REGEXP exists in org files (`org-agenda-files' and `org-agenda-text-search-extra-files').
-If SHOW-MATCH-P is non-nil, show the match."
+(defun org-capture-ref-check-regexp-search-view (regexp &optional dont-show-match-p)
+  "Check if REGEXP exists in org files using `org-search-view'.
+If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (let ((org-agenda-sticky nil)
 	(org-agenda-restrict nil))
     (org-search-view nil (format "{%s}" search-string)))
@@ -589,40 +611,45 @@ If SHOW-MATCH-P is non-nil, show the match."
       (goto-char (next-single-char-property-change (point) 'org-hd-marker)))
     (pcase (length headlines)
       (0 t)
-      (1 (when show-match-p
+      (1 (unless dont-show-match-p
 	   (switch-to-buffer (marker-buffer (car headlines)))
 	   (goto-char (car headlines))
            (if (functionp #'org-fold-reveal)
                (org-fold-reveal)
 	     (org-reveal)))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))
-      (_ (unless show-match-p (kill-buffer))
+      (_ (when dont-show-match-p (kill-buffer))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))))
 
 (defun org-capture-ref-check-key ()
   "Check if `:key' already exists.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key))))
-    (unless (org-capture-ref-get-capture-info :immediate-finish)
-      (switch-to-buffer (marker-buffer mk))
-      (goto-char mk)
-      (org-show-entry))
-    (org-capture-ref-message (format "Existing :ID: %s" (org-capture-ref-get-bibtex-field :key)) 'error)))
+  (pcase org-capture-ref-check-key-method
+    (`org-id-find
+     (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key) 'marker)))
+       (unless (org-capture-ref-get-capture-info :immediate-finish)
+	 (switch-to-buffer (marker-buffer mk))
+	 (goto-char mk)
+	 (org-show-entry))
+       (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
+    (`grep
+     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (org-capture-ref-get-bibtex-field :key)) (org-capture-ref-get-capture-info :immediate-finish)))
+    (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error))))
 
 (defun org-capture-ref-check-url ()
   "Check if `:url' already exists.
 It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "{^:Source:[ \t]+%s}" (org-capture-ref-get-bibtex-field :url)) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (org-capture-ref-get-bibtex-field :url)) (org-capture-ref-get-capture-info :immediate-finish)))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
 It is assumed that `:link' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "{^:Source:[ \t]+%s}" (org-capture-ref-get-capture-info :link)) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (org-capture-ref-get-capture-info :link)) (org-capture-ref-get-capture-info :immediate-finish)))
 
 ;;; Internal variables
 
