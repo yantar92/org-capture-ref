@@ -326,19 +326,18 @@ Existing BiBTeX fields are not modified."
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
-  (with-demoted-errors "Failed to fetch DOI record: %S"
-    (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
-	       (alist-get :doi org-capture-ref-field-regexps))
-      (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
-	(org-capture-ref-parse-generic)))
-    (let ((doi (org-capture-ref-get-bibtex-field :doi)))
-      (when doi
-	(org-capture-ref-message "Retrieving DOI record...")
-	(let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
-          (if (not bibtex-string)
-              (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
-            (org-capture-ref-message "Retrieving DOI record... done")
-	    (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)))))))
+  (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
+	     (alist-get :doi org-capture-ref-field-regexps))
+    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
+      (org-capture-ref-parse-generic)))
+  (let ((doi (org-capture-ref-get-bibtex-field :doi)))
+    (when doi
+      (org-capture-ref-message "Retrieving DOI record...")
+      (let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
+        (if (not bibtex-string)
+            (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
+          (org-capture-ref-message "Retrieving DOI record... done")
+	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
@@ -603,7 +602,7 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (let ((org-agenda-sticky nil)
 	(org-agenda-restrict nil))
-    (org-search-view nil (format "{%s}" search-string)))
+    (org-search-view nil (format "{%s}" regexp)))
   (goto-char (point-min))
   (let (headlines)
     (while (< (point) (point-max))
