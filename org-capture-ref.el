@@ -3,6 +3,8 @@
 ;; Copyright (C) 2020  Ihor Radchenko
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
+;; Version: 0.3
+;; Package-Requires: (s org org-ref bibtex)
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
