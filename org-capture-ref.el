@@ -365,13 +365,13 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-github ()
   "Parse Github link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "github\\.com" link)
+    (when (string-match "git\\(hub\\|lab\\)\\.com" link)
       (with-current-buffer (org-capture-ref-get-buffer)
         ;; Fix URL
         (when (string-match "^\\(.+\\)/tree/[a-zA-Z0-9]+$" link)
           (org-capture-ref-set-bibtex-field :url (match-string 1 link)))
 	;; Find author
-        (when (string-match "\\(?:https://\\)?github\\.com/\\([^/]+\\)" link)
+        (when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
           (org-capture-ref-set-bibtex-field :author (match-string 1 link)))
 	;; find title
 	(goto-char (point-min))
