@@ -52,16 +52,21 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-get-bibtex-functions '(org-capture-ref-get-bibtex-url-from-capture-data
+(defcustom org-capture-ref-get-bibtex-functions '(;; First, pull generic data from capture
+				   org-capture-ref-get-bibtex-url-from-capture-data
 				   org-capture-ref-get-bibtex-howpublished-from-url
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
+                                   ;; Elfeed parsers
 				   org-capture-ref-get-bibtex-from-elfeed-data
+                                   ;; DOI retrieval
                                    org-capture-ref-get-bibtex-from-first-doi
-				   org-capture-ref-parse-generic
-                                   org-capture-ref-get-bibtex-github
+				   ;; Site-specific parsing
+				   org-capture-ref-get-bibtex-github
                                    org-capture-ref-get-bibtex-youtube-watch
-                                   org-capture-ref-get-bibtex-habr)
+                                   org-capture-ref-get-bibtex-habr
+				   ;; Generic parser
+				   org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
 
 Each function will be called without arguments in sequence.
