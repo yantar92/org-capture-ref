@@ -651,7 +651,7 @@ capture template."
 	 (org-show-entry))
        (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
     (`grep
-     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (org-capture-ref-get-bibtex-field :key)) (org-capture-ref-get-capture-info :immediate-finish)))
+     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-info :immediate-finish)))
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error))))
 
 (defun org-capture-ref-check-url ()
@@ -659,14 +659,14 @@ capture template."
 It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (org-capture-ref-get-bibtex-field :url)) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-info :immediate-finish)))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
 It is assumed that `:link' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (org-capture-ref-get-capture-info :link)) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-info :immediate-finish)))
 
 ;;; Internal variables
 
