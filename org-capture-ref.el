@@ -616,8 +616,8 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 (defun org-capture-ref-message-emacs (msg &optional severity)
   "Show message in Emacs."
   (pcase severity
-    (`error (error msg))
-    (`warning (warn msg))
+    (`error (user-error msg))
+    (`warning (message msg))
     (_ (message msg))))
 
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
