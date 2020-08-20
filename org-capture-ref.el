@@ -179,7 +179,7 @@ may throw error and hence prevent any laster function to be executed."
 				     "/doi/\\([^\"]*\\)\">"
 				     "doi/full/\\(.*\\)&"
 				     "doi=\\([^&]*\\)&amp"))
-                            (:year . ("class=\\(.?+date.[^>]*\\)>\\([[:ascii:][:nonascii:]]*?\\)</"))
+                            (:year . ("class=\\(.?+date.[^>]*\\)>[^<]*\\([0-9]\\{4\\}\\)[^<]*</"))
                             (:author . ("\\(?:<meta name=\"author\" content=\"\\(.+\\)\" ?/?>\\)\""
 					"\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
                             (:title . ("<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
