@@ -109,7 +109,8 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
 				orcb-clean-pages
 				orcb-check-journal
 				org-ref-sort-bibtex-entry
-				orcb-fix-spacing)
+				orcb-fix-spacing
+                                org-capture-ref-clear-nil-bibtex-entries)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
 Each function is called with point at undefined position inside buffer
@@ -547,6 +548,14 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 					(or (org-capture-ref-get-bibtex-field (intern key))
 					    ""))
 				      org-capture-ref--bibtex-alist)))
+
+;; Cleaning up BiBTeX entry
+
+(defun org-capture-ref-clear-nil-bibtex-entries ()
+  "Remove {nil} in BiBTeX record."
+  (goto-char 1)
+  (while (re-search-forward "{nil}" nil 'noerror)
+    (kill-whole-line)))
 
 ;;; Message functions
 
