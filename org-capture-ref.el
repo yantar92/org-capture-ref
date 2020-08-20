@@ -513,12 +513,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (when-let (url (org-capture-ref-get-bibtex-field :url))
     (setq url (replace-regexp-in-string "https?://\\(www\\.?\\)?" "" url))
     (setq url (replace-regexp-in-string "[^a-zA-Z0-9/.]" "-" url))
-    url))
+    (sha1 url)))
 
 (defun org-capture-ref-generate-key-from-doi ()
   "Generate citation key from DOI."
   (when-let ((doi (org-capture-ref-get-bibtex-field :doi)))
-    doi))
+    (sha1 doi)))
 
 ;; Formatting BibTeX entry
 
