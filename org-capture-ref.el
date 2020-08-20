@@ -63,6 +63,11 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    ;; Elfeed parsers
 				   org-capture-ref-get-bibtex-from-elfeed-data
                                    ;; DOI retrieval
+                                   org-capture-ref-get-bibtex-doi
+                                   org-capture-ref-get-bibtex-aps
+                                   org-capture-ref-get-bibtex-springer
+                                   org-capture-ref-get-bibtex-wiley
+                                   org-capture-ref-get-bibtex-tandfonline
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
 				   org-capture-ref-get-bibtex-github
@@ -485,6 +490,41 @@ The generated value will be the website name."
 	  (let ((year (match-string 1)))
 	    (string-match "[0-9]\\{4\\}" year)
             (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
+
+(defun org-capture-ref-get-bibtex-aps ()
+  "Generate BiBTeX for APS publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "aps\\.org/doi/\\([0-9a-z-/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-springer ()
+  "Generate BiBTeX for Springer publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "springer\\.com/\\([0-9a-z-/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-tandfonline ()
+  "Generate BiBTeX for Tandfonline publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "tandfonline\\.com/doi/full/\\([0-9a-z-/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-wiley ()
+  "Generate BiBTeX for Wiley publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "wiley\\.com/doi/abs/\\([0-9a-z-/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-doi ()
+  "Generate BiBTeX for an actual doi.org link."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "doi\\.org/\\([0-9a-z-/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-first-doi))))
 
 ;; Getting BiBTeX from elfeed entries
 
