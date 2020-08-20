@@ -594,7 +594,8 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (org-save-all-org-buffers)
     (dolist (file files)
       (when (file-exists-p file)
-	(let ((ans (shell-command-to-string (format "grep -nE '%s' '%s'" regexp file))))
+	;; Use -a switch to process UTF-16 files
+	(let ((ans (shell-command-to-string (format "grep -anE '%s' '%s'" regexp file))))
           (unless (string-empty-p ans)
             (setq matches (append matches
 				  (mapcar (lambda (str)
