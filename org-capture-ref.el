@@ -363,11 +363,16 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
       (org-capture-ref-message "Retrieving DOI record...")
-      (let ((bibtex-string (doi-utils-doi-to-bibtex-string doi)))
+      (let ((bibtex-string (condition-case err
+			       ;; Ignore errors and avoid opening the DOI url.
+			       (cl-letf (((symbol-function 'browse-url) #'ignore))
+				 (doi-utils-doi-to-bibtex-string doi))
+                             (t nil))))
         (if (not bibtex-string)
             (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
           (org-capture-ref-message "Retrieving DOI record... done")
-	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks))))))
+	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+          (throw :finish t))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
