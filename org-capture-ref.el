@@ -237,7 +237,8 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-warn-when-using-generic-parser t
-  "Non-nil means warn user if some fields are trying to be parsed using generic parser."
+  "Non-nil means warn user if some fields are trying to be parsed using generic parser.
+`debug' means show all the details."
   :type 'boolean
   :group 'org-capture-ref)
 
@@ -338,7 +339,7 @@ Existing BiBTeX fields are not modified."
 	(let ((key (car alist-elem))
 	      (regexps (cdr alist-elem)))
           (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
-            (when org-capture-ref-warn-when-using-generic-parser
+            (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
             (catch :found
               (dolist (regex regexps)
@@ -346,8 +347,8 @@ Existing BiBTeX fields are not modified."
 		(when (re-search-forward regex  nil t)
 		  (org-capture-ref-set-bibtex-field key (match-string 1))
 		  (throw :found t))))
-            (when org-capture-ref-warn-when-using-generic-parser
-              (if (org-capture-ref-get-bibtex-field :key)
+            (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
+	      (if (org-capture-ref-get-bibtex-field :key)
 		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
 		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key)
 			  'warning)))))))))
