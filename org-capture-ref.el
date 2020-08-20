@@ -68,6 +68,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 				   org-capture-ref-get-bibtex-github
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
+                                   org-capture-ref-get-bibtex-weixin
 				   ;; Generic parser
 				   org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
@@ -362,6 +363,21 @@ The generated value will be the website name."
 (defun org-capture-ref-set-access-date ()
   "Set `:urldate' field of the BiBTeX entry to now."
   (org-capture-ref-set-bibtex-field :urldate (format-time-string "%d %B %Y")))
+
+(defun org-capture-ref-get-bibtex-weixin ()
+  "Parse BiBTeX for Wechat article."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "mp\\.weixin\\.qq\\.com" link)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "\\(sn=[^&]+\\).*$" "\\1" link))
+      (org-capture-ref-set-bibtex-field :howpublished "Wechat")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (with-current-buffer (org-capture-ref-get-buffer)
+	(goto-char (point-min))
+        (when (re-search-forward "=\"\\([0-9]\\{4\\}\\)-[0-9]\\{2\\}-[0-9]\\{2\\}\"")
+          (org-capture-ref-set-bibtex-field :year (match-string 1)))
+        (goto-char (point-min))
+        (when (re-search-forward "id=\"js_name\"> *\\([^<]+\\) *</")
+          (org-capture-ref-set-bibtex-field :author (match-string 1)))))))
 
 (defun org-capture-ref-get-bibtex-github ()
   "Parse Github link and generate bibtex entry."
