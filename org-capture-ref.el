@@ -139,7 +139,7 @@ Return value of the first function returning non-nil will be used as final forma
 
 (defcustom org-capture-ref-generate-key-functions '(org-capture-ref-generate-key-from-doi
 				     org-capture-ref-generate-key-from-url)
-  "Functions used to generate citation key.
+  "Functions used to generate citation key if it is not yet present.
 The functions will be called in sequence until any of them returns non-nil value."
   :type 'hook
   :group 'org-capture-ref)
