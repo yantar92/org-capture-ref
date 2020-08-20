@@ -230,6 +230,11 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 		 (const :tag "Use `org-id-find'" org-id-find))
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-warn-when-using-generic-parser t
+  "Non-nil means warn user if some fields are trying to be parsed using generic parser."
+  :type 'boolean
+  :group 'org-capture-ref)
+
 ;;; API
 
 (defun org-capture-ref-get-buffer ()
@@ -313,25 +318,37 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
 Sets BiBTeX fields according to `org-capture-ref-field-regexps'.
 Existing BiBTeX fields are not modified."
   ;; Do not bother is everything is already set.
-  (unless (-all-p #'org-capture-ref-get-bibtex-field (mapcar #'car org-capture-ref-field-regexps))
+  (unless (-all-p (lambda (key)
+		    (org-capture-ref-get-bibtex-field key 'consider-placeholder))
+		  (mapcar #'car org-capture-ref-field-regexps))
+    (when org-capture-ref-warn-when-using-generic-parser
+      (org-capture-ref-message "Capturing using generic parser..." 'warning))
     (with-current-buffer (org-capture-ref-get-buffer)
       (dolist (alist-elem org-capture-ref-field-regexps)
 	(let ((key (car alist-elem))
 	      (regexps (cdr alist-elem)))
           (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
+            (when org-capture-ref-warn-when-using-generic-parser
+	      (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
             (catch :found
               (dolist (regex regexps)
 		(goto-char (point-min))
 		(when (re-search-forward regex  nil t)
 		  (org-capture-ref-set-bibtex-field key (match-string 1))
-		  (throw :found t))))))))))
+		  (throw :found t))))
+            (when org-capture-ref-warn-when-using-generic-parser
+              (if (org-capture-ref-get-bibtex-field :key)
+		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
+		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key)
+			  'warning)))))))))
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
   (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
 	     (alist-get :doi org-capture-ref-field-regexps))
-    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps))))
+    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps)))
+	  org-capture-ref-warn-when-using-generic-parser)
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
