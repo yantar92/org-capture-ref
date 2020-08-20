@@ -265,6 +265,10 @@ See `org-capture-ref--bibtex-alist' for common field names."
     (let ((res (alist-get field org-capture-ref--bibtex-alist)))
       (unless (string-equal res org-capture-ref-placeholder-value) res))))
 
+(defun org-capture-ref-get-capture-template-info (key)
+  "Return value of KEY from `org-capture-plist'."
+  (plist-get org-capture-plist key))
+
 (defun org-capture-ref-get-capture-info (key)
   "Return value of KEY from `org-capture-ref--store-link-plist'.
   
@@ -712,13 +716,13 @@ capture template."
   (pcase org-capture-ref-check-key-method
     (`org-id-find
      (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key) 'marker)))
-       (unless (org-capture-ref-get-capture-info :immediate-finish)
+       (unless (org-capture-ref-get-capture-template-info :immediate-finish)
 	 (switch-to-buffer (marker-buffer mk))
 	 (goto-char mk)
 	 (org-show-entry))
        (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
     (`grep
-     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-info :immediate-finish)))
+     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error))))
 
 (defun org-capture-ref-check-url ()
@@ -726,14 +730,14 @@ capture template."
 It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish)))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
 It is assumed that `:link' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-info :immediate-finish)))
+  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-template-info :immediate-finish)))
 
 ;;; Internal variables
 
