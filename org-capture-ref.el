@@ -455,7 +455,7 @@ The generated value will be the website name."
 	(goto-char (point-min))
 	(when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
 	  (let ((channel-name (match-string 1)))
-	    (org-capture-ref-set-bibtex-field :author channel-name)))
+	    (org-capture-ref-set-bibtex-field :author (decode-coding-string channel-name 'utf-8))))
 	;; Find title
 	(goto-char (point-min))
 	(when (re-search-forward "title\":\"\\([^\"]+\\)\"" nil t)
