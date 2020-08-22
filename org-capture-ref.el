@@ -691,7 +691,7 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 			      (file-exists-p b)
 			      (file-equal-p a b)))))
     ;; Save buffers to make sure that grep can see latest changes.
-    (org-save-all-org-buffers)
+    (let ((inhibit-message t)) (org-save-all-org-buffers))
     (dolist (file files)
       (when (file-exists-p file)
 	;; Use -a switch to process UTF-16 files
