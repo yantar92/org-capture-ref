@@ -94,7 +94,7 @@ The following parsers will then be aware that there is no need to search for the
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-get-bibtex-from-elfeed-functions '(org-capture-ref-get-bibtex-generic-elfeed
-					       org-capture-ref-get-bibtex-habr-elfeed-fix-title
+					       org-capture-ref-get-bibtex-habr-elfeed
                                                org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
                                                org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished)
   "Functions used to generate BibTeX entry from elfeed entry data defined in `:elfeed-data' field of the `org-protocol' capture query.
@@ -476,6 +476,8 @@ The generated value will be the website name."
       (setq link (replace-regexp-in-string "company/[^/]+/blog/" "post/" link))
       (setq link (replace-regexp-in-string "/\\?[^/]+$" "/" link))
       (org-capture-ref-set-capture-info :link link)
+      ;; Mark unneeded fields
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (with-current-buffer (org-capture-ref-get-buffer)
         ;; Simplify url
 	(goto-char (point-min))
@@ -542,25 +544,32 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-generic-elfeed (entry)
   "Parse generic elfeed capture and generate bibtex entry."
   (require 'elfeed-db)
-  (org-capture-ref-set-bibtex-field :url (elfeed-entry-link entry))
-  (let ((authors (plist-get (elfeed-entry-meta entry) :authors)))
-    (setq authors (mapcar #'cadr authors))
-    (if authors
-	(org-capture-ref-set-bibtex-field :author (s-join ", " authors))
-      ;; fallback to feed title
-      (org-capture-ref-set-bibtex-field :author (elfeed-feed-title (elfeed-entry-feed entry)))))
-  (org-capture-ref-set-bibtex-field :title (elfeed-entry-title entry))
-  (org-capture-ref-set-bibtex-field :keywords (s-join ", " (plist-get (elfeed-entry-meta entry) :categories)))
-  (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date entry))))
+  (unless (org-capture-ref-get-bibtex-field :url)
+    (org-capture-ref-set-bibtex-field :url (elfeed-entry-link entry)))
+  (unless (org-capture-ref-get-bibtex-field :author)
+    (let ((authors (plist-get (elfeed-entry-meta entry) :authors)))
+      (setq authors (mapcar #'cadr authors))
+      (if authors
+	  (org-capture-ref-set-bibtex-field :author (s-join ", " authors))
+	;; fallback to feed title
+	(org-capture-ref-set-bibtex-field :author (elfeed-feed-title (elfeed-entry-feed entry))))))
+  (unless (org-capture-ref-get-bibtex-field :title)
+    (org-capture-ref-set-bibtex-field :title (elfeed-entry-title entry)))
+  (unless (org-capture-ref-get-bibtex-field :keywords)
+    (org-capture-ref-set-bibtex-field :keywords (s-join ", " (plist-get (elfeed-entry-meta entry) :categories))))
+  (unless (org-capture-ref-get-bibtex-field :year)
+    (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date entry)))))
 
-(defun org-capture-ref-get-bibtex-habr-elfeed-fix-title (_)
+(defun org-capture-ref-get-bibtex-habr-elfeed (entry)
   "Fix title in habr elfeed entries.
 This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed'."
   ;; Habr RSS adds indication if post is translated or from sandbox,
   ;; but it is not the case in the website. Unifying to make it
   ;; consistent.
   (when (s-match "habr\\.com" (org-capture-ref-get-bibtex-field :url))
-    (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))))
+    (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))
+    (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+    (org-capture-ref-get-bibtex-generic-elfeed entry)))
 
 (defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (_)
   "Populate author for https://rgoswami.me"
