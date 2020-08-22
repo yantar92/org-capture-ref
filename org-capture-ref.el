@@ -478,31 +478,34 @@ The generated value will be the website name."
       (org-capture-ref-set-capture-info :link link)
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (with-current-buffer (org-capture-ref-get-buffer)
-        ;; Simplify url
-	(goto-char (point-min))
-	(when (re-search-forward "\"page_url_canonical\": \"\\([^\"]+\\)\"" nil t)
-	  (let ((url (s-replace "\n" "" (match-string 1))))
-            (setq url (s-replace "?[^/]+$" "" url))
-            (org-capture-ref-set-bibtex-field :url (s-replace "\\" "" url))))
-	;; Find authors
-	(goto-char (point-min))
-	(when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
-          (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
-            (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
-            (setq authors (s-join ", " authors))
-            (org-capture-ref-set-bibtex-field :author authors)))
-	;; Find title
-	(goto-char (point-min))
-	(when (re-search-forward "\"page_title\": \"\\([^\"]+\\)\"" nil t)
-	  (let ((title (match-string 1)))
-            (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
-	;; Find year
-	(goto-char (point-min))
-	(when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
-	  (let ((year (match-string 1)))
-	    (string-match "[0-9]\\{4\\}" year)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
+      (unless (-all-p (lambda (key)
+			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
+                      '(:url :author :title :year))
+	(with-current-buffer (org-capture-ref-get-buffer)
+          ;; Simplify url
+	  (goto-char (point-min))
+	  (when (re-search-forward "\"page_url_canonical\": \"\\([^\"]+\\)\"" nil t)
+	    (let ((url (s-replace "\n" "" (match-string 1))))
+              (setq url (s-replace "?[^/]+$" "" url))
+              (org-capture-ref-set-bibtex-field :url (s-replace "\\" "" url))))
+	  ;; Find authors
+	  (goto-char (point-min))
+	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
+            (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
+              (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
+              (setq authors (s-join ", " authors))
+              (org-capture-ref-set-bibtex-field :author authors)))
+	  ;; Find title
+	  (goto-char (point-min))
+	  (when (re-search-forward "\"page_title\": \"\\([^\"]+\\)\"" nil t)
+	    (let ((title (match-string 1)))
+              (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
+	  ;; Find year
+	  (goto-char (point-min))
+	  (when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
+	    (let ((year (match-string 1)))
+	      (string-match "[0-9]\\{4\\}" year)
+              (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
