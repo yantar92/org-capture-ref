@@ -345,7 +345,7 @@ Existing BiBTeX fields are not modified."
               (dolist (regex regexps)
 		(goto-char (point-min))
 		(when (re-search-forward regex  nil t)
-		  (org-capture-ref-set-bibtex-field key (match-string 1))
+		  (org-capture-ref-set-bibtex-field key (decode-coding-string (match-string 1) 'utf-8))
 		  (throw :found t))))
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (if (org-capture-ref-get-bibtex-field :key)
@@ -459,7 +459,7 @@ The generated value will be the website name."
 	(goto-char (point-min))
 	(when (re-search-forward "title\":\"\\([^\"]+\\)\"" nil t)
 	  (let ((title (match-string 1)))
-	    (org-capture-ref-set-bibtex-field :title title)))
+	    (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
 	;; Find year
 	(goto-char (point-min))
 	(when (re-search-forward "publishDate\":\"\\([^\"]+\\)\"" nil t)
@@ -493,7 +493,7 @@ The generated value will be the website name."
 	(goto-char (point-min))
 	(when (re-search-forward "\"page_title\": \"\\([^\"]+\\)\"" nil t)
 	  (let ((title (match-string 1)))
-            (org-capture-ref-set-bibtex-field :title title)))
+            (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
 	;; Find year
 	(goto-char (point-min))
 	(when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
