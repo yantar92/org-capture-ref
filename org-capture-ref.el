@@ -451,6 +451,7 @@ The generated value will be the website name."
         (setq link (replace-regexp-in-string "&[^/]+$" "" link))
         (org-capture-ref-set-bibtex-field :url link)
         (org-capture-ref-set-capture-info :link link)
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
 	;; Find author
 	(goto-char (point-min))
 	(when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
