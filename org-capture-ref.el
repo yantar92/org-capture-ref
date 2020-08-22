@@ -184,7 +184,7 @@ may throw error and hence prevent any laster function to be executed."
 				     "doi = '\\([^']*\\)'"
 				     "\"http://dx.doi.org/\\([^\"]*\\)\""
 				     "/doi/\\([^\"]*\\)\">"
-				     "doi/full/\\(.*\\)&"
+				     "doi/full/\\([^&]*\\)&"
 				     "doi=\\([^&]*\\)&amp"))
                             (:year . ("class=\\(?:.?+date.[^>]*\\)>[^<]*\\([0-9]\\{4\\}\\)[^<]*</"))
                             (:author . ("\\(?:<meta name=\"author\" content=\"\\(.+\\)\" ?/?>\\)\""
