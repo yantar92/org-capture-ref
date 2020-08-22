@@ -87,8 +87,9 @@ Any function can throw an error and abort the capture process.
 Any function can throw `:finish'. All the remaining functions from
 this list will not be called then.
 
-If any of the listed functions modifies :key field of the `org-capture-ref-bibtex-alist',
-the field will be overwritten by functions from `org-capture-ref-generete-key-functions'."
+Any function can mark a field as not defined for the captured link.
+This is done by setting that field to `org-capture-ref-placeholder-value'.
+The following parsers will then be aware that there is no need to search for the field."
   :type 'hook
   :group 'org-capture-ref)
 
