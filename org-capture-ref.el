@@ -476,6 +476,7 @@ The generated value will be the website name."
       (setq link (replace-regexp-in-string "company/[^/]+/blog/" "post/" link))
       (setq link (replace-regexp-in-string "/\\?[^/]+$" "/" link))
       (org-capture-ref-set-capture-info :link link)
+      (org-capture-ref-set-bibtex-field :url link)
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (unless (-all-p (lambda (key)
