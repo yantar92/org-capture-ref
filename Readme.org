@@ -230,6 +230,66 @@ SELECTED_TEXT="$QUTE_SELECTED_TEXT"
      && echo "message-info \"Bookmark saved to inbox.org/Inbox\"" >> "$QUTE_FIFO" || echo "message-error \"Bookmark not saved!\"" >> "$QUTE_FIFO");
 #+end_src
 
+** Customisation
+
+The main function used in the package is =org-capture-ref-process-capture=. It takes the capture info from org-protocol, loads the link html (by default), and parses it to obtain and verify the BiBTeX. The parsing is done in the following steps:
+1. The capture info is scraped to get the necessary BiBTeX fields according to =org-capture-ref-get-bibtex-functions=
+2. Unique BiBTeX key is generated according to =org-capture-ref-generate-key-functions=
+3. The obtained BiBTeX fields and the key are used to format (=org-capture-ref-get-formatted-bibtex-functions=) and cleanup (=org-capture-ref-clean-bibtex-hook=) BiBTeX entry
+4. The generated entry is verified (by default, it is checked if the link is already present in org files) according to =org-capture-ref-check-bibtex-functions=
+
+*** Retrieving BiBTeX fields
+
+When capture is done from =elfeed=, org-capture-ref first attempts to use the feed entry metadata to obtain all the necessary information. Otherwise, the BiBTeX information is retrieved by scraping the web-page (downloading it when necessary according to =org-capture-ref-get-buffer-functions=).
+
+The necessary BiBTeX fields are the fields defined in =org-capture-ref-field-regexps=, though individual website parsers may add extra fields. For example, =elfeed= entries often contain keywords information.
+
+Any captured link is assigned with =howpublished= field, which is simply web-site name without front =www= part and the tail =.com/org/...= part.
+
+By default, the BiBTeX entry has =@misc= type (see =org-capture-ref-default-type=).
+
+If capture information or website contains a DOI, [[https://doi.org]] is used to obtain the BiBTeX.
+
+Parsers for the following websites are available:
+- Scientific articles from APS, Springer, Wiley, and Tandfonline publishers
+- Github repos
+- Youtube video pages
+- https://habr.com articles
+- Wechat articles
+
+Special parsers for the following RSS feeds are available (via =elfeed=):
+- https://habr.com articles
+- Reddit
+
+*Contributions implementing additional parsers are welcome.*
+
+If the above parsers did not scrape (or mark missing) all the fields from =org-capture-ref-field-regexps=, generic html parser is used to obtain them. This is often sufficient, but may not be accurate.
+
+One can find information about writing own parsers in docstrings of =org-capture-ref-get-bibtex-functions= and =org-capture-ref-get-bibtex-from-elfeed-functions=.
+
+*** Key generation
+
+org-capture-ref relies on the fact the BiBTeX keys are unique for each entry and will remain unique if the same entry will be captured in future.
+
+The key generation methods are defined in =org-capture-ref-generate-key-functions=. By default, sha1 hash of DOI (if present) or the URL are used as BiBTeX keys. The more readable built-in =bibtex-generate-autokey= is often not sufficient to generate unique keys since many link titles are too long and repetitive to be unique. *Though any contributions to generate human-readable BiBTeX keys are welcome.*
+
+*** Formatting BiBTeX entry
+
+By default, the BiBTeX entry is formatted according to =org-capture-ref-default-bibtex-template= with all the missing fields removed.
+Then some common cleanups are applied to the entry (similar to org-ref, see =org-capture-ref-get-formatted-bibtex-functions=).
+
+The behaviour can be customised by customising =org-capture-ref-get-formatted-bibtex-functions=.
+
+*** Validating the BiBTeX entry
+
+The common problem (at least, for me) of capturing the same links multiple times is avoided by verifying uniqueness of the captured entry. By default, the BiBTeX key, URL (as in generated BiBTeX), and the original link as passed to org-protocol are searched in org files. If a match is found, capture process is terminated, warning is shown, and the matching org entry is revealed.
+
+It is assumed that the BiBTeX key is stored as org entry's :ID: property and the URL (org link URL) are stored as org entry's :Source: property.
+
+The validation can be customised in =org-capture-ref-check-bibtex-functions=.
+
+By default, search is done via =grep= (if installed). It can be switched to built-in =org-search-view= (for URL validation) and to =org-id-find= (for BiBTeX key validation) by customising =org-capture-ref-check-regexp-method= and =org-capture-ref-check-key-method=, respectively.
+
 ** Planned features
 
 - [ ] Parsing amazon/goodreads for ISBN and generating BiBTeX using the obtained ISBN
