@@ -178,9 +178,36 @@ Below is example configuration defining org capture template using org-capture-r
 
 #+end_src
 
+** Extra features
+
+*** Detecting existing captures
+
+Org-capture-ref checks if there are any existing headlines containing the captured link already. By default, :ID: {cite key of the BiBTeX} and :Source: {URL} properties of headlines are checked in all files searchable by =org-search-view=.
+
+*** Integration with [[https://github.com/qutebrowser/qutebrowser/][qutebrowser]]
+
+The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parser by the package.
+
+If one wants to use this feature, extra argument =qutebrowser-fifo= will need to be provided to org-protocol from qutebrowser userscript.
+
+An example of bookmarking userscript is below:
+
+#+begin_src bash
+#!/bin/bash
+TEMPLATE="b"
+QUTE_URL=$(echo $QUTE_URL | sed -r 's/^[^/]+//')
+URL="$REPLY"
+TITLE="$(echo $QUTE_TITLE | sed -r 's/&//g')"
+SELECTED_TEXT="$QUTE_SELECTED_TEXT"
+(emacsclient "org-protocol://capture?template=$TEMPLATE&url=$URL&title=$TITLE&body=$SELECTED_TEXT&html=$QUTE_HTML&qutebrowser-fifo=$QUTE_FIFO"\
+     && echo "message-info \"Bookmark saved to inbox.org/Inbox\"" >> "$QUTE_FIFO" || echo "message-error \"Bookmark not saved!\"" >> "$QUTE_FIFO");
+#+end_src
+
 ** Planned features
 
 - [ ] Parsing amazon/goodreads for ISBN and generating BiBTeX using the obtained ISBN
 - [ ] Use DOM as main method to parse html
 - [ ] Automatically tangle the generated BiBTeX into .bib file (for org-ref integration)
 - [ ] Provide custom note function for org-ref
+
+
