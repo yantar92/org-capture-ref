@@ -11,7 +11,7 @@ Alternatively, the BiBTeX can be kept in org-mode entries as the main bibliograp
 
 Below are examples of captured web links:
 
-file:info-output.png
+[[file:info-output.png]]
 
 Reddit post
 #+begin_src org
