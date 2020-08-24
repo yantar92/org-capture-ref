@@ -1,0 +1,152 @@
+* Auto-generating BiBTeX for more than just books and papers
+
+This package is inspired by [[https://github.com/jkitchin/org-ref][org-ref]], extending org-ref's idea to auto-retrieve BiBTeX from scientific paper links. Instead of limiting BiBTeX generation to research purposes (scientific articles and books), this package auto-generates BiBTeX for any possible web link (Youtube videos, blog posts, reddit threads, etc).
+
+The package is created assuming that the links are captured using the following methods:
+- [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]] from system browser
+- org-protocol from [[https://github.com/skeeto/elfeed/][elfeed]]
+
+The generated BiBTeX for web links can be directly inserted into a =.bib= file and handled by org-ref just like any other book/paper.
+Alternatively, the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangles into the .bib file if needed).
+
+Below are examples of captured web links:
+
+Reddit post
+#+begin_src org
+,* TODO  /u/drencomix [Reddit:Gentoo] (2020) Best Gentoo install video or blog tutorial to supplement the handbook? :BOOKMARK:
+:PROPERTIES:
+:ID: d6046a9b50b86abd6ff5957a554466074f0ed78e
+:CREATED: [2020-08-24 Mon 09:21]
+:Source: https://www.reddit.com/r/Gentoo/comments/if7aow/best_gentoo_install_video_or_blog_tutorial_to/
+:END:
+:BIBTEX:
+,#+begin_src bibtex
+@misc{d6046a9b50b86abd6ff5957a554466074f0ed78e,
+  author =       {/u/drencomix},
+  howpublished = {Reddit:Gentoo},
+  keywords =     {Gentoo},
+  note =         {Online; accessed 24 August 2020},
+  title =        {Best Gentoo install video or blog tutorial to
+                  supplement the handbook?},
+  url =
+                  {https://www.reddit.com/r/Gentoo/comments/if7aow/best_gentoo_install_video_or_blog_tutorial_to/},
+  year =         2020,
+}
+,#+end_src
+:END:
+#+end_src
+
+Youtube link
+#+begin_src org
+,* TODO  Koncerthuset [Youtube] (2020) Those Ordinary Things // DR Big Band with Sinne Eeg (Live) :BOOKMARK:
+:PROPERTIES:
+:ID: e24aa466b27e06b30419d85f9fb17f891c965939
+:CREATED: [2020-08-24 Mon 09:24]
+:Source: https://www.youtube.com/watch?v=-P--Lh1YSw0
+:END:
+:BIBTEX:
+,#+begin_src bibtex
+@misc{e24aa466b27e06b30419d85f9fb17f891c965939,
+  author =       {DR Koncerthuset},
+  howpublished = {Youtube},
+  note =         {Online; accessed 24 August 2020},
+  title =        {Those Ordinary Things // DR Big Band with Sinne Eeg
+                  (Live)},
+  url =          {https://www.youtube.com/watch?v=-P--Lh1YSw0},
+  year =         2020,
+}
+,#+end_src
+:END:
+
+#+end_src
+
+Blog post
+#+begin_src org
+,* TODO  jcs [Irreal] (2020) Irreal: Gccemacs on Linux :BOOKMARK:
+:PROPERTIES:
+:ID: b7a0973131c78328b117096045ee5c1d974e0eb0
+:CREATED: [2020-08-24 Mon 09:21]
+:Source: https://irreal.org/blog/?p=9094
+:END:
+:BIBTEX:
+,#+begin_src bibtex
+@misc{b7a0973131c78328b117096045ee5c1d974e0eb0,
+  author =       {jcs},
+  howpublished = {Irreal},
+  note =         {Online; accessed 24 August 2020},
+  title =        {Irreal: Gccemacs on Linux},
+  url =          {https://irreal.org/blog/?p=9094},
+  year =         2020,
+}
+,#+end_src
+:END:
+
+#+end_src 
+
+** Usage
+
+Below is example configuration defining org capture template using org-capture-ref and [[https://github.com/progfolio/doct][doct]].
+
+#+begin_src emacs-lisp
+(use-package org-capture-ref
+  :if init-flag
+  :load-path "~/Git/org-capture-ref/"
+  :after org-capture
+  :demand t
+  :init (use-package asoc :straight asoc.el :demand t)
+  :config
+  (let ((templates (doct '( :group "Browser link"
+ 			    :type entry
+ 			    :file "~/Org/inbox.org"
+ 			    :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
+			    :bibtex (lambda () (org-capture-ref-get-bibtex-field :bibtex-string))
+                            :url (lambda () (org-capture-ref-get-bibtex-field :url))
+			    :title (lambda () (format "%s%s%s%s"
+						 (or (when (org-capture-ref-get-bibtex-field :author)
+                                                       (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
+							      (author-surnames (mapcar (lambda (author)
+											 (car (last (s-split " +" author))))
+										       authors)))
+							 (if (= 1 (length author-surnames))
+                                                             (format "%s " (car author-surnames))
+                                                           (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
+                                                     "")
+                                                 (or (when (org-capture-ref-get-bibtex-field :journal)
+						       (format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
+                                                     (when (org-capture-ref-get-bibtex-field :howpublished)
+                                                       (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
+                                                     "")
+                                                 (or (when (org-capture-ref-get-bibtex-field :year)
+                                                       (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
+                                                     "")
+                                                 (or (org-capture-ref-get-bibtex-field :title)
+                                                     "")))
+			    :id (lambda () (org-capture-ref-get-bibtex-field :key))
+			    :template
+			    ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:"
+			     ":PROPERTIES:"
+			     ":ID: %{id}"
+			     ":CREATED: %U"
+			     ":Source: %{url}"
+			     ":END:"
+                             ":BIBTEX:"
+			     "#+begin_src bibtex"
+			     "%{bibtex}"
+			     "#+end_src"
+                             ":END:")
+			    :children (("Interactive link"
+					:keys "b"
+					:clock-in t
+					:clock-resume t
+					)
+				       ("Silent link"
+					:keys "B"
+					:immediate-finish t))))))
+    (dolist (template templates)
+      (asoc-put! org-capture-templates
+		 (car template)
+		 (cdr  template)
+		 'replace))))
+
+#+end_src
+
