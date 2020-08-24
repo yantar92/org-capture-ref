@@ -83,6 +83,34 @@ Blog post
 
 #+end_src 
 
+Scientific article
+#+begin_src org
+,****** TODO Brukner [Nature Physics] (2020) Facts are relative :BOOKMARK:
+:PROPERTIES:
+:ID: cd1ab39b6634e151b8ab0c6a56edf7d798f303dc
+:CREATED: [2020-08-20 Thu 21:31]
+:Source: https://doi.org/10.1038/s41567-020-0984-8
+:END:
+:LOGBOOK:
+- Refiled on [2020-08-21 Fri 07:00]
+:END:
+:BIBTEX:
+,#+begin_src bibtex
+@article{cd1ab39b6634e151b8ab0c6a56edf7d798f303dc,
+  author =       {Časlav Brukner},
+  title =        {Facts are relative},
+  journal =      {Nature Physics},
+  year =         2020,
+  doi =          {10.1038/s41567-020-0984-8},
+  url =          {https://doi.org/10.1038/s41567-020-0984-8},
+  howpublished = {Feeds.Nature},
+  note =         {Online; accessed 20 August 2020},
+}
+,#+end_src
+:END:
+
+#+end_src
+
 ** Usage
 
 Below is example configuration defining org capture template using org-capture-ref and [[https://github.com/progfolio/doct][doct]].
