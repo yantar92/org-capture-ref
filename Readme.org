@@ -115,6 +115,8 @@ Scientific article
 
 Below is example configuration defining org capture template using org-capture-ref and [[https://github.com/progfolio/doct][doct]].
 
+TL;DR: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX from the link. Then use =org-capture-ref-get-bibtex-field= to get BiBTeX fields (=:bibtex-string= field will contain formatted BiBTeX entry).
+
 #+begin_src emacs-lisp
 (use-package org-capture-ref
   :if init-flag
