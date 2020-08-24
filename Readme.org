@@ -186,9 +186,11 @@ Org-capture-ref checks if there are any existing headlines containing the captur
 
 *** Integration with [[https://github.com/qutebrowser/qutebrowser/][qutebrowser]]
 
-The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parser by the package.
+The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parsed by the package.
 
-If one wants to use this feature, extra argument =qutebrowser-fifo= will need to be provided to org-protocol from qutebrowser userscript.
+If one wants to use this feature, extra argument =html= will need to be provided to org-protocol from qutebrowser userscript.
+
+In addition, package logs can be shown as qutebrowser messages if =qutebrowser-fifo= is provided.
 
 An example of bookmarking userscript is below:
 
