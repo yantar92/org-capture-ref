@@ -184,6 +184,8 @@ Below is example configuration defining org capture template using org-capture-r
 
 Org-capture-ref checks if there are any existing headlines containing the captured link already. By default, :ID: {cite key of the BiBTeX} and :Source: {URL} properties of headlines are checked in all files searchable by =org-search-view=.
 
+If org-capture-ref finds that the captured link already exist in org files the matching entry is shown by default unless capture template has =:immediate-finish t=.
+
 *** Integration with [[https://github.com/qutebrowser/qutebrowser/][qutebrowser]]
 
 The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parsed by the package.
