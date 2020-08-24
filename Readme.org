@@ -178,3 +178,9 @@ Below is example configuration defining org capture template using org-capture-r
 
 #+end_src
 
+** Planned features
+
+- [ ] Parsing amazon/goodreads for ISBN and generating BiBTeX using the obtained ISBN
+- [ ] Use DOM as main method to parse html
+- [ ] Automatically tangle the generated BiBTeX into .bib file (for org-ref integration)
+- [ ] Provide custom note function for org-ref
