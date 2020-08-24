@@ -116,7 +116,8 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
 				orcb-check-journal
 				org-capture-ref-sort-bibtex-entry
 				orcb-fix-spacing
-                                org-capture-ref-clear-nil-bibtex-entries)
+                                org-capture-ref-clear-nil-bibtex-entries
+                                org-capture-ref-replace-%)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
 Each function is called with point at undefined position inside buffer
@@ -631,6 +632,14 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
                                page-dashes
                                inherit-booktitle)))
     (org-ref-sort-bibtex-entry)))
+
+(defun org-capture-ref-replace-% ()
+  "Escape % chars to avoid confusing org-capture."
+  (goto-char 1)
+  (while (re-search-forward "%[^%]" nil 'noerror)
+    (goto-char (match-beginning 0))
+    (insert "%")
+    (goto-char (match-end 0))))
 
 ;;; Message functions
 
