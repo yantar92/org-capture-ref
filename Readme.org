@@ -13,6 +13,28 @@ Below are examples of captured web links:
 
 [[file:info-output.png]]
 
+Github page
+#+begin_src org
+,* TODO  yantar92 [Github] org-capture-ref: Extract bibtex info from captured websites :BOOKMARK:
+:PROPERTIES:
+:ID:       9c0d656603f59abfb5bec098b1a6aeea7c823c4b
+:CREATED:  [2020-08-24 Mon 21:21]
+:Source:   https://github.com/yantar92/org-capture-ref
+:END:
+:BIBTEX:
+,#+begin_src bibtex
+@misc{9c0d656603f59abfb5bec098b1a6aeea7c823c4b,
+  author =       {yantar92},
+  howpublished = {Github},
+  note =         {Online; accessed 24 August 2020},
+  title =        {org-capture-ref: Extract bibtex info from captured
+                  websites},
+  url =          {https://github.com/yantar92/org-capture-ref},
+}
+,#+end_src
+:END:
+#+end_src
+
 Reddit post
 #+begin_src org
 ,* TODO  /u/drencomix [Reddit:Gentoo] (2020) Best Gentoo install video or blog tutorial to supplement the handbook? :BOOKMARK:
