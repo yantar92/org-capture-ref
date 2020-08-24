@@ -178,6 +178,29 @@ Below is example configuration defining org capture template using org-capture-r
 
 #+end_src
 
+Example configuration for capturing =elfeed= entries (assuming the capture template above). =Elfeed= entry object is passed to org-capture-ref via =:elfeed-data=.
+
+#+begin_src emacs-lisp
+(defun yant/elfeed-capture-entry ()
+  "Capture selected entries into inbox."
+  (interactive)
+  (elfeed-search-tag-all 'opened)
+  (previous-logical-line)
+  (let ((entries (elfeed-search-selected)))
+    (cl-loop for entry in entries
+	     do (elfeed-untag entry 'unread)
+	     when (elfeed-entry-link entry)
+	     do (flet ((raise-frame nil nil))
+		  (org-protocol-capture (list :template "B"
+					      :url it
+					      :title (format "%s: %s"
+							     (elfeed-feed-title (elfeed-entry-feed entry))
+							     (elfeed-entry-title entry))
+                                              :elfeed-data entry))))
+    (mapc #'elfeed-search-update-entry entries)
+    (unless (use-region-p) (forward-line))))
+#+end_src
+
 ** Extra features
 
 *** Detecting existing captures
