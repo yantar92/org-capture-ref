@@ -11,6 +11,8 @@ Alternatively, the BiBTeX can be kept in org-mode entries as the main bibliograp
 
 Below are examples of captured web links:
 
+file:info-output.png
+
 Reddit post
 #+begin_src org
 ,* TODO  /u/drencomix [Reddit:Gentoo] (2020) Best Gentoo install video or blog tutorial to supplement the handbook? :BOOKMARK:
