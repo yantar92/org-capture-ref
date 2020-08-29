@@ -460,7 +460,7 @@ The generated value will be the website name."
 	    (org-capture-ref-set-bibtex-field :author (decode-coding-string channel-name 'utf-8))))
 	;; Find title
 	(goto-char (point-min))
-	(when (re-search-forward "title\":\"\\([^\"]+\\)\"" nil t)
+	(when (re-search-forward "class=\"title.+?\\([^<]+\\)</yt-formatted-string>" nil t)
 	  (let ((title (match-string 1)))
 	    (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
 	;; Find year
