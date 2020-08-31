@@ -427,7 +427,7 @@ The generated value will be the website name."
 	;; find title
 	(goto-char (point-min))
 	(when (re-search-forward "<title>\\([^>]+\\)</title>" nil t)
-	  (let ((title (match-string 1)))
+	  (let ((title (decode-coding-string (match-string 1) 'utf-8)))
             (when (string-match "^\\(.+\\) at [0-9a-zA-Z]\\{20,\\}$" title)
 	      (setq title (match-string 1 title)))
             ;; Remove trailing Gitlab in title
