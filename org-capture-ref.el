@@ -113,7 +113,6 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
 				orcb-clean-year
 				orcb-clean-doi
 				orcb-clean-pages
-				orcb-check-journal
 				org-capture-ref-sort-bibtex-entry
 				orcb-fix-spacing
                                 org-capture-ref-clear-nil-bibtex-entries
