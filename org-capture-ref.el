@@ -411,7 +411,7 @@ The generated value will be the website name."
           (org-capture-ref-set-bibtex-field :year (match-string 1)))
         (goto-char (point-min))
         (when (re-search-forward "id=\"js_name\"> *\\([^<]+\\) *</")
-          (org-capture-ref-set-bibtex-field :author (match-string 1)))))))
+          (org-capture-ref-set-bibtex-field :author (s-trim (match-string 1))))))))
 
 (defun org-capture-ref-get-bibtex-github ()
   "Parse Github link and generate bibtex entry."
