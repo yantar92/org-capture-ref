@@ -438,6 +438,13 @@ The generated value will be the website name."
             ;; Temove author name from title
             (setq title (replace-regexp-in-string "^[^/]*/[ \t]*" "" title))
             (org-capture-ref-set-bibtex-field :title title)))
+        (when (string-match-p "/commit/[a-z0-9]+" link)
+          (goto-char (point-min))
+          (when (re-search-forward "commit-title\">\\([^<]+\\)" nil t)
+	    (let ((title (decode-coding-string (match-string 1) 'utf-8)))
+              (setq title (replace-regexp-in-string "([^(]*$" "" title))
+              (setq title (s-trim title))
+              (org-capture-ref-set-bibtex-field :title title))))
         ;; Year has no meaning for repo
         (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (when (string-match-p "github" link)
