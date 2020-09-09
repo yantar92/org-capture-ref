@@ -364,9 +364,6 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
-      (when (string-match "[0-9]+\\.[0-9]+/[^/]+" doi)
-	(setq doi (match-string 0 doi))
-        (org-capture-ref-set-bibtex-field :doi doi))
       (org-capture-ref-message "Retrieving DOI record...")
       (let ((bibtex-string (condition-case err
 			       ;; Ignore errors and avoid opening the DOI url.
