@@ -181,7 +181,7 @@ TL;DR: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX 
 			     ":PROPERTIES:"
 			     ":ID: %{id}"
 			     ":CREATED: %U"
-			     ":Source: %{url}"
+			     ":Source: [[%{url}]]"
 			     ":END:"
                              ":BIBTEX:"
 			     "#+begin_src bibtex"
