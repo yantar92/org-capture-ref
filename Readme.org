@@ -135,6 +135,35 @@ Scientific article
 
 #+end_src
 
+** Installation
+
+The package is currently not on Melpa/Elpa now. It is possible to install package directly downloading the =.el= files from Github or using package managers with git support:
+
+*** Using [[https://github.com/raxod502/straight.el/][straight.el]]
+
+#+begin_src emacs-lisp
+(straight-use-package '(org-capture-ref :type git :host github :repo "yantar92/org-capture-ref"))
+#+end_src
+
+or with [[https://github.com/jwiegley/use-package/][use-package]]
+
+#+begin_src emacs-lisp
+(use-package org-capture-ref
+  :straight (org-capture-ref :type git :host github :repo "yantar92/org-capture-ref"))
+#+end_src
+
+*** Using [[https://github.com/quelpa/quelpa][quelpa]]
+
+#+begin_src emacs-lisp
+(quelpa '(org-capture-ref :repo "yantar92/org-capture-ref" :fetcher github))
+#+end_src
+
+*** Using direct download
+
+1. Download =org-capture-ref.el= from this page
+2. Open the file in Emacs
+3. Run =M-x package-install-from-buffer <RET>=
+
 ** Usage
 
 Below is example configuration defining org capture template using org-capture-ref and [[https://github.com/progfolio/doct][doct]].
