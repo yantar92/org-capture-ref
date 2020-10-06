@@ -2,14 +2,14 @@
 
 This package is inspired by [[https://github.com/jkitchin/org-ref][org-ref]], extending org-ref's idea to auto-retrieve BiBTeX from scientific paper links. Instead of limiting BiBTeX generation to research purposes (scientific articles and books), this package auto-generates BiBTeX for any possible web link (Youtube videos, blog posts, reddit threads, etc).
 
-The package is created assuming that the links are captured using the following methods:
+Unlike =org-ref=, this package is designed to be used together with [[https://orgmode.org/manual/Capture.html#Capture][org-capture]]. The package is created assuming that the links/articles/books are captured from web sources using the following methods:
 - [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]] from system browser
 - org-protocol from [[https://github.com/skeeto/elfeed/][elfeed]]
 
 The generated BiBTeX for web links can be directly inserted into a =.bib= file and handled by org-ref just like any other book/paper.
-Alternatively, the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangles into the .bib file if needed).
+Alternatively (recommended), the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed).
 
-Below are examples of captured web links:
+Below are examples of captured web links. The links are captured as todo-entries in org-mode with BiBTeX stored and code block within the entry.
 
 [[file:info-output.png]]
 
@@ -166,7 +166,7 @@ or with [[https://github.com/jwiegley/use-package/][use-package]]
 
 ** Usage
 
-Below is example configuration defining org capture template using org-capture-ref and [[https://github.com/progfolio/doct][doct]].
+Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/jwiegley/use-package/][use-package]], [[https://github.com/troyp/asoc.el][asoc.el]], and [[https://github.com/progfolio/doct][doct]].
 
 TL;DR: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX from the link. Then use =org-capture-ref-get-bibtex-field= to get BiBTeX fields (=:bibtex-string= field will contain formatted BiBTeX entry).
 
@@ -176,7 +176,7 @@ TL;DR: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX 
   :load-path "~/Git/org-capture-ref/"
   :after org-capture
   :demand t
-  :init (use-package asoc :straight asoc.el :demand t)
+  :init (use-package asoc :demand t)
   :config
   (let ((templates (doct '( :group "Browser link"
  			    :type entry
@@ -255,6 +255,8 @@ Example configuration for capturing =elfeed= entries (assuming the capture templ
     (mapc #'elfeed-search-update-entry entries)
     (unless (use-region-p) (forward-line))))
 #+end_src
+
+The above function should be ran with point at an =elfeed= entry.
 
 ** Extra features
 
