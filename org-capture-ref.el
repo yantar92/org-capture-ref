@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: (s org org-ref bibtex)
+;; Package-Requires: ((s "1.12.0") (org "9.3") (org-ref "1.1.1"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
