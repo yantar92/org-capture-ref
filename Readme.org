@@ -9,6 +9,8 @@ Unlike =org-ref=, this package is designed to be used together with [[https://or
 The generated BiBTeX for web links can be directly inserted into a =.bib= file and handled by org-ref just like any other book/paper.
 Alternatively (recommended), the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed).
 
+The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate.
+
 Below are examples of captured web links. The links are captured as todo-entries in org-mode with BiBTeX stored and code block within the entry.
 
 [[file:info-output.png]]
@@ -160,78 +162,93 @@ or with [[https://github.com/jwiegley/use-package/][use-package]]
 
 *** Using direct download
 
-1. Download =org-capture-ref.el= from this page
+1. Download =org-capture-ref.el= from this page and save it somewhere in Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load-path]]
 2. Open the file in Emacs
 3. Run =M-x package-install-from-buffer <RET>=
+4. Put =(require 'org-capture-ref)= somewhere in your init file
 
 ** Usage
 
-Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/jwiegley/use-package/][use-package]], [[https://github.com/troyp/asoc.el][asoc.el]], and [[https://github.com/progfolio/doct][doct]].
+*** Capture setup
 
-TL;DR: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX from the link. Then use =org-capture-ref-get-bibtex-field= to get BiBTeX fields (=:bibtex-string= field will contain formatted BiBTeX entry).
+Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/troyp/asoc.el][asoc.el]], and [[https://github.com/progfolio/doct][doct]]. You will need to install the latter two packages to make the example work.
+
+The example will define two new capture templates:
+ - Silent link (B) :: create a new TODO entry in =~/Org/inbox.org= containing author, journal/website, year, and title of the web-page + the generated BiBTeX (see examples above);
+ - Interactive link (b) :: interactive version of the above, but also open Emacs frame allowing to modify the link before confirming the capture.
+
+These capture templates can later be called from inside Emacs or from browser (using [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]]).
 
 #+begin_src emacs-lisp
-(use-package org-capture-ref
-  :if init-flag
-  :load-path "~/Git/org-capture-ref/"
-  :after org-capture
-  :demand t
-  :init (use-package asoc :demand t)
-  :config
-  (let ((templates (doct '( :group "Browser link"
- 			    :type entry
- 			    :file "~/Org/inbox.org"
- 			    :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
-			    :bibtex (lambda () (org-capture-ref-get-bibtex-field :bibtex-string))
-                            :url (lambda () (org-capture-ref-get-bibtex-field :url))
-			    :title (lambda () (format "%s%s%s%s"
-						 (or (when (org-capture-ref-get-bibtex-field :author)
-                                                       (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
-							      (author-surnames (mapcar (lambda (author)
-											 (car (last (s-split " +" author))))
-										       authors)))
-							 (if (= 1 (length author-surnames))
-                                                             (format "%s " (car author-surnames))
-                                                           (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
-                                                     "")
-                                                 (or (when (org-capture-ref-get-bibtex-field :journal)
-						       (format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
-                                                     (when (org-capture-ref-get-bibtex-field :howpublished)
-                                                       (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
-                                                     "")
-                                                 (or (when (org-capture-ref-get-bibtex-field :year)
-                                                       (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
-                                                     "")
-                                                 (or (org-capture-ref-get-bibtex-field :title)
-                                                     "")))
-			    :id (lambda () (org-capture-ref-get-bibtex-field :key))
-			    :template
-			    ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:"
-			     ":PROPERTIES:"
-			     ":ID: %{id}"
-			     ":CREATED: %U"
-			     ":Source: [[%{url}]]"
-			     ":END:"
-                             ":BIBTEX:"
-			     "#+begin_src bibtex"
-			     "%{bibtex}"
-			     "#+end_src"
-                             ":END:")
-			    :children (("Interactive link"
-					:keys "b"
-					:clock-in t
-					:clock-resume t
-					)
-				       ("Silent link"
-					:keys "B"
-					:immediate-finish t))))))
-    (dolist (template templates)
-      (asoc-put! org-capture-templates
-		 (car template)
-		 (cdr  template)
-		 'replace))))
+(require 'org-capture)
+(require 'asoc)
+(require 'org-capture-ref)
+(let ((templates (doct '( :group "Browser link"
+ 			  :type entry
+ 			  :file "~/Org/inbox.org"
+ 			  :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
+			  :bibtex (lambda () (org-capture-ref-get-bibtex-field :bibtex-string))
+                          :url (lambda () (org-capture-ref-get-bibtex-field :url))
+			  :title (lambda () (format "%s%s%s%s"
+					       (or (when (org-capture-ref-get-bibtex-field :author)
+                                                     (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
+							    (author-surnames (mapcar (lambda (author)
+										       (car (last (s-split " +" author))))
+										     authors)))
+                                                       (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
+                                                         (setq author-surnames authors))
+						       (if (= 1 (length author-surnames))
+                                                           (format "%s " (car author-surnames))
+                                                         (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
+                                                   "")
+                                               (or (when (org-capture-ref-get-bibtex-field :journal)
+						     (format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
+                                                   (when (org-capture-ref-get-bibtex-field :howpublished)
+                                                     (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
+                                                   "")
+                                               (or (when (org-capture-ref-get-bibtex-field :year)
+                                                     (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
+                                                   "")
+                                               (or (org-capture-ref-get-bibtex-field :title)
+                                                   "")))
+			  :id (lambda () (org-capture-ref-get-bibtex-field :key))
+			  :template
+			  ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:"
+			   ":PROPERTIES:"
+			   ":ID: %{id}"
+			   ":CREATED: %U"
+			   ":Source: [[%{url}]]"
+			   ":END:"
+                           ":BIBTEX:"
+			   "#+begin_src bibtex"
+			   "%{bibtex}"
+			   "#+end_src"
+                           ":END:")
+			  :children (("Interactive link"
+				      :keys "b"
+				      :clock-in t
+				      :clock-resume t
+				      )
+				     ("Silent link"
+				      :keys "B"
+				      :immediate-finish t))))))
+  (dolist (template templates)
+    (asoc-put! org-capture-templates
+	       (car template)
+	       (cdr  template)
+	       'replace)))
 
 #+end_src
+
+*TL;DR how the above code works*: Call =org-capture-ref-process-capture= at the beginning to scrape BiBTeX from the link. Then use =org-capture-ref-get-bibtex-field= to get BiBTeX fields (=:bibtex-string= field will contain formatted BiBTeX entry).
+
+*** Capturing links from browser
+
+The above capture templates can be used via  [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]]:
+- For popular browsers like Firefox, see [[https://github.com/alphapapa/org-protocol-capture-html#org-protocol-instructions][Alphapapa's org-protocol instructions]]
+- For Qutebrowser, see [[id:6d565e1f-3e42-4839-8279-8a5238c819b0][Integration with qutebrowser]].
+
+*** Capturing rss links from [[https://github.com/skeeto/elfeed/][elfeed]]
 
 Example configuration for capturing =elfeed= entries (assuming the capture template above). =Elfeed= entry object is passed to org-capture-ref via =:elfeed-data=.
 
@@ -256,7 +273,7 @@ Example configuration for capturing =elfeed= entries (assuming the capture templ
     (unless (use-region-p) (forward-line))))
 #+end_src
 
-The above function should be ran with point at an =elfeed= entry.
+The above function should be ran (=M-x yant/elfeed-capture-entry <RET>=) with point at an =elfeed= entry.
 
 ** Extra features
 
@@ -267,6 +284,9 @@ Org-capture-ref checks if there are any existing headlines containing the captur
 If org-capture-ref finds that the captured link already exist in org files the matching entry is shown by default unless capture template has =:immediate-finish t=.
 
 *** Integration with [[https://github.com/qutebrowser/qutebrowser/][qutebrowser]]
+:PROPERTIES:
+:ID:       6d565e1f-3e42-4839-8279-8a5238c819b0
+:END:
 
 The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parsed by the package.
 
