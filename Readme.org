@@ -16,6 +16,9 @@ Below are examples of captured web links. The links are captured as todo-entries
 [[file:info-output.png]]
 
 Github page
+
+[[file:capture1.png]]
+
 #+begin_src org
 ,* TODO  yantar92 [Github] org-capture-ref: Extract bibtex info from captured websites :BOOKMARK:
 :PROPERTIES:
@@ -38,6 +41,9 @@ Github page
 #+end_src
 
 Reddit post
+
+[[file:capture2.png]]
+
 #+begin_src org
 ,* TODO  /u/drencomix [Reddit:Gentoo] (2020) Best Gentoo install video or blog tutorial to supplement the handbook? :BOOKMARK:
 :PROPERTIES:
@@ -63,6 +69,9 @@ Reddit post
 #+end_src
 
 Youtube link
+
+[[file:capture3.png]]
+
 #+begin_src org
 ,* TODO  Koncerthuset [Youtube] (2020) Those Ordinary Things // DR Big Band with Sinne Eeg (Live) :BOOKMARK:
 :PROPERTIES:
@@ -87,6 +96,9 @@ Youtube link
 #+end_src
 
 Blog post
+
+[[file:capture4.png]]
+
 #+begin_src org
 ,* TODO  jcs [Irreal] (2020) Irreal: Gccemacs on Linux :BOOKMARK:
 :PROPERTIES:
@@ -110,6 +122,9 @@ Blog post
 #+end_src 
 
 Scientific article
+
+[[file:capture5.png]]
+
 #+begin_src org
 ,****** TODO Brukner [Nature Physics] (2020) Facts are relative :BOOKMARK:
 :PROPERTIES:
