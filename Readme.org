@@ -7,7 +7,7 @@ Unlike =org-ref=, this package is designed to be used together with [[https://or
 - org-protocol from [[https://github.com/skeeto/elfeed/][elfeed]]
 
 The generated BiBTeX for web links can be directly inserted into a =.bib= file and handled by org-ref just like any other book/paper.
-Alternatively (recommended), the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed).
+Alternatively (recommended), the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed). An example of such setup can be found in [[http://cachestocaches.com/2020/3/org-mode-annotated-bibliography/][this blog post]].
 
 The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate.
 
