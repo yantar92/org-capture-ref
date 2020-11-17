@@ -531,35 +531,37 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "aps\\.org/doi/\\([0-9a-z-/.]+\\)" link)
+    (when (string-match "aps\\.org/doi/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-springer ()
   "Generate BiBTeX for Springer publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "springer\\.com/\\([0-9a-z-/.]+\\)" link)
+    ;; Sometimes, / in doi is coded as %2F.
+    (setq link (replace-regexp-in-string "%2F" "/" link))
+    (when (string-match "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-tandfonline ()
   "Generate BiBTeX for Tandfonline publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "tandfonline\\.com/doi/full/\\([0-9a-z-/.]+\\)" link)
+    (when (string-match "tandfonline\\.com/doi/full/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-wiley ()
   "Generate BiBTeX for Wiley publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "wiley\\.com/doi/abs/\\([0-9a-z-/.]+\\)" link)
+    (when (string-match "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "doi\\.org/\\([0-9a-z-/.]+\\)" link)
+    (when (string-match "doi\\.org/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
