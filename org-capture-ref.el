@@ -370,6 +370,7 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
 			       (cl-letf (((symbol-function 'browse-url) #'ignore))
 				 (doi-utils-doi-to-bibtex-string doi))
                              (t nil))))
+        (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil))
         (if (not bibtex-string)
             (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
           (org-capture-ref-message "Retrieving DOI record... done")
