@@ -604,7 +604,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 (defun org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished (_)
   "Mention subreddit in :howpublished."
-  (when (s-match "reddit\\.com" (org-capture-ref-get-bibtex-field :url))
+  (when (s-match "\\(old\\.\\)?reddit\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :howpublished
 		       (format "%s:%s"
 			       (org-capture-ref-get-bibtex-field :howpublished)
