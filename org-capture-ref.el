@@ -74,6 +74,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
+                                   org-capture-ref-get-bibtex-authortoday-work
 				   ;; Generic parser
 				   org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
@@ -216,6 +217,7 @@ There is no need to attempt finding the value for this key.")
       doi          = {${:doi}},
       url          = {${:url}},
       howpublished = {${:howpublished}},
+      publisher = {${:publisher}},
       keywords     = {${:keywords}},
       note         = {Online; accessed ${:urldate}}
       }"
@@ -524,6 +526,32 @@ The generated value will be the website name."
 	  ;; Find year
 	  (goto-char (point-min))
 	  (when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
+	    (let ((year (match-string 1)))
+	      (string-match "[0-9]\\{4\\}" year)
+              (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
+
+(defun org-capture-ref-get-bibtex-authortoday-work ()
+  "Generate BiBTeX for an author.today/work book."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "author\\.today/work" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
+      (org-capture-ref-set-bibtex-field :publisher "Author.Today")
+      ;; Mark unneeded fields
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (unless (-all-p (lambda (key)
+			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
+                      '(:url :author :title :year))
+        (let ((title (org-capture-ref-get-capture-info :description)))
+          (org-capture-ref-set-bibtex-field :author (s-trim (cadr (s-split "-" title))))
+          (org-capture-ref-set-bibtex-field :title (s-trim (car (s-split "-" title)))))
+	(with-current-buffer (org-capture-ref-get-buffer)
+          ;; Simplify url
+	  (goto-char (point-min))
+	  ;; Find year
+	  (goto-char (point-min))
+	  (when (re-search-forward "data-time=\\([^>]+\\)" nil t)
 	    (let ((year (match-string 1)))
 	      (string-match "[0-9]\\{4\\}" year)
               (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
