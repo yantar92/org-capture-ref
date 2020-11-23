@@ -686,7 +686,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (goto-char 1)
   (while (re-search-forward "%[^%]" nil 'noerror)
     (goto-char (match-beginning 0))
-    (insert "%")
+    (insert "\\")
     (goto-char (match-end 0))))
 
 ;;; Message functions
