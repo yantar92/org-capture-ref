@@ -204,6 +204,7 @@ These capture templates can later be called from inside Emacs or from browser (u
  			  :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
 			  :bibtex (lambda () (org-capture-ref-get-bibtex-field :bibtex-string))
                           :url (lambda () (org-capture-ref-get-bibtex-field :url))
+                          :type-tag (lambda () (org-capture-ref-get-bibtex-field :type))
 			  :title (lambda () (format "%s%s%s%s"
 					       (or (when (org-capture-ref-get-bibtex-field :author)
                                                      (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
@@ -227,8 +228,17 @@ These capture templates can later be called from inside Emacs or from browser (u
                                                (or (org-capture-ref-get-bibtex-field :title)
                                                    "")))
 			  :id (lambda () (org-capture-ref-get-bibtex-field :key))
+                          :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
+					   (s-join "\n"
+						   '("- [ ] download and attach pdf"
+						     "- [ ] check if bibtex entry has missing fields"
+						     "- [ ] read paper"
+						     "- [ ] check citing articles"
+						     "- [ ] check related articles"
+						     "- [ ] check references"))
+                                         ""))
 			  :template
-			  ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:"
+			  ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:%{type-tag}:"
 			   ":PROPERTIES:"
 			   ":ID: %{id}"
 			   ":CREATED: %U"
@@ -238,7 +248,8 @@ These capture templates can later be called from inside Emacs or from browser (u
 			   "#+begin_src bibtex"
 			   "%{bibtex}"
 			   "#+end_src"
-                           ":END:")
+                           ":END:"
+                           "%{extra}")
 			  :children (("Interactive link"
 				      :keys "b"
 				      :clock-in t
