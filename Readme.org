@@ -190,7 +190,7 @@ Below is example configuration defining org capture template using org-capture-r
 
 The example will define two new capture templates:
  - Silent link (B) :: create a new TODO entry in =~/Org/inbox.org= containing author, journal/website, year, and title of the web-page + the generated BiBTeX (see examples above);
- - Interactive link (b) :: interactive version of the above, but also open Emacs frame allowing to modify the link before confirming the capture.
+ - Interactive link (b) :: interactive version of the above. It opens Emacs frame allowing to modify the link before confirming the capture.
 
 These capture templates can later be called from inside Emacs or from browser (using [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]]).
 
