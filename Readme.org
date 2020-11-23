@@ -359,6 +359,7 @@ Parsers for the following websites are available:
 - Youtube video pages
 - https://habr.com articles
 - Wechat articles
+- https://author.today books
 
 Special parsers for the following RSS feeds are available (via =elfeed=):
 - https://habr.com articles
