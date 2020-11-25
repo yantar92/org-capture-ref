@@ -742,12 +742,7 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (setq files (org-agenda-files t t))
     (when (eq (car org-agenda-text-search-extra-files) 'agenda-archives)
       (pop org-agenda-text-search-extra-files))
-    (setq files (cl-remove-duplicates
-		 (append files org-agenda-text-search-extra-files)
-		 :test (lambda (a b)
-			 (and (file-exists-p a)
-			      (file-exists-p b)
-			      (file-equal-p a b)))))
+    (setq files (append files org-agenda-text-search-extra-files))
     ;; Save buffers to make sure that grep can see latest changes.
     (let ((inhibit-message t)) (org-save-all-org-buffers))
     (dolist (file files)
