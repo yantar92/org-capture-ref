@@ -224,6 +224,7 @@ These capture templates can later be called from inside Emacs or from browser (u
 #+begin_src emacs-lisp
 (require 'org-capture)
 (require 'asoc)
+(require 'doct)
 (require 'org-capture-ref)
 (let ((templates (doct '( :group "Browser link"
  			  :type entry
