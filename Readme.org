@@ -186,7 +186,7 @@ or with [[https://github.com/jwiegley/use-package/][use-package]]
 
 *** Capture setup
 
-Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/troyp/asoc.el][asoc.el]], [[https://github.com/magnars/s.el][s.el]] and [[https://github.com/progfolio/doct][doct]]. You will need to install the latter two packages to make the example work:
+Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/troyp/asoc.el][asoc.el]], [[https://github.com/magnars/s.el][s.el]] and [[https://github.com/progfolio/doct][doct]]. You will need to install these packages to make the example work:
 
 1. Using [[https://github.com/raxod502/straight.el/][straight.el]]
 #+begin_src emacs-lisp
