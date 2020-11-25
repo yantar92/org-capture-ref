@@ -481,28 +481,31 @@ The generated value will be the website name."
   "Parse Youtube watch link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "youtube\\.com/watch" link)
-      (with-current-buffer (org-capture-ref-get-buffer)
-	;; Remove garbage from the link
-        (setq link (replace-regexp-in-string "&[^/]+$" "" link))
-        (org-capture-ref-set-bibtex-field :url link)
-        (org-capture-ref-set-capture-info :link link)
-        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-	;; Find author
-	(goto-char (point-min))
-	(when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
-	  (let ((channel-name (match-string 1)))
-	    (org-capture-ref-set-bibtex-field :author (decode-coding-string channel-name 'utf-8))))
-	;; Find title
-	(goto-char (point-min))
-	(when (re-search-forward "class=\"title.+?\\([^<]+\\)</yt-formatted-string>" nil t)
-	  (let ((title (match-string 1)))
-	    (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
-	;; Find year
-	(goto-char (point-min))
-	(when (re-search-forward "publishDate\":\"\\([^\"]+\\)\"" nil t)
-	  (let ((year (match-string 1)))
-	    (string-match "[0-9]\\{4\\}" year)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 year))))))))
+      ;; Remove garbage from the link
+      (setq link (replace-regexp-in-string "&[^/]+$" "" link))
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-capture-info :link link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (unless (-all-p (lambda (key)
+			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
+                      '(:author :title :year))
+	(with-current-buffer (org-capture-ref-get-buffer)
+	  ;; Find author
+	  (goto-char (point-min))
+	  (when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
+	    (let ((channel-name (match-string 1)))
+	      (org-capture-ref-set-bibtex-field :author (decode-coding-string channel-name 'utf-8))))
+	  ;; Find title
+	  (goto-char (point-min))
+	  (when (re-search-forward "class=\"title.+?\\([^<]+\\)</yt-formatted-string>" nil t)
+	    (let ((title (match-string 1)))
+	      (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
+	  ;; Find year
+	  (goto-char (point-min))
+	  (when (re-search-forward "publishDate\":\"\\([^\"]+\\)\"" nil t)
+	    (let ((year (match-string 1)))
+	      (string-match "[0-9]\\{4\\}" year)
+	      (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
