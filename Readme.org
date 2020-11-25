@@ -194,6 +194,7 @@ Below is example configuration defining org capture template using org-capture-r
 (straight-use-package s)
 (straight-use-package doct)
 #+end_src
+
 2. Using [[https://github.com/raxod502/straight.el/][straight.el]] with [[https://github.com/jwiegley/use-package/][use-package]]
 #+begin_src emacs-lisp
 (use-package asoc
@@ -203,12 +204,14 @@ Below is example configuration defining org capture template using org-capture-r
 (use-package doct
   :straight t)
 #+end_src
+
 3. Using [[https://github.com/quelpa/quelpa][quelpa]]
 #+begin_src emacs-lisp
 (quelpa '(asoc.el :repo "troyp/asoc.el" :fetcher github))
 (quelpa 's)
 (quelpa 'doct)
 #+end_src
+
 4. Using direct download
 Follow instructions from [[Using direct download]]. The packages can be downloaded from the following websites:
 - https://github.com/troyp/asoc.el
