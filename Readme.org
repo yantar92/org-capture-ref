@@ -189,28 +189,28 @@ or with [[https://github.com/jwiegley/use-package/][use-package]]
 Below is example configuration defining org capture template using org-capture-ref, [[https://github.com/troyp/asoc.el][asoc.el]], [[https://github.com/magnars/s.el][s.el]] and [[https://github.com/progfolio/doct][doct]]. You will need to install these packages to make the example work:
 
 1. Using [[https://github.com/raxod502/straight.el/][straight.el]]
-#+begin_src emacs-lisp
-(straight-use-package '(asoc.el :type git :host github :repo "troyp/asoc.el"))
-(straight-use-package s)
-(straight-use-package doct)
-#+end_src
+    #+begin_src emacs-lisp
+    (straight-use-package '(asoc.el :type git :host github :repo "troyp/asoc.el"))
+    (straight-use-package s)
+    (straight-use-package doct)
+    #+end_src
 
 2. Using [[https://github.com/raxod502/straight.el/][straight.el]] with [[https://github.com/jwiegley/use-package/][use-package]]
-#+begin_src emacs-lisp
-(use-package asoc
-    :straight (asoc.el :type git :host github :repo "troyp/asoc.el"))
-(use-package s
-  :straight t)
-(use-package doct
-  :straight t)
-#+end_src
+    #+begin_src emacs-lisp
+    (use-package asoc
+        :straight (asoc.el :type git :host github :repo "troyp/asoc.el"))
+    (use-package s
+      :straight t)
+    (use-package doct
+      :straight t)
+    #+end_src
 
 3. Using [[https://github.com/quelpa/quelpa][quelpa]]
-#+begin_src emacs-lisp
-(quelpa '(asoc.el :repo "troyp/asoc.el" :fetcher github))
-(quelpa 's)
-(quelpa 'doct)
-#+end_src
+    #+begin_src emacs-lisp
+    (quelpa '(asoc.el :repo "troyp/asoc.el" :fetcher github))
+    (quelpa 's)
+    (quelpa 'doct)
+    #+end_src
 
 4. Using direct download
 Follow instructions from [[Using direct download]]. The packages can be downloaded from the following websites:
