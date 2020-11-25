@@ -68,6 +68,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-springer
                                    org-capture-ref-get-bibtex-wiley
                                    org-capture-ref-get-bibtex-tandfonline
+                                   org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
 				   org-capture-ref-get-bibtex-github
@@ -355,6 +356,19 @@ Existing BiBTeX fields are not modified."
 		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
 		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key)
 			  'warning)))))))))
+
+(defun org-capture-ref-mark-links-with-known-absent-doi ()
+  "Prevent `org-capture-ref-get-bibtex-from-first-doi' from searching DOI in website text.
+
+Some websites contain DOI references in the articles/blogs. However,
+the actual website page does not have DOI.
+`org-capture-ref-get-bibtex-from-first-doi' can sometimes give
+false-positive results in such websites."
+  (when (s-match (regexp-opt '("reddit.com"
+			       "youtube.com"
+                               "lesswrong.com"))
+                 (org-capture-ref-get-capture-info :link))
+    (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
