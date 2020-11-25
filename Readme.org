@@ -213,7 +213,7 @@ Below is example configuration defining org capture template using org-capture-r
     #+end_src
 
 4. Using direct download
-Follow instructions from [[Using direct download]]. The packages can be downloaded from the following websites:
+Follow instructions from [[Using direct download][Using direct download]]. The packages can be downloaded from the following websites:
 - https://github.com/troyp/asoc.el
 - https://github.com/magnars/s.el
 - https://github.com/progfolio/doct/
@@ -303,7 +303,7 @@ These capture templates can later be called from inside Emacs or from browser (u
 
 The above capture templates can be used via  [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]]:
 - For popular browsers like Firefox, see [[https://github.com/alphapapa/org-protocol-capture-html#org-protocol-instructions][Alphapapa's org-protocol instructions]]
-- For Qutebrowser, see "Integration with qutebrowser" section below.
+- For Qutebrowser, see [[#qute_integration][Integration with qutebrowser]] section below.
 
 *** Capturing rss links from [[https://github.com/skeeto/elfeed/][elfeed]]
 
@@ -342,7 +342,7 @@ If org-capture-ref finds that the captured link already exist in org files the m
 
 *** Integration with [[https://github.com/qutebrowser/qutebrowser/][qutebrowser]]
 :PROPERTIES:
-:ID:       6d565e1f-3e42-4839-8279-8a5238c819b0
+:CUSTOM_ID: qute_integration
 :END:
 
 The web-page contents loaded in qutebrowser can be reused by org-capture-ref without a need to load the page again for parsing. This also means that content requiring authorisation can be parsed by the package.
