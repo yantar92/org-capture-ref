@@ -434,6 +434,7 @@ The generated value will be the website name."
   "Parse Github link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "git\\(hub\\|lab\\)\\.com" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (with-current-buffer (org-capture-ref-get-buffer)
         ;; Fix URL
         (when (string-match "^\\(.+\\)/tree/[a-zA-Z0-9]+$" link)
