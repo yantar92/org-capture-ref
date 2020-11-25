@@ -176,9 +176,6 @@ or with [[https://github.com/jwiegley/use-package/][use-package]]
 #+end_src
 
 *** Using direct download
-:PROPERTIES:
-:CUSTOM_ID: direct_download
-:END:
 
 1. Download =org-capture-ref.el= from this page and save it somewhere in Emacs [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Lisp-Libraries.html#Lisp-Libraries][load-path]]
 2. Open the file in Emacs
@@ -216,7 +213,7 @@ Below is example configuration defining org capture template using org-capture-r
     #+end_src
 
 4. Using direct download
-Follow instructions from [[#direct_download][Using direct download]]. The packages can be downloaded from the following websites:
+Follow instructions from [[Using direct download]]. The packages can be downloaded from the following websites:
 - https://github.com/troyp/asoc.el
 - https://github.com/magnars/s.el
 - https://github.com/progfolio/doct/
