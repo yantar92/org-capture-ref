@@ -367,7 +367,8 @@ the actual website page does not have DOI.
 false-positive results in such websites."
   (when (s-match (regexp-opt '("reddit.com"
 			       "youtube.com"
-                               "lesswrong.com"))
+                               "lesswrong.com"
+                               "zettelkasten.de"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
