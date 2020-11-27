@@ -1,4 +1,4 @@
-;;; org-capture-ref.el --- Extract bibtex info from captured websites  -*- lexical-binding: t; -*-
+;; org-capture-ref.el --- Extract bibtex info from captured websites  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Ihor Radchenko
 
@@ -72,6 +72,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
 				   org-capture-ref-get-bibtex-github
+                                   org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
@@ -429,6 +430,30 @@ The generated value will be the website name."
         (goto-char (point-min))
         (when (re-search-forward "id=\"js_name\"> *\\([^<]+\\) *</")
           (org-capture-ref-set-bibtex-field :author (s-trim (match-string 1))))))))
+
+(defun org-capture-ref-get-bibtex-reddit ()
+  "Parse reddit link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "\\(?:old\\.\\)?reddit\\.com\\(?:/r/\\([^/]+\\)\\)?" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
+      (if (match-string 1 link)
+	  (progn
+            (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
+            (org-capture-ref-set-bibtex-field :title
+			       (replace-regexp-in-string
+				(rx (zero-or-more " ")
+				    ":"
+				    (zero-or-more " ")
+				    (literal (match-string 1 link))
+				    eol)
+				""
+				(org-capture-ref-get-capture-info :description))))
+	(org-capture-ref-set-bibtex-field :howpublished "Reddit"))
+      ;; Generic parser works ok.
+      (let (org-capture-ref-warn-when-using-generic-parser)
+	(org-capture-ref-parse-generic))
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-github ()
   "Parse Github link and generate bibtex entry."
