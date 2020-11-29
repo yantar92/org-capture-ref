@@ -368,7 +368,8 @@ false-positive results in such websites."
   (when (s-match (regexp-opt '("reddit.com"
 			       "youtube.com"
                                "lesswrong.com"
-                               "zettelkasten.de"))
+                               "zettelkasten.de"
+                               "github.com"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
