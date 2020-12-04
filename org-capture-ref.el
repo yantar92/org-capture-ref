@@ -369,7 +369,8 @@ false-positive results in such websites."
 			       "youtube.com"
                                "lesswrong.com"
                                "zettelkasten.de"
-                               "github.com"))
+                               "github.com"
+                               "wikipedia.org"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
