@@ -259,6 +259,12 @@ This calls `org-capture-ref-get-buffer-functions'."
     (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
     (setq org-capture-ref--buffer buffer)))
 
+(defun org-capture-ref-get-dom ()
+  "Return parsed html of the captured link."
+  (or org-capture-ref--buffer-dom
+      (setq org-capture-ref--buffer-dom (with-current-buffer (org-capture-ref-get-buffer)
+			   (libxml-parse-html-region (point-min) (point-max))))))
+
 (defun org-capture-ref-get-bibtex-field (field &optional return-placeholder-p)
   "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
 Unless RETURN-PLACEHOLDER-P is non-nil, return nil when the value is equal
@@ -911,11 +917,15 @@ Special field :bibtex-string contains formatted BiBTeX entry as a string.")
 (defvar org-capture-ref--buffer nil
   "Buffer containing downloaded webpage being captured.")
 
+(defvar org-capture-ref--buffer-dom nil
+  "Parsed html of the captured page.")
+
 ;;; Main capturing routine
 
 (defun org-capture-ref-reset-state ()
   "Refresh all the internal variables for fresh capture."
   (setq org-capture-ref--buffer nil
+	org-capture-ref--buffer-dom nil
 	org-capture-ref--bibtex-alist nil
         org-capture-ref--store-link-plist org-store-link-plist))
 
