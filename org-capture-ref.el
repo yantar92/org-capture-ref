@@ -534,23 +534,29 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:author :title :year))
-	(with-current-buffer (org-capture-ref-get-buffer)
-	  ;; Find author
-	  (goto-char (point-min))
-	  (when (re-search-forward "channelName\":\"\\([^\"]+\\)\"" nil t)
-	    (let ((channel-name (match-string 1)))
-	      (org-capture-ref-set-bibtex-field :author (decode-coding-string channel-name 'utf-8))))
-	  ;; Find title
-	  (goto-char (point-min))
-	  (when (re-search-forward "class=\"title.+?\\([^<]+\\)</yt-formatted-string>" nil t)
-	    (let ((title (match-string 1)))
-	      (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
-	  ;; Find year
-	  (goto-char (point-min))
-	  (when (re-search-forward "publishDate\":\"\\([^\"]+\\)\"" nil t)
-	    (let ((year (match-string 1)))
-	      (string-match "[0-9]\\{4\\}" year)
-	      (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
+	;; Find author
+        (org-capture-ref-set-bibtex-field :author (decode-coding-string
+                                    (dom-text
+                                     (dom-by-tag (dom-by-tag (org-capture-ref-get-dom)
+                                                             'ytd-channel-name)
+                                                 'a))
+                                    'utf-8))
+	;; Find title
+        (org-capture-ref-set-bibtex-field :title (decode-coding-string
+                                   (dom-text
+                                    (dom-by-tag (dom-by-class
+                                                 (org-capture-ref-get-dom)
+                                                 "^title style-scope ytd-video-primary-info-renderer$")
+                                                'yt-formatted-string))
+                                   'utf-8))
+	;; Find year
+        (let ((date (decode-coding-string (dom-text
+                                           (dom-by-tag (dom-by-id (org-capture-ref-get-dom)
+                                                                  "^date$")
+                                                       'yt-formatted-string))
+                                          'utf-8)))
+          (when (string-match "[0-9]\\{4\\}" date)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
