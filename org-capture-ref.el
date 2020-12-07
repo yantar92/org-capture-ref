@@ -79,6 +79,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
                                    org-capture-ref-get-bibtex-authortoday-work
+                                   org-capture-ref-get-bibtex-lesswrong
 				   ;; Generic parser
 				   org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
@@ -667,6 +668,20 @@ The generated value will be the website name."
     (when (string-match "sciencedirect\\.com/science/article" link)
       (org-capture-ref-set-bibtex-field :doi (replace-regexp-in-string "https?://doi\\.org/" "" (dom-text (dom-by-class (org-capture-ref-get-dom) "^doi$"))))
       (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-lesswrong ()
+  "Generate BiBTeX for LessWrong publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "lesswrong\\.com" link)
+      (org-capture-ref-set-bibtex-field :howpublished "Lesswrong")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom)
+                                                                     "^PostsAuthors-authorName$")
+                                                       'a)))
+      (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-class (org-capture-ref-get-dom) "PostsPageTitle")))
+      (let ((date (dom-text (cdr (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "PostsPageDate-date") 'span)))))
+        (when (string-match "[0-9]\\{4\\}" date)
+          (org-capture-ref-set-bibtex-field :year (match-string 0 date)))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
