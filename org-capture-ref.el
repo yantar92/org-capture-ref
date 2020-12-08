@@ -295,8 +295,11 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                      (mapcar (lambda (node) (dom-attr node 'content))
                              (dom-search (org-capture-ref-get-dom)
                                          (lambda (node)
-                                           (and (eq (car node) 'meta))
-                                           (string= key (dom-attr node 'property))))))))
+                                           (and (eq (car node) 'meta)
+                                                (or (string= key (dom-attr node 'property))
+                                                    (string= key (dom-attr node 'name))))))))))
+    (if (string-empty-p ans) nil ans)))
+
 (defun org-capture-ref-query-meta (key &optional separator)
   "Query KEY from the website metadata.
 The KEY can be a symbol or string.
