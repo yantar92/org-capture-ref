@@ -607,18 +607,15 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
-        (let ((title (org-capture-ref-get-capture-info :description)))
-          (org-capture-ref-set-bibtex-field :author (s-trim (cadr (s-split "-" title))))
-          (org-capture-ref-set-bibtex-field :title (s-trim (car (s-split "-" title)))))
-	(with-current-buffer (org-capture-ref-get-buffer)
-          ;; Simplify url
-	  (goto-char (point-min))
-	  ;; Find year
-	  (goto-char (point-min))
-	  (when (re-search-forward "data-time=\\([^>]+\\)" nil t)
-	    (let ((year (match-string 1)))
-	      (string-match "[0-9]\\{4\\}" year)
-              (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
+        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom)
+                                                                                "book-meta-panel")
+                                                                  "book-title"))))
+        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "book-authors") 'a))))
+        (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top")) 'data-hint)))
+          (when (string-match "[0-9]\\{4\\}" date)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+          (when (string-match "[0-9]\\{4\\}" date)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
