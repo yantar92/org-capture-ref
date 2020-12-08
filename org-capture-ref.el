@@ -34,6 +34,7 @@
 (require 'org-ref-core)
 (require 'org-ref-bibtex)
 (require 'bibtex)
+(require 'dom)
 (require 's)
 
 ;;; Customization:
@@ -422,7 +423,7 @@ Existing BiBTeX fields are not modified."
             (catch :found
               (dolist (regex regexps)
 		(goto-char (point-min))
-		(when (re-search-forward regex  nil t)
+		(when (re-search-forward regex nil t)
 		  (org-capture-ref-set-bibtex-field key (decode-coding-string (match-string 1) 'utf-8))
 		  (throw :found t))))
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
@@ -488,7 +489,8 @@ The generated value will be the website name."
 
 (defun org-capture-ref-set-default-type ()
   "Set `:type' of the BiBTeX entry to `org-capture-ref-default-type'."
-  (org-capture-ref-set-bibtex-field :type org-capture-ref-default-type))
+  (unless (org-capture-ref-get-bibtex-field :type)
+    (org-capture-ref-set-bibtex-field :type org-capture-ref-default-type)))
 
 (defun org-capture-ref-set-access-date ()
   "Set `:urldate' field of the BiBTeX entry to now."
@@ -598,11 +600,11 @@ The generated value will be the website name."
                       '(:author :title :year))
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (decode-coding-string
-                                    (dom-text
-                                     (dom-by-tag (dom-by-tag (org-capture-ref-get-dom)
-                                                             'ytd-channel-name)
-                                                 'a))
-                                    'utf-8))
+                                                   (dom-text
+                                                    (dom-by-tag (dom-by-tag (org-capture-ref-get-dom)
+                                                                            'ytd-channel-name)
+                                                                'a))
+                                                   'utf-8))
 	;; Find title
         (org-capture-ref-set-bibtex-field :title (decode-coding-string
                                    (dom-text
