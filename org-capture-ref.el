@@ -435,17 +435,12 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "\\(sn=[^&]+\\).*$" "\\1" link))
       (org-capture-ref-set-bibtex-field :howpublished "Wechat")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "rich_media_title"))))
+      (org-capture-ref-set-bibtex-field :author (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "rich_media_meta rich_media_meta_nickname") 'a))))
       (with-current-buffer (org-capture-ref-get-buffer)
 	(goto-char (point-min))
         (when (re-search-forward "=\"\\([0-9]\\{4\\}\\)-[0-9]\\{2\\}-[0-9]\\{2\\}\"")
-          (org-capture-ref-set-bibtex-field :year (match-string 1)))
-        (goto-char (point-min))
-        (when (re-search-forward "id=\"js_name\"> *\\([^<]+\\) *</")
-          (org-capture-ref-set-bibtex-field :author (s-trim (match-string 1)))))
-      ;; Title is correctly parsed with generic parser.
-      (let (org-capture-ref-warn-when-using-generic-parser)
-	(org-capture-ref-parse-generic)
-        (throw :finish t)))))
+          (org-capture-ref-set-bibtex-field :year (match-string 1)))))))
 
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
