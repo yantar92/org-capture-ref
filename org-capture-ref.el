@@ -203,6 +203,18 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type '(alist :key-type symbol :value-type (list string)))
 
+(defcustom org-capture-ref-demand-doi-list '("tandfonline\\.com/doi/"
+                              "aps\\.org/doi"
+                              "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
+                              "sciencedirect\\.com/science/article"
+                              "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)")
+  "List of regexps matching URLs that must have DOI.
+
+If DOI retrieval fails on these URLs, fallback options are not used -
+the capture exits with error."
+  :group 'org-capture-ref
+  :type '(list string))
+
 (defcustom org-capture-ref-default-type "misc"
   "Default BiBTeX type of the captured entry."
   :group 'org-capture-ref
@@ -402,7 +414,9 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
                              (t nil))))
         (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil))
         (if (not bibtex-string)
-            (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning)
+            (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
+                (org-capture-ref-message (format "Retrieving DOI record... failed, but demanded for %s" (org-capture-ref-get-bibtex-field :url)) 'error)
+              (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning))
           (org-capture-ref-message "Retrieving DOI record... done")
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
