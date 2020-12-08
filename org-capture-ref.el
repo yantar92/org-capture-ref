@@ -612,13 +612,13 @@ The generated value will be the website name."
                                                 'yt-formatted-string))
                                    'utf-8))
 	;; Find year
-        (let ((date (decode-coding-string (dom-text
-                                           (dom-by-tag (dom-by-id (org-capture-ref-get-dom)
-                                                                  "^date$")
-                                                       'yt-formatted-string))
-                                          'utf-8)))
-          (when (string-match "[0-9]\\{4\\}" date)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+        (org-capture-ref-set-bibtex-field
+         :year
+         (org-capture-ref-extract-year-from-string (decode-coding-string (dom-text
+                                                           (dom-by-tag (dom-by-id (org-capture-ref-get-dom)
+                                                                                  "^date$")
+                                                                       'yt-formatted-string))
+                                                          'utf-8)))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
@@ -657,8 +657,7 @@ The generated value will be the website name."
 	  (goto-char (point-min))
 	  (when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
 	    (let ((year (match-string 1)))
-	      (string-match "[0-9]\\{4\\}" year)
-              (org-capture-ref-set-bibtex-field :year (match-string 0 year)))))))))
+              (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string year)))))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-work ()
   "Generate BiBTeX for an author.today/work book."
@@ -678,8 +677,7 @@ The generated value will be the website name."
                                                                   "book-title"))))
         (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "book-authors") 'a))))
         (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top")) 'data-hint)))
-          (when (string-match "[0-9]\\{4\\}" date)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
   "Generate BiBTeX for an author.today/post post."
@@ -696,8 +694,7 @@ The generated value will be the website name."
         (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "post-title"))))
         (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "^mr$") 'a))))
         (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top-right mr")) 'data-hint)))
-          (when (string-match "[0-9]\\{4\\}" date)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-ficbook ()
   "Generate BiBTeX for an ficbook.net book."
@@ -716,9 +713,9 @@ The generated value will be the website name."
                                                                               "fanfic-main-info")
                                                                 'h1))))
         (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "creator-info") 'a))))
-        (let ((date (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span))))
-          (when (string-match "[0-9]\\{4\\}" date)
-            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+        (let ((date (dom-text (or (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span)
+                                  (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "part-date") 'span)))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
@@ -775,8 +772,7 @@ The generated value will be the website name."
                                                        'a)))
       (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-class (org-capture-ref-get-dom) "PostsPageTitle")))
       (let ((date (dom-text (cdr (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "PostsPageDate-date") 'span)))))
-        (when (string-match "[0-9]\\{4\\}" date)
-          (org-capture-ref-set-bibtex-field :year (match-string 0 date)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
