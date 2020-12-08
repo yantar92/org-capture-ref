@@ -407,17 +407,17 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
-      (org-capture-ref-message "Retrieving DOI record...")
+      (org-capture-ref-message (format "Retrieving DOI record %s ..." doi))
       (let ((bibtex-string (condition-case err
 			       ;; Ignore errors and avoid opening the DOI url.
 			       (cl-letf (((symbol-function 'browse-url) #'ignore))
 				 (doi-utils-doi-to-bibtex-string doi))
-                             (t nil))))
+                             (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
         (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil))
         (if (not bibtex-string)
             (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
-                (org-capture-ref-message (format "Retrieving DOI record... failed, but demanded for %s" (org-capture-ref-get-bibtex-field :url)) 'error)
-              (org-capture-ref-message "Retrieving DOI record... failed. Proceding with fallback options." 'warning))
+                (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
+              (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning))
           (org-capture-ref-message "Retrieving DOI record... done")
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
