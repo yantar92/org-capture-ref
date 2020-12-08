@@ -1136,14 +1136,16 @@ The return value is always empty string, so that this function can be
 used inside capture template."
   
   (unwind-protect
-      (progn
-	(org-capture-ref-reset-state)
-	(org-capture-ref-message "Capturing BiBTeX...")
-	(org-capture-ref-get-bibtex)
-	(org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
-	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
-	(org-capture-ref-check-bibtex)
-	(org-capture-ref-message "Capturing BiBTeX... done"))
+      (condition-case err
+          (progn
+	    (org-capture-ref-reset-state)
+	    (org-capture-ref-message "Capturing BiBTeX...")
+	    (org-capture-ref-get-bibtex)
+	    (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
+	    (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
+	    (org-capture-ref-check-bibtex)
+	    (org-capture-ref-message "Capturing BiBTeX... done"))
+        (t (org-capture-ref-message (format "%s" (error-message-string err)) 'error)))
     (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer)))
   "")
 
