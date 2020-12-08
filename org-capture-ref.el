@@ -56,7 +56,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-get-bibtex-functions '(;; First, pull generic data from capture
-				   org-capture-ref-get-bibtex-url-from-capture-data
+                                   org-capture-ref-get-bibtex-url-from-capture-data
 				   org-capture-ref-get-bibtex-howpublished-from-url
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
@@ -79,6 +79,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
                                    org-capture-ref-get-bibtex-authortoday-work
+                                   org-capture-ref-get-bibtex-authortoday-post
                                    org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
 				   ;; Generic parser
@@ -627,6 +628,24 @@ The generated value will be the website name."
                                                                   "book-title"))))
         (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "book-authors") 'a))))
         (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top")) 'data-hint)))
+          (when (string-match "[0-9]\\{4\\}" date)
+            (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+
+(defun org-capture-ref-get-bibtex-authortoday-post ()
+  "Generate BiBTeX for an author.today/post post."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "author\\.today/post" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
+      (org-capture-ref-set-bibtex-field :publisher "Author.Today")
+      ;; Mark unneeded fields
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (unless (-all-p (lambda (key)
+			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
+                      '(:url :author :title :year))
+        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "post-title"))))
+        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "^mr$") 'a))))
+        (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top-right mr")) 'data-hint)))
           (when (string-match "[0-9]\\{4\\}" date)
             (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
 
