@@ -297,6 +297,18 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                                          (lambda (node)
                                            (and (eq (car node) 'meta))
                                            (string= key (dom-attr node 'property))))))))
+(defun org-capture-ref-query-meta (key &optional separator)
+  "Query KEY from the website metadata.
+The KEY can be a symbol or string.
+SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
+  (when (symbolp key) (setq key (symbol-name key)))
+  (let ((ans (s-join (or separator " and ")
+                     (mapcar (lambda (node) (dom-attr node 'content))
+                             (dom-search (org-capture-ref-get-dom)
+                                         (lambda (node)
+                                           (and (eq (car node) 'meta)
+                                                (or (string= key (dom-attr node 'property))
+                                                    (string= key (dom-attr node 'name))))))))))
     (if (string-empty-p ans) nil ans)))
 
 (defun org-capture-ref-extract-year-from-string (string)
@@ -413,6 +425,10 @@ Existing BiBTeX fields are not modified."
 		  (mapcar #'car org-capture-ref-field-regexps))
     (when org-capture-ref-warn-when-using-generic-parser
       (org-capture-ref-message "Capturing using generic parser..." 'warning))
+    ;; Try to find in metadata first.
+    (unless (org-capture-ref-get-bibtex-field :author)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-meta 'author)))
+    ;; Last resort is regexp.
     (with-current-buffer (org-capture-ref-get-buffer)
       (dolist (alist-elem org-capture-ref-field-regexps)
 	(let ((key (car alist-elem))
