@@ -79,6 +79,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
                                    org-capture-ref-get-bibtex-authortoday-work
+                                   org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
 				   ;; Generic parser
 				   org-capture-ref-parse-generic)
@@ -614,6 +615,25 @@ The generated value will be the website name."
         (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top")) 'data-hint)))
           (when (string-match "[0-9]\\{4\\}" date)
             (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
+
+(defun org-capture-ref-get-bibtex-ficbook ()
+  "Generate BiBTeX for an ficbook.net book."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "ficbook\\.net" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :howpublished "Ficbook")
+      (org-capture-ref-set-bibtex-field :publisher "Ficbook")
+      ;; Mark unneeded fields
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (unless (-all-p (lambda (key)
+			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
+                      '(:url :author :title :year))
+        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom)
+                                                                              "fanfic-main-info")
+                                                                'h1))))
+        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "creator-info") 'a))))
+        (let ((date (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span))))
           (when (string-match "[0-9]\\{4\\}" date)
             (org-capture-ref-set-bibtex-field :year (match-string 0 date))))))))
 
