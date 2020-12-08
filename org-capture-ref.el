@@ -57,6 +57,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 
 (defcustom org-capture-ref-get-bibtex-functions '(;; First, pull generic data from capture
                                    org-capture-ref-get-bibtex-url-from-capture-data
+                                   org-capture-ref-parse-opengraph
 				   org-capture-ref-get-bibtex-howpublished-from-url
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
@@ -282,6 +283,26 @@ This calls `org-capture-ref-get-buffer-functions'."
       (setq org-capture-ref--buffer-dom (with-current-buffer (org-capture-ref-get-buffer)
 			   (libxml-parse-html-region (point-min) (point-max))))))
 
+(defun org-capture-ref-query-opengraph (key &optional separator)
+  "Query opengraph KEY from the website.
+The KEY can be a symbol or string not prefixed with og:.
+See https://ogp.me/ for possible KEY values.
+SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
+  (when (symbolp key) (setq key (symbol-name key)))
+  (setq key (s-concat "og:" key))
+  (let ((ans (s-join (or separator " and ")
+                     (mapcar (lambda (node) (dom-attr node 'content))
+                             (dom-search (org-capture-ref-get-dom)
+                                         (lambda (node)
+                                           (and (eq (car node) 'meta))
+                                           (string= key (dom-attr node 'property))))))))
+    (if (string-empty-p ans) nil ans)))
+
+(defun org-capture-ref-extract-year-from-string (string)
+  "Extract year from date string."
+  (when (and string (string-match "[0-9]\\{4\\}" string))
+    (match-string 0 string)))
+
 (defun org-capture-ref-get-bibtex-field (field &optional return-placeholder-p)
   "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
 Unless RETURN-PLACEHOLDER-P is non-nil, return nil when the value is equal
@@ -351,6 +372,32 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
     (when elfeed-entry
       (require 'elfeed)
       (run-hook-with-args 'org-capture-ref-get-bibtex-from-elfeed-functions elfeed-entry))))
+
+(defun org-capture-ref-parse-opengraph ()
+  "Generic parser for websites supporting OpenGraph protocol.
+
+See https://ogp.me/ for details."
+
+  (let ((type (org-capture-ref-query-opengraph 'type))
+        (title (org-capture-ref-query-opengraph 'title))
+        (url (org-capture-ref-query-opengraph 'url))
+        (howpublished (org-capture-ref-query-opengraph 'site_name)))
+    (unless (org-capture-ref-get-bibtex-field :title t)
+      (org-capture-ref-set-bibtex-field :title title))
+    (org-capture-ref-set-bibtex-field :url url)
+    (org-capture-ref-set-bibtex-field :howpublished howpublished)
+    (pcase (org-capture-ref-query-opengraph 'type)
+      ("article"
+       (org-capture-ref-set-bibtex-field :type "article")
+       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'article:author))
+       (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'article:published_time)))
+       (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", ")))
+      ("book"
+       (org-capture-ref-set-bibtex-field :type "book")
+       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'book:author))
+       (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:release_date)))
+       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:isbn)))
+       (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", "))))))
 
 (defun org-capture-ref-parse-generic ()
   "Generic parser for the captured html.
