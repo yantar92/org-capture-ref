@@ -331,12 +331,15 @@ containing `cdar' of KEY, an so on."
       (setq plist (plist-get plist (pop key))))
     plist))
 
-(defun org-capture-ref-set-bibtex-field (field val)
+(defun org-capture-ref-set-bibtex-field (field val &optional force)
   "Set BiBTeX FIELD to VAL.
   
 FIELD must be a symbol like `:author'.
-See `org-capture-ref--bibtex-alist' for common field names."
-  (setf (alist-get field org-capture-ref--bibtex-alist) val))
+See `org-capture-ref--bibtex-alist' for common field names.
+If VAL is empty string, do not do anything.
+Bypass VAL check when FORCE is non-nil."
+  (unless (and force (or (string-empty-p val) (not val)))
+    (setf (alist-get field org-capture-ref--bibtex-alist) val)))
 
 (defun org-capture-ref-set-capture-info (key val)
   "Set KEY in capture info to VAL.
@@ -460,7 +463,7 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
 			       (cl-letf (((symbol-function 'browse-url) #'ignore))
 				 (doi-utils-doi-to-bibtex-string doi))
                              (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
-        (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil))
+        (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil 'force))
         (if (not bibtex-string)
             (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
@@ -472,16 +475,16 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
   (let ((url (org-capture-ref-get-capture-info :link)))
-    (when url (org-capture-ref-set-bibtex-field :url url))))
+    (org-capture-ref-set-bibtex-field :url url)))
 
 (defun org-capture-ref-get-bibtex-howpublished-from-url ()
   "Generate `:howpublished' field using `:url' BiBTeX field.
 The generated value will be the website name."
-  (let ((url (or (org-capture-ref-get-bibtex-field :url))))
-    (when url
-      (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
-      (when (match-string 1 url)
-	(org-capture-ref-set-bibtex-field :howpublished (capitalize (match-string 1 url)))))))
+  (unless (org-capture-ref-get-bibtex-field :howpublished)
+    (let ((url (or (org-capture-ref-get-bibtex-field :url))))
+      (when url
+        (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
+        (org-capture-ref-set-bibtex-field :howpublished (capitalize (match-string 1 url)))))))
 
 (defun org-capture-ref-set-default-type ()
   "Set `:type' of the BiBTeX entry to `org-capture-ref-default-type'."
