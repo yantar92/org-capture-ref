@@ -670,7 +670,7 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-tandfonline ()
   "Generate BiBTeX for Tandfonline publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "tandfonline\\.com/doi/full/\\([0-9a-z-_/.]+\\)" link)
+    (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abd\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
