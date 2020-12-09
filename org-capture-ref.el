@@ -451,8 +451,7 @@ Existing BiBTeX fields are not modified."
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (if (org-capture-ref-get-bibtex-field :key)
 		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
-		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key)
-			  'warning)))))))))
+		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning)))))))))
 
 (defun org-capture-ref-mark-links-with-known-absent-doi ()
   "Prevent `org-capture-ref-get-bibtex-from-first-doi' from searching DOI in website text.
