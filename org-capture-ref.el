@@ -58,7 +58,6 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 
 (defcustom org-capture-ref-get-bibtex-functions '(;; First, pull generic data from capture
                                    org-capture-ref-get-bibtex-url-from-capture-data
-                                   org-capture-ref-parse-opengraph
 				   org-capture-ref-get-bibtex-howpublished-from-url
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
@@ -84,6 +83,8 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-authortoday-post
                                    org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
+                                   ;; OpenGraph parser
+                                   org-capture-ref-parse-opengraph
 				   ;; Generic parser
 				   org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
@@ -396,27 +397,29 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
   "Generic parser for websites supporting OpenGraph protocol.
 
 See https://ogp.me/ for details."
-
-  (let ((type (org-capture-ref-query-opengraph 'type))
-        (title (org-capture-ref-query-opengraph 'title))
-        (url (org-capture-ref-query-opengraph 'url))
-        (howpublished (org-capture-ref-query-opengraph 'site_name)))
-    (unless (org-capture-ref-get-bibtex-field :title t)
-      (org-capture-ref-set-bibtex-field :title title))
-    (org-capture-ref-set-bibtex-field :url url)
-    (org-capture-ref-set-bibtex-field :howpublished howpublished)
-    (pcase (org-capture-ref-query-opengraph 'type)
-      ("article"
-       (org-capture-ref-set-bibtex-field :type "article")
-       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'article:author))
-       (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'article:published_time)))
-       (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", ")))
-      ("book"
-       (org-capture-ref-set-bibtex-field :type "book")
-       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'book:author))
-       (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:release_date)))
-       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:isbn)))
-       (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", "))))))
+  (unless (-all-p (lambda (key)
+		    (org-capture-ref-get-bibtex-field key 'consider-placeholder))
+		  '(:title :url :howpublished))
+    (let ((type (org-capture-ref-query-opengraph 'type))
+          (title (org-capture-ref-query-opengraph 'title))
+          (url (org-capture-ref-query-opengraph 'url))
+          (howpublished (org-capture-ref-query-opengraph 'site_name)))
+      (unless (org-capture-ref-get-bibtex-field :title t)
+        (org-capture-ref-set-bibtex-field :title title))
+      (org-capture-ref-set-bibtex-field :url url)
+      (org-capture-ref-set-bibtex-field :howpublished howpublished)
+      (pcase (org-capture-ref-query-opengraph 'type)
+        ("article"
+         (org-capture-ref-set-bibtex-field :type "article")
+         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'article:author))
+         (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'article:published_time)))
+         (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", ")))
+        ("book"
+         (org-capture-ref-set-bibtex-field :type "book")
+         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-opengraph 'book:author))
+         (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:release_date)))
+         (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-extract-year-from-string (org-capture-ref-query-opengraph 'book:isbn)))
+         (org-capture-ref-set-bibtex-field :tag (org-capture-ref-query-opengraph 'article:tag ", ")))))))
 
 (defun org-capture-ref-parse-generic ()
   "Generic parser for the captured html.
