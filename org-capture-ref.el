@@ -835,7 +835,9 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (when (s-match "habr\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-    (org-capture-ref-get-bibtex-generic-elfeed entry)))
+    (org-capture-ref-get-bibtex-generic-elfeed entry)
+    (org-capture-ref-get-bibtex-habr)
+    (throw :finish t)))
 
 (defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (_)
   "Populate author for https://rgoswami.me"
