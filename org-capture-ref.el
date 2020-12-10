@@ -157,6 +157,7 @@ Return value of the first function returning non-nil will be used as final forma
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-generate-key-functions '(org-capture-ref-generate-key-from-doi
+                                     org-capture-ref-generate-key-from-isbn
 				     org-capture-ref-generate-key-from-url)
   "Functions used to generate citation key if it is not yet present.
 The functions will be called in sequence until any of them returns non-nil value."
@@ -387,6 +388,27 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
     (when link
       (url-retrieve-synchronously link))))
 
+(defun org-capture-ref--get-bibtex-string-from-isbn (isbn)
+  "Get BiBTeX record for given ISBN.
+Use https://www.ottobib.com to retrieve the BiBTeX record."
+  (let ((url (concat "https://www.ottobib.com/isbn/" isbn "/bibtex"))
+	data)
+    (with-current-buffer
+	(url-retrieve-synchronously
+	 ;; (concat "http://dx.doi.org/" doi)
+	 url)
+      (setq data (buffer-substring url-http-end-of-headers (point-max)))
+      (cond
+       ((or (string-match "<title>Error: DOI Not Found</title>" data)
+	    (string-match "Resource not found" data)
+	    (string-match "Status *406" data)
+	    (string-match "400 Bad Request" data))
+	(error "Something went wrong.  We got this response:
+%s" data))
+       ;; everything seems ok with the data
+       (t
+	(dom-text (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'textarea)))))))
+
 ;; Getting BiBTeX
 
 (defun org-capture-ref-get-bibtex-from-elfeed-data ()
@@ -496,6 +518,22 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
               (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning))
           (org-capture-ref-message "Retrieving DOI record... done")
+	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+          (throw :finish t))))))
+
+(defun org-capture-ref-get-bibtex-from-isbn ()
+  "Generate BiBTeX using ISBN number found `:isbn' field."
+  (let ((isbn (org-capture-ref-get-bibtex-field :isbn)))
+    (when isbn
+      (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn))
+      (let ((bibtex-string (condition-case err
+			       ;; Ignore errors and avoid opening the ISBN url.
+			       (org-capture-ref--get-bibtex-string-from-isbn isbn)
+                             (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
+        (unless bibtex-string (org-capture-ref-set-bibtex-field :isbn nil 'force))
+        (if (not bibtex-string)
+            (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceding with fallback options." isbn) 'warning)
+          (org-capture-ref-message "Retrieving ISBN record... done")
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
 
@@ -869,6 +907,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Generate citation key from DOI."
   (when-let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (sha1 doi)))
+
+(defun org-capture-ref-generate-key-from-isbn ()
+  "Generate citation key from ISBN."
+  (when-let ((isbn (org-capture-ref-get-bibtex-field :isbn)))
+    (sha1 isbn)))
+
 
 ;; Formatting BibTeX entry
 
