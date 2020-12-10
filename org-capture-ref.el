@@ -208,10 +208,12 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :type '(alist :key-type symbol :value-type (list string)))
 
 (defcustom org-capture-ref-demand-doi-list '("tandfonline\\.com/doi/"
-                              "aps\\.org/doi"
+                              "aps\\.org"
                               "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
                               "sciencedirect\\.com/science/article"
-                              "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)")
+                              "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)"
+                              "science\\.sciencemag\\.org"
+                              "nature\\.com")
   "List of regexps matching URLs that must have DOI.
 
 If DOI retrieval fails on these URLs, fallback options are not used -
@@ -465,7 +467,9 @@ false-positive results in such websites."
                                "lesswrong.com"
                                "zettelkasten.de"
                                "github.com"
-                               "wikipedia.org"))
+                               "wikipedia.org"
+                               "app.dimensions.ai"
+                               "scholar.google.com"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
