@@ -74,6 +74,8 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
+                                   org-capture-ref-get-bibtex-goodreads
+                                   org-capture-ref-get-bibtex-amazon
 				   org-capture-ref-get-bibtex-github
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
@@ -776,12 +778,42 @@ The generated value will be the website name."
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
         (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom)
-                                                                              "fanfic-main-info")
-                                                                'h1))))
+                                                                                             "fanfic-main-info")
+                                                                               'h1))))
         (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "creator-info") 'a))))
         (let ((date (dom-text (or (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span)
                                   (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "part-date") 'span)))))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
+
+(defun org-capture-ref-get-bibtex-goodreads ()
+  "Generate BiBTeX for Goodreads book."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "goodreads\\.com/book" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-meta 'books:isbn))
+      (org-capture-ref-get-bibtex-from-isbn)
+      (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-class (org-capture-ref-get-dom) "^authorName$"))))
+      (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-id (org-capture-ref-get-dom) "^bookTitle$")))
+      (let ((details (s-replace "\n" " " (dom-text (dom-by-id (org-capture-ref-get-dom) "^details$")))))
+        
+        (when (string-match "Published *\\([0-9]\\{4\\}\\) *by *\\([^(]+\\) *(?" details)
+          (org-capture-ref-set-bibtex-field :publisher (match-string 1 details))
+          (org-capture-ref-set-bibtex-field :year (match-string 2 details)))))))
+
+(defun org-capture-ref-get-bibtex-amazon ()
+  "Generate BiBTeX for Amazon book."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "amazon\\.com" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (let ((isbn-line (seq-find (lambda (str) (s-contains-p "ISBN-10" str))
+                                 (mapcar #'dom-texts
+                                         (dom-by-class (car (dom-by-id (org-capture-ref-get-dom)
+                                                                       "^detailBullets_feature_div$"))
+                                                       "^a-list-item$")))))
+        (when (string-match "\\([0-9X]\\{10\\}\\)" isbn-line)
+          (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
+      (org-capture-ref-get-bibtex-from-isbn))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
