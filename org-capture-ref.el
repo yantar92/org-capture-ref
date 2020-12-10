@@ -127,6 +127,7 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
 				org-capture-ref-sort-bibtex-entry
 				orcb-fix-spacing
                                 org-capture-ref-clear-nil-bibtex-entries
+                                org-capture-ref-normalize-type
                                 org-capture-ref-replace-%)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
@@ -887,6 +888,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (goto-char 1)
   (while (re-search-forward "{nil}" nil 'noerror)
     (kill-whole-line)))
+
+(defun org-capture-ref-normalize-type ()
+  "Make sure that record type is downcased."
+  (goto-char 1)
+  (re-search-forward "@[a-z]+{" nil t)
+  (replace-match (downcase (match-string 0))))
 
 (defun org-capture-ref-sort-bibtex-entry ()
   "Call `org-ref-sort-bibtex-entry' without hooks."
