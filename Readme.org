@@ -427,7 +427,7 @@ By default, search is done via =grep= (if installed). It can be switched to buil
 
 ** Planned features
 
-- [ ] Parsing amazon/goodreads for ISBN and generating BiBTeX using the obtained ISBN
+- [X] Parsing amazon/goodreads for ISBN and generating BiBTeX using the obtained ISBN
 - [ ] Use DOM as main method to parse html
 - [ ] Automatically tangle the generated BiBTeX into .bib file (for org-ref integration)
 - [ ] Provide custom note function for org-ref
