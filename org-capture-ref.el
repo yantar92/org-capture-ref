@@ -409,7 +409,10 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
 %s" data))
        ;; everything seems ok with the data
        (t
-	(dom-text (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'textarea)))))))
+        (let ((bibtex (dom-text (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'textarea))))
+          (if (string-empty-p bitex)
+              (error "ISBN record %s not found" isbn)
+            bibtex)))))))
 
 ;; Getting BiBTeX
 
