@@ -795,14 +795,16 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-meta 'books:isbn))
-      (org-capture-ref-get-bibtex-from-isbn)
-      (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-class (org-capture-ref-get-dom) "^authorName$"))))
-      (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-id (org-capture-ref-get-dom) "^bookTitle$")))
-      (let ((details (s-replace "\n" " " (dom-text (dom-by-id (org-capture-ref-get-dom) "^details$")))))
+      (if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
+          (org-capture-ref-set-bibtex-field :isbn nil 'force)
+        (org-capture-ref-get-bibtex-from-isbn))
+      (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-texts (dom-by-class (org-capture-ref-get-dom) "^authorName$"))))
+      (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-id (org-capture-ref-get-dom) "^bookTitle$"))))
+      (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
-        (when (string-match "Published *\\([0-9]\\{4\\}\\) *by *\\([^(]+\\) *(?" details)
-          (org-capture-ref-set-bibtex-field :publisher (match-string 1 details))
-          (org-capture-ref-set-bibtex-field :year (match-string 2 details)))))))
+        (when (string-match "Published .*?\\([0-9]\\{4\\}\\) *by *\\([^(]+\\)\\(?:More details...\\).*?(?" details)
+          (org-capture-ref-set-bibtex-field :publisher (s-trim (match-string 2 details)))
+          (org-capture-ref-set-bibtex-field :year (match-string 1 details)))))))
 
 (defun org-capture-ref-get-bibtex-amazon ()
   "Generate BiBTeX for Amazon book."
