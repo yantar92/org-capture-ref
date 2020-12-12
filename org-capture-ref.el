@@ -497,7 +497,8 @@ false-positive results in such websites."
                                "github.com"
                                "wikipedia.org"
                                "app.dimensions.ai"
-                               "scholar.google.com"))
+                               "scholar.google.com"
+                               "gwern.net"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
