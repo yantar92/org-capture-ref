@@ -833,7 +833,7 @@ The generated value will be the website name."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     ;; Sometimes, / in doi is coded as %2F.
     (setq link (replace-regexp-in-string "%2F" "/" link))
-    (when (string-match "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)" link)
+    (when (string-match "springer\\.com/\\(?:chapter/\\|article/\\)?\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
