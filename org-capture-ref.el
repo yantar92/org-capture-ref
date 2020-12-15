@@ -706,14 +706,10 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
+        
 	(with-current-buffer (org-capture-ref-get-buffer)
-          ;; Simplify url
-	  (goto-char (point-min))
-	  (when (re-search-forward "\"page_url_canonical\": \"\\([^\"]+\\)\"" nil t)
-	    (let ((url (s-replace "\n" "" (match-string 1))))
-              (setq url (s-replace "?[^/]+$" "" url))
-              (org-capture-ref-set-bibtex-field :url (s-replace "\\" "" url))))
 	  ;; Find authors
+          (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (org-capture-ref-get-dom) "^user-info__nickname user-info__nickname_small$")))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
             (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
@@ -721,15 +717,9 @@ The generated value will be the website name."
               (setq authors (s-join ", " authors))
               (org-capture-ref-set-bibtex-field :author authors)))
 	  ;; Find title
-	  (goto-char (point-min))
-	  (when (re-search-forward "\"page_title\": \"\\([^\"]+\\)\"" nil t)
-	    (let ((title (match-string 1)))
-              (org-capture-ref-set-bibtex-field :title (decode-coding-string title 'utf-8))))
+          (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-class (org-capture-ref-get-dom) "^post__title-text$")))
 	  ;; Find year
-	  (goto-char (point-min))
-	  (when (re-search-forward "datePublished\": \"\\([^\"]+\\)\"" nil t)
-	    (let ((year (match-string 1)))
-              (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string year)))))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-text (dom-by-class (org-capture-ref-get-dom) "^post__time$")))))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-work ()
   "Generate BiBTeX for an author.today/work book."
