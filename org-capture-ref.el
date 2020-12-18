@@ -808,7 +808,7 @@ The generated value will be the website name."
                                          (dom-by-class (car (dom-by-id (org-capture-ref-get-dom)
                                                                        "^detailBullets_feature_div$"))
                                                        "^a-list-item$")))))
-        (when (string-match "\\([0-9X]\\{10\\}\\)" isbn-line)
+        (when (string-match "\\([0-9X]\\{10,\\}\\)" isbn-line)
           (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
       (org-capture-ref-get-bibtex-from-isbn))))
 
