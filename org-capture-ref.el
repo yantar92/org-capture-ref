@@ -411,7 +411,7 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
        ;; everything seems ok with the data
        (t
         (let ((bibtex (dom-text (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'textarea))))
-          (if (string-empty-p bitex)
+          (if (string-empty-p bibtex)
               (error "ISBN record %s not found" isbn)
             bibtex)))))))
 
