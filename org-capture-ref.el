@@ -217,7 +217,8 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
                               "sciencedirect\\.com/science/article"
                               "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)"
                               "science\\.sciencemag\\.org"
-                              "nature\\.com")
+                              "nature\\.com"
+                              "aip\\.scitation\\.org")
   "List of regexps matching URLs that must have DOI.
 
 If DOI retrieval fails on these URLs, fallback options are not used -
