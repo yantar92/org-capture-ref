@@ -499,7 +499,8 @@ false-positive results in such websites."
                                "wikipedia.org"
                                "app.dimensions.ai"
                                "scholar.google.com"
-                               "gwern.net"))
+                               "gwern.net"
+                               "habr.com"))
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
