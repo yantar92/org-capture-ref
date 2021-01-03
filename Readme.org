@@ -431,5 +431,6 @@ By default, search is done via =grep= (if installed). It can be switched to buil
 - [X] Use DOM as main method to parse html
 - [ ] Automatically tangle the generated BiBTeX into .bib file (for org-ref integration)
 - [ ] Provide custom note function for org-ref
+- [ ] Add support of major browsers, probably using https://github.com/maxnikulin/linkremark
 
 
