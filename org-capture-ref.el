@@ -196,11 +196,7 @@ may throw error and hence prevent any laster function to be executed."
 				     "data-doi=\"\\([^\"]*\\)\""
 				     "content=\"\\([^\"]*\\)\" name=\"citation_doi"
 				     "objectDOI\" : \"\\([^\"]*\\)\""
-				     "doi = '\\([^']*\\)'"
-				     "\"http://dx.doi.org/\\([^\"]*\\)\""
-				     "/doi/\\([^\"]*\\)\">"
-				     "doi/full/\\([^&]*\\)&"
-				     "doi=\\([^&]*\\)&amp"))
+				     "doi = '\\([^']*\\)'"))
                             (:year . ("class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
                             (:author . ("\\(?:<meta name=\"author\" content=\"\\(.+\\)\" ?/?>\\)\""
 					"\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
