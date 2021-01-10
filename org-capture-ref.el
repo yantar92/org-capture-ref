@@ -210,7 +210,6 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
 (defcustom org-capture-ref-demand-doi-list '("tandfonline\\.com/doi/"
                               "aps\\.org"
                               "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
-                              "sciencedirect\\.com/science/article"
                               "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)"
                               "science\\.sciencemag\\.org"
                               "nature\\.com"
@@ -515,8 +514,8 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
 			       ;; Ignore errors and avoid opening the DOI url.
 			       (cl-letf (((symbol-function 'browse-url) #'ignore))
 				 (doi-utils-doi-to-bibtex-string doi))
-                             (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
-        (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil 'force))
+                             (t nil))))
+        ;; (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil 'force))
         (if (not bibtex-string)
             (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
@@ -853,6 +852,19 @@ The generated value will be the website name."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "sciencedirect\\.com/science/article" link)
       (org-capture-ref-set-bibtex-field :doi (replace-regexp-in-string "https?://doi\\.org/" "" (dom-text (dom-by-class (org-capture-ref-get-dom) "^doi$"))))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-meta 'citation_publication_date)))
+      (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-meta 'citation_journal_title))
+      (when-let ((volume-date-page (dom-texts (dom-by-class (dom-by-class (org-capture-ref-get-dom) "publication-volume") "^text-xs$"))))
+        (when (string-match "Volume \\([0-9]+\\) , [0-9]+ [a-zA-Z]+ [0-9]+, \\([0-9-]+\\)" volume-date-page)
+          (org-capture-ref-set-bibtex-field :volume (match-string 1 volume-date-page))
+          (org-capture-ref-set-bibtex-field :pages (match-string 2 volume-date-page))))
+      (when-let ((author-surnames (mapcar #'dom-texts (dom-by-class (dom-by-class (org-capture-ref-get-dom) "author") "surname")))
+                 (author-names (mapcar #'dom-texts (dom-by-class (dom-by-class (org-capture-ref-get-dom) "author") "given-name"))))
+        (org-capture-ref-set-bibtex-field :author (mapconcat #'identity
+                                              (cl-mapcar (lambda (surname name)
+                                                           (format "%s %s" name surname))
+                                                         author-surnames author-names)
+                                              " and ")))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-lesswrong ()
