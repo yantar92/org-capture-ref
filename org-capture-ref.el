@@ -71,6 +71,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-tandfonline
                                    org-capture-ref-get-bibtex-semanticscholar
                                    org-capture-ref-get-bibtex-sciencedirect-article
+                                   org-capture-ref-get-bibtex-proquest
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
@@ -846,6 +847,16 @@ The generated value will be the website name."
     (when (string-match "semanticscholar\\.org" link)
       (org-capture-ref-set-bibtex-field :doi (dom-text (dom-by-class (org-capture-ref-get-dom) "doi__link")))
       (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-proquest ()
+  "Generate BiBTeX for ProQuest page."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "search\\.proquest\\.com" link)
+      (with-current-buffer (org-capture-ref-get-buffer)
+        (goto-char 1)
+        (when (re-search-forward "DOI:\\([0-9.]+/.+\\)" nil t)
+          (org-capture-ref-set-bibtex-field :doi (match-string 1))
+          (org-capture-ref-get-bibtex-from-first-doi))))))
 
 (defun org-capture-ref-get-bibtex-sciencedirect-article ()
   "Generate BiBTeX for Sciencedirect publication."
