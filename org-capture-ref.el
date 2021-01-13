@@ -309,7 +309,7 @@ The KEY can be a symbol or string.
 SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
   (when (symbolp key) (setq key (symbol-name key)))
   (let ((ans (s-join (or separator " and ")
-                     (mapcar (lambda (node) (dom-attr node 'content))
+                     (mapcar (lambda (node) (replace-regexp-in-string " +" " " (dom-attr node 'content)))
                              (dom-search (org-capture-ref-get-dom)
                                          (lambda (node)
                                            (and (eq (car node) 'meta)
