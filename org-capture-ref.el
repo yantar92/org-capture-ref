@@ -208,8 +208,7 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type '(alist :key-type symbol :value-type (list string)))
 
-(defcustom org-capture-ref-demand-doi-list '("tandfonline\\.com/doi/"
-                              "aps\\.org"
+(defcustom org-capture-ref-demand-doi-list '("aps\\.org"
                               "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
                               "wiley\\.com/doi/abs/\\([0-9a-z-_/.]+\\)"
                               "science\\.sciencemag\\.org"
@@ -502,7 +501,8 @@ false-positive results in such websites."
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
-Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
+Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record.
+Return nil if DOI record is not found."
   (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
 	     (alist-get :doi org-capture-ref-field-regexps))
     (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps)))
@@ -518,9 +518,10 @@ Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record."
                              (t nil))))
         ;; (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil 'force))
         (if (not bibtex-string)
-            (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
-                (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
-              (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning))
+            (prog1 nil
+              (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
+                  (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
+                (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning)))
           (org-capture-ref-message "Retrieving DOI record... done")
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
@@ -832,7 +833,20 @@ The generated value will be the website name."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abd\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
-      (org-capture-ref-get-bibtex-from-first-doi))))
+      (unless (org-capture-ref-get-bibtex-from-first-doi)
+        (let ((pagerangehistory (dom-text (dom-by-class (org-capture-ref-get-dom) "itemPageRangeHistory"))))
+          (when (string-match "Pages \\([0-9]+-[0-9]+\\).+Published online: [0-9]+ [a-zA-Z]+ \\([0-9]\\{4\\}\\)" pagerangehistory)
+            (org-capture-ref-set-bibtex-field :pages (match-string 1 pagerangehistory))
+            (org-capture-ref-set-bibtex-field :year (match-string 2 pagerangehistory))))
+        (org-capture-ref-set-bibtex-field :journal (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "journal-heading") 'a))))
+        (let ((issue-heading (dom-text (dom-by-class (org-capture-ref-get-dom) "issue-heading"))))
+          (when (string-match "Volume \\([0-9]+\\)" issue-heading)
+            (org-capture-ref-set-bibtex-field :volume (match-string 1 issue-heading))))
+        (let ((issue (dom-text (dom-by-class (org-capture-ref-get-dom) "nav-toc-list"))))
+          (when (string-match "Issue \\([0-9]+\\)" issue)
+            (org-capture-ref-set-bibtex-field :issue (match-string 1 issue))))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-meta 'dc.Creator))
+        (org-capture-ref-set-bibtex-field :keywords (org-capture-ref-query-meta 'keywords ", "))))))
 
 (defun org-capture-ref-get-bibtex-wiley ()
   "Generate BiBTeX for Wiley publication."
