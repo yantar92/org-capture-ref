@@ -801,7 +801,7 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-amazon ()
   "Generate BiBTeX for Amazon book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "amazon\\.com" link)
+    (when (s-match "amazon\\." link)
       (org-capture-ref-set-bibtex-field :url link)
       (when-let ((isbn-line (seq-find (lambda (str) (s-contains-p "ISBN-10" str))
                                       (mapcar #'dom-texts
