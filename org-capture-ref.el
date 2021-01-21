@@ -234,6 +234,7 @@ There is no need to attempt finding the value for this key.")
       author       = {${:author}},
       title        = {${:title}},
       journal      = {${:journal}},
+      school      = {${:school}},
       volume       = {${:volume}},
       number       = {${:number}},
       pages        = {${:pages}},
