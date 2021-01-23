@@ -670,18 +670,25 @@ The generated value will be the website name."
                       '(:author :title :year))
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (decode-coding-string
-                                                   (dom-text
-                                                    (dom-by-tag (dom-by-tag (org-capture-ref-get-dom)
-                                                                            'ytd-channel-name)
-                                                                'a))
-                                                   'utf-8))
+                                    (dom-texts
+                                     (dom-by-tag
+                                      (dom-by-tag
+                                       (dom-by-tag
+                                        (org-capture-ref-get-dom)
+                                        'ytd-video-owner-renderer)
+                                       'ytd-channel-name)
+                                      'a))
+                                    'utf-8))
+        
 	;; Find title
         (org-capture-ref-set-bibtex-field :title (decode-coding-string
                                    (dom-text
-                                    (dom-by-tag (dom-by-class
-                                                 (org-capture-ref-get-dom)
-                                                 "^title style-scope ytd-video-primary-info-renderer$")
-                                                'yt-formatted-string))
+                                    (dom-by-tag
+                                     (dom-by-tag (dom-by-class
+                                                  (org-capture-ref-get-dom)
+                                                  "^title style-scope ytd-video-primary-info-renderer$")
+                                                 'yt-formatted-string)
+                                     'a))
                                    'utf-8))
 	;; Find year
         (org-capture-ref-set-bibtex-field
