@@ -377,9 +377,8 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
   "Use buffer from file defined in `:html' field of `org-protocol' query."
   (let* ((html (org-capture-ref-get-capture-info '(:query :html))))
     (when html
-      (with-current-buffer (get-buffer-create html)
-	(insert-file-contents html)
-        (current-buffer)))))
+      (let ((coding-system-for-read 'utf-8))
+        (find-file-noselect html)))))
 
 (defun org-capture-ref-retrieve-url ()
   "Retrieve html buffer from `:link' field of capture data."
@@ -473,7 +472,10 @@ Existing BiBTeX fields are not modified."
               (dolist (regex regexps)
 		(goto-char (point-min))
 		(when (re-search-forward regex nil t)
-		  (org-capture-ref-set-bibtex-field key (decode-coding-string (match-string 1) 'utf-8))
+		  (org-capture-ref-set-bibtex-field key
+                                     (decode-coding-string (match-string 1)
+                                                           (or (get-char-property 0 'charset (match-string 1))
+                                                               'utf-8)))
 		  (throw :found t))))
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (if (org-capture-ref-get-bibtex-field :key)
