@@ -358,7 +358,7 @@ FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names.
 If VAL is empty string, do not do anything.
 Bypass VAL check when FORCE is non-nil."
-  (unless (or force (string-empty-p val) (not val))
+  (unless (and (not force) (or (string-empty-p val) (not val)))
     (setf (alist-get field org-capture-ref--bibtex-alist) val)))
 
 (defun org-capture-ref-set-capture-info (key val)
