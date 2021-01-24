@@ -804,8 +804,8 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-id (org-capture-ref-get-dom) "^bookTitle$"))))
       (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
-        (when (string-match "Published .*?\\([0-9]\\{4\\}\\) *by *\\([^(]+\\)\\(?:More details...\\).*?(?" details)
-          (org-capture-ref-set-bibtex-field :publisher (s-trim (match-string 2 details)))
+        (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(]+\\)\\(?:More details...\\).*?(?\\)?" details)
+          (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (s-trim (match-string 2 details))))
           (org-capture-ref-set-bibtex-field :year (match-string 1 details)))))))
 
 (defun org-capture-ref-get-bibtex-amazon ()
