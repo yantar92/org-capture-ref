@@ -550,6 +550,8 @@ Return nil if DOI record is not found."
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
   (let ((url (org-capture-ref-get-capture-info :link)))
+    (when (string-match "/#[^/]*$" url)
+      (setq url (replace-match "" nil nil url)))
     (org-capture-ref-set-bibtex-field :url url)))
 
 (defun org-capture-ref-get-bibtex-howpublished-from-url ()
