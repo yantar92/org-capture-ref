@@ -1145,31 +1145,34 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
   "Check if `:key' already exists.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (pcase org-capture-ref-check-key-method
-    (`org-id-find
-     (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key) 'marker)))
-       (unless (org-capture-ref-get-capture-template-info :immediate-finish)
-	 (switch-to-buffer (marker-buffer mk))
-	 (goto-char mk)
-	 (org-show-entry))
-       (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
-    (`grep
-     (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
-    (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error))))
+  (when (org-capture-ref-get-bibtex-field :key)
+    (pcase org-capture-ref-check-key-method
+      (`org-id-find
+       (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key) 'marker)))
+         (unless (org-capture-ref-get-capture-template-info :immediate-finish)
+	   (switch-to-buffer (marker-buffer mk))
+	   (goto-char mk)
+	   (org-show-entry))
+         (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
+      (`grep
+       (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
+      (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error)))))
 
 (defun org-capture-ref-check-url ()
   "Check if `:url' already exists.
 It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish)))
+  (when (org-capture-ref-get-bibtex-field :url)
+    (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
 It is assumed that `:link' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-template-info :immediate-finish)))
+  (when (org-capture-ref-get-capture-info :link)
+    (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 ;;; Internal variables
 
@@ -1279,6 +1282,8 @@ used inside capture template."
       (progn
 	(org-capture-ref-reset-state)
 	(org-capture-ref-message "Capturing BiBTeX...")
+        ;; Early check if the entry is already captured.
+        (org-capture-ref-check-bibtex)
 	(org-capture-ref-get-bibtex)
 	(org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
