@@ -77,7 +77,9 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 				   ;; Site-specific parsing
                                    org-capture-ref-get-bibtex-goodreads
                                    org-capture-ref-get-bibtex-amazon
-				   org-capture-ref-get-bibtex-github
+                                   org-capture-ref-get-bibtex-github-commit
+                                   org-capture-ref-get-bibtex-github-issue
+                                   org-capture-ref-get-bibtex-github-repo
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
@@ -606,14 +608,41 @@ The generated value will be the website name."
 	(org-capture-ref-parse-generic))
       (throw :finish t))))
 
-(defun org-capture-ref-get-bibtex-github ()
-  "Parse Github link and generate bibtex entry."
+(defun org-capture-ref-get-bibtex-github-commit ()
+  "Parse Github comit page and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "git\\(hub\\|lab\\)\\.com" link)
+    (when (string-match "github\\.com/\\(.+\\)/commit/\\([0-9a-z]+\\)" link)
+      (let ((commit-number (match-string 2 link))
+            (commit-repo (match-string 1 link)))
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+        ;; Find author
+        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (org-capture-ref-get-dom) "^commit-author user-mention$")))
+        (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
+                                           (s-truncate 10 commit-number)
+                                           (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "^commit-title$")))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+        (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" commit-repo))
+        (throw :finish t)))))
+
+(defun org-capture-ref-get-bibtex-github-issue ()
+  "Parse Github issue page and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "github\\.com/\\(.+\\)/issues/\\([0-9]+\\)" link)
+      (let ((issue-number (match-string 2 link))
+            (issue-repo (match-string 1 link)))
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+        ;; Find author
+        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-meta") "author")))
+        (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-title") "^js-issue-title$")))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+        (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
+        (throw :finish t)))))
+
+(defun org-capture-ref-get-bibtex-github-repo ()
+  "Parse Github repo link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "github\\.com" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      ;; Fix URL
-      (when (string-match "^\\(.+\\)/tree/[a-zA-Z0-9]+$" link)
-        (org-capture-ref-set-bibtex-field :url (match-string 1 link)))
       ;; Find author
       (unless (org-capture-ref-get-bibtex-field :author 'consider-placeholder)
 	(when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
@@ -621,42 +650,14 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
 		      '(:title))
-	(with-current-buffer (org-capture-ref-get-buffer)
-	  ;; find title
-	  (goto-char (point-min))
-	  (when (re-search-forward "<title>\\([^>]+\\)</title>" nil t)
-	    (let ((title (decode-coding-string (match-string 1) 'utf-8)))
-              (when (string-match "^\\(.+\\) at [0-9a-zA-Z]\\{20,\\}$" title)
-		(setq title (match-string 1 title)))
-              ;; Remove trailing Gitlab in title
-              (setq title (replace-regexp-in-string ".?\\{3\\}Gitlab" "" title))
-              ;; Temove author name from title
-              (setq title (replace-regexp-in-string "^[^/]*/[ \t]*" "" title))
-              (org-capture-ref-set-bibtex-field :title title)))
-          (when (string-match-p "/commit/[a-z0-9]+" link)
-            (goto-char (point-min))
-            (when (re-search-forward "commit-title\">\\([^<]+\\)" nil t)
-	      (let ((title (decode-coding-string (match-string 1) 'utf-8)))
-		(setq title (replace-regexp-in-string "([^(]*$" "" title))
-		(setq title (s-trim title))
-		(org-capture-ref-set-bibtex-field :title title))))
-          (when (string-match "/issues/\\([0-9]+\\)" link)
-            (goto-char (point-min))
-            (let ((issue-number (match-string 1 link)))
-              (when (re-search-forward "js-issue-title\">\\([^<]+\\)" nil t)
-		(let ((title (decode-coding-string (match-string 1) 'utf-8)))
-		  (setq title (s-trim title))
-		  (org-capture-ref-set-bibtex-field :title (s-concat  "issue#" issue-number " " title)))))
-            (goto-char (point-min))
-            (when (re-search-forward ">\\([^<]+\\)</a>[^<]+opened this issue" nil t)
-	      (let ((author (decode-coding-string (match-string 1) 'utf-8)))
-		(org-capture-ref-set-bibtex-field :author author))))
-	  ;; Year has no meaning for repo
-	  (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
-	  (when (string-match-p "github" link)
-            (org-capture-ref-set-bibtex-field :howpublished "Github"))
-	  (when (string-match-p "gitlab" link)
-            (org-capture-ref-set-bibtex-field :howpublished "Gitlab")))))))
+        (org-capture-ref-set-bibtex-field :title (format "%s: %s"
+                                          (org-capture-ref-query-opengraph 'title)
+                                          (replace-regexp-in-string (format " - %s" (org-capture-ref-query-opengraph 'title))
+                                                                    ""
+                                                                    (org-capture-ref-query-opengraph 'description))))
+	;; Year has no meaning for repo
+	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+        (org-capture-ref-set-bibtex-field :howpublished "Github")))))
 
 (defun org-capture-ref-get-bibtex-youtube-watch ()
   "Parse Youtube watch link and generate bibtex entry."
