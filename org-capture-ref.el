@@ -1054,13 +1054,13 @@ avaible in :query -> :qutebrowser-fifo capture info."
     (pcase severity
       (`error (start-process-shell-command "Send message to qutebrowser"
 					   nil
-					   (format "echo 'message-error \"%s\"' >> %s" msg fifo)))
+					   (format "echo \"message-error '%s'\" >> %s" msg fifo)))
       (`warning (start-process-shell-command "Send message to qutebrowser"
 					     nil
-					     (format "echo 'message-warning \"%s\"' >> %s" msg fifo)))
+					     (format "echo \"message-warning '%s'\" >> %s" msg fifo)))
       (_ (start-process-shell-command "Send message to qutebrowser"
 				      nil
-				      (format "echo 'message-info \"%s\"' >> %s" msg fifo))))))
+				      (format "echo \"message-info '%s'\" >> %s" msg fifo))))))
 
 (defun org-capture-ref-message (msg &optional severity)
   "Send messages via `org-capture-ref-message-functions'."
