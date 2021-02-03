@@ -291,6 +291,50 @@ This calls `org-capture-ref-get-buffer-functions'."
       (setq org-capture-ref--buffer-dom (with-current-buffer (org-capture-ref-get-buffer)
 			   (libxml-parse-html-region (point-min) (point-max))))))
 
+(defun org-capture-ref-query-dom (&rest query)
+  "Query a dom element text from the website.
+QUERY format:
+:dom|:tag|:class|:id|:attr|:join value [:tag|:class|:id|:attr|:join value]...
+value is a symbol,regexp,regexp, or symbol when matching for tag,
+class, id, or attr respectively.
+:join sets a string to join multiple match. \" \" by default.
+:dom sets dom to parse (default: org-capture-ref-get-dom)."
+  (let ((dom (if (eq ':dom (car query))
+                 (prog1 (cadr query)
+                   (setq query (cddr query)))
+               (org-capture-ref-get-dom)))
+        (separator " "))
+    (while query
+      (setq dom
+            (pcase (car query)
+              (:tag
+               (prog1 (dom-by-tag dom (cadr query))
+                 (setq query (cddr query))))
+              (:class
+               (prog1 (dom-by-class dom (cadr query))
+                 (setq query (cddr query))))
+              (:id
+               (prog1 (dom-by-id dom (cadr query))
+                 (setq query (cddr query))))
+              (:attr
+               (prog1 (dom-attr dom (cadr query))
+                 (setq query (cddr query))))
+              (:join
+               (prog1 dom
+                 (setq separator (cadr query))
+                 (setq query (cddr query))))
+              (_ (error "Invalid query: %s" query))))
+      (when (and (not (stringp dom)) (listp (car dom)) (length= dom 1)) (setq dom (car dom)))
+      (when (and (not (stringp dom)) (listp (car dom)) (length> dom 1) (not (eq ':join (car query))))
+        (setq dom (s-join separator (seq-filter (lambda (res) (not (string-empty-p res))) (mapcar (lambda (dom) (apply #'org-capture-ref-query-dom (append (list ':dom dom) query))) dom))))
+        (setq query nil)))
+    (decode-coding-string
+     (if (stringp dom)
+         dom
+       (unless (listp (car dom)) (setq dom (list dom)))
+       (s-join separator (mapcar #'s-trim (mapcar #'dom-text dom))))
+     'utf-8)))
+
 (defun org-capture-ref-query-opengraph (key &optional separator)
   "Query opengraph KEY from the website.
 The KEY can be a symbol or string not prefixed with og:.
@@ -408,8 +452,8 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
 %s" data))
        ;; everything seems ok with the data
        (t
-        (let ((bibtex (dom-text (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'textarea))))
-          (if (string-empty-p bibtex)
+        (let ((bibtex (org-capture-ref-query-dom :dom (libxml-parse-html-region (point-min) (point-max)) :tag 'textarea)))
+          (if (seq-empty-p bibtex)
               (error "ISBN record %s not found" isbn)
             bibtex)))))))
 
@@ -580,8 +624,8 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "\\(sn=[^&]+\\).*$" "\\1" link))
       (org-capture-ref-set-bibtex-field :howpublished "Wechat")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "rich_media_title"))))
-      (org-capture-ref-set-bibtex-field :author (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "rich_media_meta rich_media_meta_nickname") 'a))))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "rich_media_title"))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "rich_media_meta rich_media_meta_nickname" :tag 'a))
       (with-current-buffer (org-capture-ref-get-buffer)
 	(goto-char (point-min))
         (when (re-search-forward "=\"\\([0-9]\\{4\\}\\)-[0-9]\\{2\\}-[0-9]\\{2\\}\"")
@@ -619,11 +663,11 @@ The generated value will be the website name."
             (commit-repo (match-string 1 link)))
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author
-        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (org-capture-ref-get-dom) "^commit-author user-mention$")))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-author user-mention$"))
         (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
                                            (s-truncate 10 commit-number)
-                                           (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "^commit-title$")))))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+                                           (org-capture-ref-query-dom :class "^commit-title$")))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time 'attr 'datetime)))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" commit-repo))
         (throw :finish t)))))
 
@@ -635,9 +679,9 @@ The generated value will be the website name."
             (issue-repo (match-string 1 link)))
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author
-        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-meta") "author")))
-        (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-title") "^js-issue-title$")))))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "gh-header-meta" :class "author"))
+        (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title$")))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime)))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
         (throw :finish t)))))
 
@@ -668,14 +712,14 @@ The generated value will be the website name."
     (when (string-match "github\\.com/\\(.+\\)/pull/\\([0-9]+\\)" link)
       (let ((pull-number (match-string 2 link))
             (pull-repo (match-string 1 link))
-            (pull-status (let ((status-string (dom-attr (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-meta") "State") 'title)))
+            (pull-status (let ((status-string (org-capture-ref-query-dom :class "gh-header-meta" :class "State" :attr 'title)))
                            (string-match "Status: \\(.+\\)" status-string)
                            (match-string 1 status-string))))
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author (first comment)
-        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "timeline-comment-header") "author")))
-        (org-capture-ref-set-bibtex-field :title  (format "pull#%s: [%s] %s" pull-number pull-status (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-title") "^js-issue-title$")))))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "timeline-comment-header" :class "author"))
+        (org-capture-ref-set-bibtex-field :title  (format "pull#%s: [%s] %s" pull-number pull-status (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title")))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime)))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" pull-repo))
         (throw :finish t)))))
 
@@ -692,35 +736,14 @@ The generated value will be the website name."
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:author :title :year))
 	;; Find author
-        (org-capture-ref-set-bibtex-field :author (decode-coding-string
-                                    (dom-texts
-                                     (dom-by-tag
-                                      (dom-by-tag
-                                       (dom-by-tag
-                                        (org-capture-ref-get-dom)
-                                        'ytd-video-owner-renderer)
-                                       'ytd-channel-name)
-                                      'a))
-                                    'utf-8))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :tag 'ytd-video-owner-renderer :tag 'ytd-channel-name :tag 'a))
         
 	;; Find title
-        (org-capture-ref-set-bibtex-field :title (decode-coding-string
-                                   (dom-text
-                                    (dom-by-tag
-                                     (dom-by-tag (dom-by-class
-                                                  (org-capture-ref-get-dom)
-                                                  "^title style-scope ytd-video-primary-info-renderer$")
-                                                 'yt-formatted-string)
-                                     'a))
-                                   'utf-8))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^title style-scope ytd-video-primary-info-renderer$" :tag 'yt-formatted-string))
 	;; Find year
         (org-capture-ref-set-bibtex-field
          :year
-         (org-capture-ref-extract-year-from-string (decode-coding-string (dom-text
-                                                           (dom-by-tag (dom-by-id (org-capture-ref-get-dom)
-                                                                                  "^date$")
-                                                                       'yt-formatted-string))
-                                                          'utf-8)))))))
+         (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :id "^date$" :tag 'yt-formatted-string)))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
@@ -739,7 +762,7 @@ The generated value will be the website name."
         
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
-          (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (org-capture-ref-get-dom) "^user-info__nickname user-info__nickname_small$")))
+          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^user-info__nickname user-info__nickname_small$"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
             (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
@@ -747,9 +770,9 @@ The generated value will be the website name."
               (setq authors (s-join ", " authors))
               (org-capture-ref-set-bibtex-field :author authors)))
 	  ;; Find title
-          (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-class (org-capture-ref-get-dom) "^post__title-text$")))
+          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^post__title-text$"))
 	  ;; Find year
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-text (dom-by-class (org-capture-ref-get-dom) "^post__time$")))))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "^post__time$"))))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-work ()
   "Generate BiBTeX for an author.today/work book."
@@ -764,11 +787,9 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
-        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom)
-                                                                                "book-meta-panel")
-                                                                  "book-title"))))
-        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "book-authors") 'a))))
-        (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top")) 'data-hint)))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "book-authors" :tag 'a :join " and "))
+        (let ((date (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time)))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
@@ -783,9 +804,9 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
-        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-class (org-capture-ref-get-dom) "post-title"))))
-        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "^mr$") 'a))))
-        (let ((date (dom-attr (assq 'span (dom-by-class (org-capture-ref-get-dom) "hint-top-right mr")) 'data-hint)))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^mr$" :tag 'a :join " and "))
+        (let ((date (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time)))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-ficbook ()
@@ -803,10 +824,8 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:url :author :title :year))
-        (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom)
-                                                                              "fanfic-main-info")
-                                                                'h1))))
-        (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "creator-info") 'a))))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "fanfic-main-info" :tag 'h1))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "creator-info" :tag 'a))
         (let ((date (dom-text (or (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span)
                                   (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "part-date") 'span)))))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
@@ -821,8 +840,8 @@ The generated value will be the website name."
       (if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
           (org-capture-ref-set-bibtex-field :isbn nil 'force)
         (org-capture-ref-get-bibtex-from-isbn))
-      (org-capture-ref-set-bibtex-field :author (s-join " and " (mapcar #'dom-texts (dom-by-class (org-capture-ref-get-dom) "^authorName$"))))
-      (org-capture-ref-set-bibtex-field :title (s-trim (dom-text (dom-by-id (org-capture-ref-get-dom) "^bookTitle$"))))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^authoName$" :join " and "))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
       (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
         (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(]+\\)\\(?:More details...\\).*?(?\\)?" details)
@@ -865,15 +884,15 @@ The generated value will be the website name."
     (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abd\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
-        (let ((pagerangehistory (dom-text (dom-by-class (org-capture-ref-get-dom) "itemPageRangeHistory"))))
+        (let ((pagerangehistory (org-capture-ref-query-dom :class "itemPageRangeHistory")))
           (when (string-match "Pages \\([0-9]+-[0-9]+\\).+Published online: [0-9]+ [a-zA-Z]+ \\([0-9]\\{4\\}\\)" pagerangehistory)
             (org-capture-ref-set-bibtex-field :pages (match-string 1 pagerangehistory))
             (org-capture-ref-set-bibtex-field :year (match-string 2 pagerangehistory))))
-        (org-capture-ref-set-bibtex-field :journal (s-trim (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "journal-heading") 'a))))
-        (let ((issue-heading (dom-text (dom-by-class (org-capture-ref-get-dom) "issue-heading"))))
+        (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :class "journal-heading" :tag 'a))
+        (let ((issue-heading (org-capture-ref-query-dom :class "issue-heading")))
           (when (string-match "Volume \\([0-9]+\\)" issue-heading)
             (org-capture-ref-set-bibtex-field :volume (match-string 1 issue-heading))))
-        (let ((issue (dom-text (dom-by-class (org-capture-ref-get-dom) "nav-toc-list"))))
+        (let ((issue (org-capture-ref-query-dom :class "nav-toc-list")))
           (when (string-match "Issue \\([0-9]+\\)" issue)
             (org-capture-ref-set-bibtex-field :issue (match-string 1 issue))))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-meta 'dc.Creator))
@@ -890,7 +909,7 @@ The generated value will be the website name."
   "Generate BiBTeX for Semanticscholar page."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "semanticscholar\\.org" link)
-      (org-capture-ref-set-bibtex-field :doi (dom-text (dom-by-class (org-capture-ref-get-dom) "doi__link")))
+      (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "doi__link"))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-proquest ()
@@ -907,11 +926,11 @@ The generated value will be the website name."
   "Generate BiBTeX for Sciencedirect publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "sciencedirect\\.com/science/article" link)
-      (org-capture-ref-set-bibtex-field :doi (replace-regexp-in-string "https?://doi\\.org/" "" (dom-text (dom-by-class (org-capture-ref-get-dom) "^doi$"))))
+      (org-capture-ref-set-bibtex-field :doi (replace-regexp-in-string "https?://doi\\.org/" "" (org-capture-ref-query-dom :class "^doi$")))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-meta 'citation_publication_date)))
         (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-meta 'citation_journal_title))
-        (when-let ((volume-date-page (dom-texts (dom-by-class (dom-by-class (org-capture-ref-get-dom) "publication-volume") "^text-xs$"))))
+        (when-let ((volume-date-page (org-capture-ref-query-dom :class "publication-volume" :class "^text-xs$")))
           (when (string-match "Volume \\([0-9]+\\) , [0-9]+ [a-zA-Z]+ [0-9]+, \\([0-9-]+\\)" volume-date-page)
             (org-capture-ref-set-bibtex-field :volume (match-string 1 volume-date-page))
             (org-capture-ref-set-bibtex-field :pages (match-string 2 volume-date-page))))
@@ -932,11 +951,9 @@ The generated value will be the website name."
       (unless (-all-p (lambda (key)
 			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
                       '(:author :title :year))
-        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-tag (dom-by-class (org-capture-ref-get-dom)
-                                                                       "^PostsAuthors-authorName$")
-                                                         'a)))
-        (org-capture-ref-set-bibtex-field :title (dom-text (dom-by-class (org-capture-ref-get-dom) "PostsPageTitle")))
-        (let ((date (dom-text (cdr (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "PostsPageDate-date") 'span)))))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
+        (let ((date (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
