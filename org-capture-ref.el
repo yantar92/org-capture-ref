@@ -79,6 +79,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-amazon
                                    org-capture-ref-get-bibtex-github-commit
                                    org-capture-ref-get-bibtex-github-issue
+                                   org-capture-ref-get-bibtex-github-pull-request
                                    org-capture-ref-get-bibtex-github-repo
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
@@ -660,6 +661,23 @@ The generated value will be the website name."
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
+
+(defun org-capture-ref-get-bibtex-github-pull-request ()
+  "Parse Github pull request link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "github\\.com/\\(.+\\)/pull/\\([0-9]+\\)" link)
+      (let ((pull-number (match-string 2 link))
+            (pull-repo (match-string 1 link))
+            (pull-status (let ((status-string (dom-attr (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-meta") "State") 'title)))
+                           (string-match "Status: \\(.+\\)" status-string)
+                           (match-string 1 status-string))))
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+        ;; Find author (first comment)
+        (org-capture-ref-set-bibtex-field :author (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "timeline-comment-header") "author")))
+        (org-capture-ref-set-bibtex-field :title  (format "pull#%s: [%s] %s" pull-number pull-status (s-trim (dom-text (dom-by-class (dom-by-class (org-capture-ref-get-dom) "gh-header-title") "^js-issue-title$")))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (dom-attr (dom-by-tag (org-capture-ref-get-dom) 'relative-time) 'datetime)))
+        (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" pull-repo))
+        (throw :finish t)))))
 
 (defun org-capture-ref-get-bibtex-youtube-watch ()
   "Parse Youtube watch link and generate bibtex entry."
