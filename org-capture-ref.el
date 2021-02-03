@@ -113,7 +113,8 @@ The following parsers will then be aware that there is no need to search for the
 (defcustom org-capture-ref-get-bibtex-from-elfeed-functions '(org-capture-ref-get-bibtex-generic-elfeed
 					       org-capture-ref-get-bibtex-habr-elfeed
                                                org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
-                                               org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished)
+                                               org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished
+                                               org-capture-ref-get-bibtex-ted-elfeed)
   "Functions used to generate BibTeX entry from elfeed entry data defined in `:elfeed-data' field of the `org-protocol' capture query.
 
 This variable is only used if `org-capture-ref-get-bibtex-from-elfeed-data' is listed in `org-capture-ref-get-bibtex-functions'.
@@ -999,6 +1000,16 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 		       (format "%s:%s"
 			       (org-capture-ref-get-bibtex-field :howpublished)
                                (org-capture-ref-get-bibtex-field :keywords)))))
+
+(defun org-capture-ref-get-bibtex-ted-elfeed (_)
+  "Fix google redirect in TED feeds."
+  (when (string-match "feedproxy\\.google\\.com/~r/TEDTalks_video/.+/\\([^/]+\\)" (org-capture-ref-get-bibtex-field :url))
+    (org-capture-ref-set-bibtex-field :howpublished "TED")
+    (org-capture-ref-set-bibtex-field :url (format "https://www.ted.com/talks/%s" (match-string 1 (org-capture-ref-get-bibtex-field :url))))
+    (when (org-capture-ref-get-bibtex-field :author)
+      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string (format " | %s" (regexp-quote (org-capture-ref-get-bibtex-field :author)))
+                                                          ""
+                                                          (org-capture-ref-get-bibtex-field :title))))))
 
 ;; Generating cite key
 
