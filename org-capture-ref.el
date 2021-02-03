@@ -425,7 +425,8 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
   (let* ((html (org-capture-ref-get-capture-info '(:query :html))))
     (when html
       (let ((coding-system-for-read 'utf-8))
-        (find-file-noselect html)))))
+        (let ((auto-mode-alist '((".+" . fundamental-mode))))
+          (find-file-noselect html))))))
 
 (defun org-capture-ref-retrieve-url ()
   "Retrieve html buffer from `:link' field of capture data."
