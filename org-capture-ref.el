@@ -275,6 +275,14 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 
 ;;; API
 
+(defmacro org-capture-ref-unless-set (fields &rest body)
+  "Run BODY unless all BiBTeX FIELDS are set."
+  (declare (debug (sexp body)) (indent 1))
+  `(unless (-all-p (lambda (key)
+		     (org-capture-ref-get-bibtex-field key 'consider-placeholder))
+		   ',fields)
+     ,@body))
+
 (defun org-capture-ref-get-buffer ()
   "Return buffer containing contents of the captured link.
 
@@ -471,9 +479,7 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
   "Generic parser for websites supporting OpenGraph protocol.
 
 See https://ogp.me/ for details."
-  (unless (-all-p (lambda (key)
-		    (org-capture-ref-get-bibtex-field key 'consider-placeholder))
-		  '(:title :url :howpublished))
+  (org-capture-ref-unless-set (:title :url :howpublished)
     (let ((type (org-capture-ref-query-opengraph 'type))
           (title (org-capture-ref-query-opengraph 'title))
           (url (org-capture-ref-query-opengraph 'url))
@@ -500,9 +506,7 @@ See https://ogp.me/ for details."
 Sets BiBTeX fields according to `org-capture-ref-field-regexps'.
 Existing BiBTeX fields are not modified."
   ;; Do not bother is everything is already set.
-  (unless (-all-p (lambda (key)
-		    (org-capture-ref-get-bibtex-field key 'consider-placeholder))
-		  (mapcar #'car org-capture-ref-field-regexps))
+  (org-capture-ref-unless-set (mapcar #'car org-capture-ref-field-regexps)
     (when org-capture-ref-warn-when-using-generic-parser
       (org-capture-ref-message "Capturing using generic parser..." 'warning))
     ;; Try to find in metadata first.
@@ -511,15 +515,15 @@ Existing BiBTeX fields are not modified."
     ;; Last resort is regexp.
     (with-current-buffer (org-capture-ref-get-buffer)
       (dolist (alist-elem org-capture-ref-field-regexps)
-	(let ((key (car alist-elem))
+        (let ((key (car alist-elem))
 	      (regexps (cdr alist-elem)))
           (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
             (catch :found
               (dolist (regex regexps)
-		(goto-char (point-min))
-		(when (re-search-forward regex nil t)
+	        (goto-char (point-min))
+	        (when (re-search-forward regex nil t)
 		  (org-capture-ref-set-bibtex-field key
                                      (decode-coding-string (match-string 1)
                                                            (or (get-char-property 0 'charset (match-string 1))
@@ -528,7 +532,7 @@ Existing BiBTeX fields are not modified."
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (if (org-capture-ref-get-bibtex-field :key)
 		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
-		(org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning)))))))))
+	        (org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning)))))))))
 
 (defun org-capture-ref-mark-links-with-known-absent-doi ()
   "Prevent `org-capture-ref-get-bibtex-from-first-doi' from searching DOI in website text.
@@ -695,9 +699,7 @@ The generated value will be the website name."
       (unless (org-capture-ref-get-bibtex-field :author 'consider-placeholder)
 	(when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
           (org-capture-ref-set-bibtex-field :author (match-string 1 link))))
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-		      '(:title))
+      (org-capture-ref-unless-set (:title)
         (org-capture-ref-set-bibtex-field :title (format "%s: %s"
                                           (org-capture-ref-query-opengraph 'title)
                                           (replace-regexp-in-string (format " - %s" (org-capture-ref-query-opengraph 'title))
@@ -733,9 +735,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:author :title :year))
+      (org-capture-ref-unless-set (:author :title :year)
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :tag 'ytd-video-owner-renderer :tag 'ytd-channel-name :tag 'a))
         
@@ -757,10 +757,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url link)
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:url :author :title :year))
-        
+      (org-capture-ref-unless-set (:url :author :title :year)
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
           (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^user-info__nickname user-info__nickname_small$"))
@@ -785,9 +782,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:url :author :title :year))
+      (org-capture-ref-unless-set (:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "book-authors" :tag 'a :join " and "))
         (let ((date (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time)))
@@ -802,9 +797,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:url :author :title :year))
+      (org-capture-ref-unless-set (:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^mr$" :tag 'a :join " and "))
         (let ((date (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time)))
@@ -822,9 +815,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Ficbook")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:url :author :title :year))
+      (org-capture-ref-unless-set (:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "fanfic-main-info" :tag 'h1))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "creator-info" :tag 'a))
         (let ((date (dom-text (or (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span)
@@ -949,9 +940,7 @@ The generated value will be the website name."
     (when (string-match "lesswrong\\.com" link)
       (org-capture-ref-set-bibtex-field :howpublished "Lesswrong")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (unless (-all-p (lambda (key)
-			(org-capture-ref-get-bibtex-field key 'consider-placeholder))
-                      '(:author :title :year))
+      (org-capture-ref-unless-set (:author :title :year)
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
         (let ((date (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))
