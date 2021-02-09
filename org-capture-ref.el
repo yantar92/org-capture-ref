@@ -196,21 +196,21 @@ may throw error and hence prevent any laster function to be executed."
 
 ;; Customisation for default functions
 
-(defcustom org-capture-ref-field-regexps '((:doi . ("scheme=\"doi\" content=\"\\([^\"]*\\)\""
-				     "citation_doi\" content=\"\\([^\"]*\\)\""
-				     "data-doi=\"\\([^\"]*\\)\""
-				     "content=\"\\([^\"]*\\)\" name=\"citation_doi"
-				     "objectDOI\" : \"\\([^\"]*\\)\""
-				     "doi = '\\([^']*\\)'"))
-                            (:year . ("class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
-                            (:author . ("\\(?:<meta name=\"author\" content=\"\\(.+\\)\" ?/?>\\)\""
-					"\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
-                            (:title . ("<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
-  "Alist holding regexps used by `org-capture-ref-parse-generic' to populate common BiBTeX fields from html.
-Keys of the alist are the field names (example: `:author') and the values are lists or regexps.
+(defcustom org-capture-ref-field-rules '((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
+				   "citation_doi\" content=\"\\([^\"]*?\\)\""
+				   "data-doi=\"\\([^\"]*?\\)\""
+				   "content=\"\\([^\"]*?\\)\" name=\"citation_doi"
+				   "objectDOI\" : \"\\([^\"]*?\\)\""
+				   "doi = '\\([^']*?\\)'"))
+                          (:year . ("class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
+                          (:author . ((:meta "author")
+				      "\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
+                          (:title . ("<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
+  "Alist holding rules used by `org-capture-ref-parse-generic' to populate common BiBTeX fields from html.
+Keys of the alist are the field names (example: `:author') and the values are lists of regexps or `org-capture-ref-query-dom' rules.
 The regexps are searched one by one in the html buffer and the group 1 match is used as value in the BiBTeX field."
   :group 'org-capture-ref
-  :type '(alist :key-type symbol :value-type (list string)))
+  :type '(alist :key-type symbol :value-type (set string (set symbol string))))
 
 (defcustom org-capture-ref-demand-doi-list '("aps\\.org"
                               "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
@@ -504,32 +504,36 @@ See https://ogp.me/ for details."
 
 (defun org-capture-ref-parse-generic ()
   "Generic parser for the captured html.
-Sets BiBTeX fields according to `org-capture-ref-field-regexps'.
+Sets BiBTeX fields according to `org-capture-ref-field-rules'.
 Existing BiBTeX fields are not modified."
   ;; Do not bother is everything is already set.
-  (org-capture-ref-unless-set (mapcar #'car org-capture-ref-field-regexps)
+  (org-capture-ref-unless-set (mapcar #'car org-capture-ref-field-rules)
     (when org-capture-ref-warn-when-using-generic-parser
       (org-capture-ref-message "Capturing using generic parser..." 'warning))
-    ;; Try to find in metadata first.
-    (unless (org-capture-ref-get-bibtex-field :author)
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-meta 'author)))
-    ;; Last resort is regexp.
     (with-current-buffer (org-capture-ref-get-buffer)
-      (dolist (alist-elem org-capture-ref-field-regexps)
+      (dolist (alist-elem org-capture-ref-field-rules)
         (let ((key (car alist-elem))
-	      (regexps (cdr alist-elem)))
+	      (rules (cdr alist-elem)))
           (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
             (catch :found
-              (dolist (regex regexps)
-	        (goto-char (point-min))
-	        (when (re-search-forward regex nil t)
-		  (org-capture-ref-set-bibtex-field key
-                                     (decode-coding-string (match-string 1)
-                                                           (or (get-char-property 0 'charset (match-string 1))
-                                                               'utf-8)))
-		  (throw :found t))))
+              (dolist (rule rules)
+                (pcase rule
+                  ((pred listp)
+                   (let ((val (apply #'org-capture-ref-query-dom rule)))
+                     (unless (string-empty-p val)
+                       (org-capture-ref-set-bibtex-field key val)
+                       (throw :found t))))
+                  ((pred stringp)
+	           (goto-char (point-min))
+	           (when (re-search-forward rule nil t)
+		     (org-capture-ref-set-bibtex-field key
+                                        (decode-coding-string (match-string 1)
+                                                              (or (get-char-property 0 'charset (match-string 1))
+                                                                  'utf-8)))
+		     (throw :found t)))
+                  (_ (error "Invalid `org-capture-ref-field-rules' rule: %s" rule)))))
             (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
 	      (if (org-capture-ref-get-bibtex-field :key)
 		  (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
@@ -560,8 +564,8 @@ false-positive results in such websites."
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record.
 Return nil if DOI record is not found."
   (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
-	     (alist-get :doi org-capture-ref-field-regexps))
-    (let ((org-capture-ref-field-regexps (list (assq :doi org-capture-ref-field-regexps)))
+	     (alist-get :doi org-capture-ref-field-rules))
+    (let ((org-capture-ref-field-rules (list (assq :doi org-capture-ref-field-rules)))
 	  org-capture-ref-warn-when-using-generic-parser)
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
