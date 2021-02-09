@@ -701,7 +701,7 @@ The generated value will be the website name."
         (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
                                            (s-truncate 10 commit-number)
                                            (org-capture-ref-query-dom :class "^commit-title$")))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime)))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" commit-repo))
         (throw :finish t)))))
 
@@ -715,7 +715,7 @@ The generated value will be the website name."
         ;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "gh-header-meta" :class "author"))
         (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title$")))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime)))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
         (throw :finish t)))))
 
@@ -750,8 +750,8 @@ The generated value will be the website name."
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author (first comment)
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "timeline-comment-header" :class "author"))
-        (org-capture-ref-set-bibtex-field :title  (format "pull#%s: [%s] %s" pull-number pull-status (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title")))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime)))
+        (org-capture-ref-set-bibtex-field :title (format "pull#%s: [%s] %s" pull-number pull-status (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title")))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" pull-repo))
         (throw :finish t)))))
 
@@ -771,9 +771,7 @@ The generated value will be the website name."
 	;; Find title
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^title style-scope ytd-video-primary-info-renderer$" :tag 'yt-formatted-string))
 	;; Find year
-        (org-capture-ref-set-bibtex-field
-         :year
-         (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :id "^date$" :tag 'yt-formatted-string)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :id "^date$" :tag 'yt-formatted-string)))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
@@ -843,8 +841,7 @@ The generated value will be the website name."
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "book-authors" :tag 'a :join " and "))
-        (let ((date (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time)))
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
   "Generate BiBTeX for an author.today/post post."
@@ -858,8 +855,7 @@ The generated value will be the website name."
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^mr$" :tag 'a :join " and "))
-        (let ((date (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time)))
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-ficbook ()
   "Generate BiBTeX for an ficbook.net book."
@@ -1001,8 +997,7 @@ The generated value will be the website name."
       (org-capture-ref-unless-set '(:author :title :year)
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
-        (let ((date (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string date)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
