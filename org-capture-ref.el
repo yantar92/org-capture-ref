@@ -303,11 +303,18 @@ This calls `org-capture-ref-get-buffer-functions'."
 (defun org-capture-ref-query-dom (&rest query)
   "Query a dom element text from the website.
 QUERY format:
-:dom|:tag|:class|:id|:attr|:join value [:tag|:class|:id|:attr|:join value]...
-value is a symbol,regexp,regexp, or symbol when matching for tag,
-class, id, or attr respectively.
+:dom|:tag|:class|:id|:attr|:join|:meta|:apply value [:tag|:class|:id|:attr|:join value|:apply]...
+Value is a symbol, regexp, or regexp when matching for tag,
+class, or id respectively.
+Value can be either a symbol or a cons (symbol . string) for :attr. If
+value is a symbol, return the value of attribute represented by that
+symbol. If value is the cons search dom elements with attribute value
+equal to the strin in the cons.
 :join sets a string to join multiple match. \" \" by default.
-:dom sets dom to parse (default: org-capture-ref-get-dom)."
+:dom sets dom to parse (default: org-capture-ref-get-dom).
+:meta runs query to html metadata. All other query fields (except
+:join) are ignored then. :meta must be the first symbol in the query.
+:apply applies provided function symbol to the result of preceding query."
   (let ((dom (if (eq ':dom (car query))
                  (prog1 (cadr query)
                    (setq query (cddr query)))
@@ -316,6 +323,12 @@ class, id, or attr respectively.
     (while query
       (setq dom
             (pcase (car query)
+              (:apply
+               (prog1 (funcall (cadr query) dom)
+                 (setq query (cddr query))))
+              (:meta
+               (prog1 (org-capture-ref-query-meta (cadr query) (or (plist-get query :join) separator))
+                 (setq query nil)))
               (:tag
                (prog1 (dom-by-tag dom (cadr query))
                  (setq query (cddr query))))
@@ -326,8 +339,16 @@ class, id, or attr respectively.
                (prog1 (dom-by-id dom (cadr query))
                  (setq query (cddr query))))
               (:attr
-               (prog1 (dom-attr dom (cadr query))
-                 (setq query (cddr query))))
+               (pcase (cadr query)
+                 ((and (pred consp)
+                       (app car name)
+                       (app cdr value))
+                  (prog1 (dom-search dom (lambda (node) (string= value (dom-attr node name))))
+                    (setq query (cddr query))))
+                 ((pred symbolp)
+                  (prog1 (dom-attr dom (cadr query))
+                    (setq query (cddr query))))
+                 (_ (error "Invalid :attr query: %s" (cadr query)))))
               (:join
                (prog1 dom
                  (setq separator (cadr query))
@@ -341,7 +362,7 @@ class, id, or attr respectively.
      (if (stringp dom)
          dom
        (unless (listp (car dom)) (setq dom (list dom)))
-       (s-join separator (mapcar #'s-trim (mapcar #'dom-text dom))))
+       (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom)))))
      'utf-8)))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
