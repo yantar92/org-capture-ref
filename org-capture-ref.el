@@ -87,6 +87,8 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-weixin
                                    org-capture-ref-get-bibtex-authortoday-work
                                    org-capture-ref-get-bibtex-authortoday-post
+                                   org-capture-ref-get-bibtex-fantlab-work
+                                   org-capture-ref-get-bibtex-fantlab-edition
                                    org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
                                    ;; OpenGraph parser
@@ -798,6 +800,35 @@ The generated value will be the website name."
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^post__title-text$"))
 	  ;; Find year
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "^post__time$"))))))))
+
+(defun org-capture-ref-get-bibtex-fantlab-work ()
+  "Generate BiBTeX for a fantlab.ru book page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "fantlab\\.ru/work" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
+      (org-capture-ref-set-bibtex-field :publisher "Fantlab")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "author")))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "name") :join " and "))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
+
+(defun org-capture-ref-get-bibtex-fantlab-edition ()
+  "Generate BiBTeX for a fantlab.ru book edition page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "fantlab\\.ru/edition" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
+      (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-dom :class "^titles-block-center$" :class "^isbn$"))
+      ;; We still parse manually since internation ISBN for Russian books is ugly
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^titles-block-center$" :attr '(itemprop . "author") :join " and "))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^titles-block-center$" :id "^name$"))
+      (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :class "^titles-block-center$" :id "^publisher$"))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^titles-block-center$" :id "^year$" :apply #'dom-text :apply #'org-capture-ref-extract-year-from-string))
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-authortoday-work ()
   "Generate BiBTeX for an author.today/work book."
