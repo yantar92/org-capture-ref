@@ -281,7 +281,7 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
   (declare (debug (sexp body)) (indent 1))
   `(unless (-all-p (lambda (key)
 		     (org-capture-ref-get-bibtex-field key 'consider-placeholder))
-		   ',fields)
+		   ,fields)
      ,@body))
 
 (defun org-capture-ref-get-buffer ()
@@ -480,7 +480,7 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
   "Generic parser for websites supporting OpenGraph protocol.
 
 See https://ogp.me/ for details."
-  (org-capture-ref-unless-set (:title :url :howpublished)
+  (org-capture-ref-unless-set '(:title :url :howpublished)
     (let ((type (org-capture-ref-query-opengraph 'type))
           (title (org-capture-ref-query-opengraph 'title))
           (url (org-capture-ref-query-opengraph 'url))
@@ -704,7 +704,7 @@ The generated value will be the website name."
       (unless (org-capture-ref-get-bibtex-field :author 'consider-placeholder)
 	(when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
           (org-capture-ref-set-bibtex-field :author (match-string 1 link))))
-      (org-capture-ref-unless-set (:title)
+      (org-capture-ref-unless-set '(:title)
         (org-capture-ref-set-bibtex-field :title (format "%s: %s"
                                           (org-capture-ref-query-opengraph 'title)
                                           (replace-regexp-in-string (format " - %s" (org-capture-ref-query-opengraph 'title))
@@ -740,7 +740,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:author :title :year)
+      (org-capture-ref-unless-set '(:author :title :year)
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :tag 'ytd-video-owner-renderer :tag 'ytd-channel-name :tag 'a))
         
@@ -762,7 +762,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :url link)
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:url :author :title :year)
+      (org-capture-ref-unless-set '(:url :author :title :year)
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
           (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^user-info__nickname user-info__nickname_small$"))
@@ -787,7 +787,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:url :author :title :year)
+      (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "book-authors" :tag 'a :join " and "))
         (let ((date (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time)))
@@ -802,7 +802,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:url :author :title :year)
+      (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^mr$" :tag 'a :join " and "))
         (let ((date (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time)))
@@ -820,7 +820,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :publisher "Ficbook")
       ;; Mark unneeded fields
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:url :author :title :year)
+      (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "fanfic-main-info" :tag 'h1))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "creator-info" :tag 'a))
         (let ((date (dom-text (or (dom-by-tag (dom-by-class (org-capture-ref-get-dom) "list-of-fanfic-parts") 'span)
@@ -945,7 +945,7 @@ The generated value will be the website name."
     (when (string-match "lesswrong\\.com" link)
       (org-capture-ref-set-bibtex-field :howpublished "Lesswrong")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-unless-set (:author :title :year)
+      (org-capture-ref-unless-set '(:author :title :year)
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
         (let ((date (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))
