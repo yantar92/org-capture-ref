@@ -35,6 +35,7 @@
 (require 'org-ref-bibtex)
 (require 'bibtex)
 (require 'dom)
+(require 'dash)
 (require 's)
 
 ;;; Customization:
@@ -305,7 +306,7 @@ This calls `org-capture-ref-get-buffer-functions'."
 (defun org-capture-ref-query-dom (&rest query)
   "Query a dom element text from the website.
 QUERY format:
-:dom|:tag|:class|:id|:attr|:join|:meta|:apply value [:tag|:class|:id|:attr|:join value|:apply]...
+:dom|:return-dom|:tag|:class|:id|:attr|:join|:meta|:apply value [:tag|:class|:id|:attr|:join value|:apply]...
 Value is a symbol, regexp, or regexp when matching for tag,
 class, or id respectively.
 Value can be either a symbol or a cons (symbol . string) for :attr. If
@@ -314,6 +315,7 @@ symbol. If value is the cons search dom elements with attribute value
 equal to the strin in the cons.
 :join sets a string to join multiple match. \" \" by default.
 :dom sets dom to parse (default: org-capture-ref-get-dom).
+:return-dom forces return value to be a DOM element instead of string when non-nil.
 :meta runs query to html metadata. All other query fields (except
 :join) are ignored then. :meta must be the first symbol in the query.
 :apply applies provided function symbol to the result of preceding query."
@@ -321,8 +323,12 @@ equal to the strin in the cons.
                  (prog1 (cadr query)
                    (setq query (cddr query)))
                (org-capture-ref-get-dom)))
+        (return-dom (and (eq (car query) ':dom)
+                         (prog1 (cadr query)
+                           (setq query (cddr query)))))
         (separator " "))
     (while query
+      (unless (listp (car dom)) (setq dom (list dom)))
       (setq dom
             (pcase (car query)
               (:apply
@@ -332,40 +338,38 @@ equal to the strin in the cons.
                (prog1 (org-capture-ref-query-meta (cadr query) (or (plist-get query :join) separator))
                  (setq query nil)))
               (:tag
-               (prog1 (dom-by-tag dom (cadr query))
+               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-tag dom (cadr query))) dom))
                  (setq query (cddr query))))
               (:class
-               (prog1 (dom-by-class dom (cadr query))
+               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-class dom (cadr query))) dom))
                  (setq query (cddr query))))
               (:id
-               (prog1 (dom-by-id dom (cadr query))
+               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-id dom (cadr query))) dom))
                  (setq query (cddr query))))
               (:attr
                (pcase (cadr query)
                  ((and (pred consp)
                        (app car name)
                        (app cdr value))
-                  (prog1 (dom-search dom (lambda (node) (string= value (dom-attr node name))))
+                  (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-search dom (lambda (node) (string= value (dom-attr node name))))) dom))
                     (setq query (cddr query))))
                  ((pred symbolp)
-                  (prog1 (dom-attr dom (cadr query))
+                  (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-attr dom (cadr query))) dom))
                     (setq query (cddr query))))
                  (_ (error "Invalid :attr query: %s" (cadr query)))))
               (:join
                (prog1 dom
                  (setq separator (cadr query))
                  (setq query (cddr query))))
-              (_ (error "Invalid query: %s" query))))
-      (when (and (not (stringp dom)) (listp (car dom)) (length= dom 1)) (setq dom (car dom)))
-      (when (and (not (stringp dom)) (listp (car dom)) (length> dom 1) (not (eq ':join (car query))))
-        (setq dom (s-join separator (seq-filter (lambda (res) (not (string-empty-p res))) (mapcar (lambda (dom) (apply #'org-capture-ref-query-dom (append (list ':dom dom) query))) dom))))
-        (setq query nil)))
-    (decode-coding-string
-     (if (stringp dom)
-         dom
-       (unless (listp (car dom)) (setq dom (list dom)))
-       (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom)))))
-     'utf-8)))
+              (_ (error "Invalid query: %s" query)))))
+    (if return-dom
+        dom
+      (decode-coding-string
+       (if (stringp dom)
+           dom
+         (unless (listp (car dom)) (setq dom (list dom)))
+         (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom)))))
+       'utf-8))))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
   "Query opengraph KEY from the website.
@@ -810,7 +814,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "author")))
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "name") :join " and "))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "name")))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
 
 (defun org-capture-ref-get-bibtex-fantlab-edition ()
@@ -822,7 +826,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-dom :class "^titles-block-center$" :class "^isbn$"))
       ;; We still parse manually since internation ISBN for Russian books is ugly
       (org-capture-ref-set-bibtex-field :type "book")
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^titles-block-center$" :attr '(itemprop . "author") :join " and "))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^titles-block-center$" :attr '(itemprop . "author")))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^titles-block-center$" :id "^name$"))
       (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :class "^titles-block-center$" :id "^publisher$"))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^titles-block-center$" :id "^year$" :apply #'dom-text :apply #'org-capture-ref-extract-year-from-string))
@@ -840,7 +844,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "book-authors" :tag 'a :join " and "))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "book-authors" :tag 'a))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
@@ -854,7 +858,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^mr$" :tag 'a :join " and "))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^mr$" :tag 'a))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-ficbook ()
@@ -886,7 +890,7 @@ The generated value will be the website name."
       (if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
           (org-capture-ref-set-bibtex-field :isbn nil 'force)
         (org-capture-ref-get-bibtex-from-isbn))
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^authoName$" :join " and "))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^authoName$"))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
       (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
