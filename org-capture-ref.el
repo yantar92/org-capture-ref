@@ -82,6 +82,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-github-issue
                                    org-capture-ref-get-bibtex-github-pull-request
                                    org-capture-ref-get-bibtex-github-repo
+                                   org-capture-ref-get-bibtex-gitlab-repo
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
@@ -758,6 +759,20 @@ The generated value will be the website name."
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" pull-repo))
         (throw :finish t)))))
+
+(defun org-capture-ref-get-bibtex-gitlab-repo ()
+  "Parse GitLab repo link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "gitlab\\.com" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      ;; Find author
+      (org-capture-ref-unless-set '(:author)
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "js-title-container" :tag 'a :apply #'car)))
+      (org-capture-ref-unless-set '(:title)
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "home-panel-title-row" :attr '(itemprop . "name")))
+	;; Year has no meaning for repo
+	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+        (org-capture-ref-set-bibtex-field :howpublished "GitLab")))))
 
 (defun org-capture-ref-get-bibtex-youtube-watch ()
   "Parse Youtube watch link and generate bibtex entry."
