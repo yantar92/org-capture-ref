@@ -329,7 +329,10 @@ equal to the strin in the cons.
                            (setq query (cddr query)))))
         (separator " "))
     (while query
-      (unless (listp (car dom)) (setq dom (list dom)))
+      (unless (or (stringp dom)
+                  (stringp (car dom))
+                  (listp (car dom)))
+        (setq dom (list dom)))
       (setq dom
             (pcase (car query)
               (:apply
@@ -402,10 +405,13 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                                                     (string= key (dom-attr node 'name))))))))))
     (if (string-empty-p ans) nil ans)))
 
-(defun org-capture-ref-extract-year-from-string (string)
-  "Extract year from date string."
-  (when (and string (string-match "[0-9]\\{4\\}" string))
-    (match-string 0 string)))
+(defun org-capture-ref-extract-year-from-string (string-or-dom)
+  "Extract year from date string or DOM element."
+  (let ((string (if (stringp string-or-dom)
+                    string-or-dom
+                  (dom-texts string-or-dom))))
+    (when (and string (string-match "[0-9]\\{4\\}" string))
+      (match-string 0 string))))
 
 (defun org-capture-ref-get-bibtex-field (field &optional return-placeholder-p)
   "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
@@ -860,7 +866,7 @@ The generated value will be the website name."
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "book-meta-panel" :class "book-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "book-authors" :tag 'a))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "book-meta-panel" :class "hint-top" :tag 'span :attr 'data-time :apply #'car :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
   "Generate BiBTeX for an author.today/post post."
@@ -874,7 +880,7 @@ The generated value will be the website name."
       (org-capture-ref-unless-set '(:url :author :title :year)
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "post-title"))
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^mr$" :tag 'a))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time :apply #'org-capture-ref-extract-year-from-string))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "hint-top-right mr" :tag 'span :attr 'data-time :apply #'car :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-ficbook ()
   "Generate BiBTeX for an ficbook.net book."
