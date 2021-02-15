@@ -72,6 +72,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-tandfonline
                                    org-capture-ref-get-bibtex-semanticscholar
                                    org-capture-ref-get-bibtex-sciencedirect-article
+                                   org-capture-ref-get-bibtex-sciencemag-careers-article
                                    org-capture-ref-get-bibtex-proquest
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
@@ -1012,6 +1013,19 @@ The generated value will be the website name."
                                                              (format "%s %s" name surname))
                                                            author-surnames author-names)
                                                 " and ")))))))
+
+(defun org-capture-ref-get-bibtex-sciencemag-careers-article ()
+  "Generate BiBTeX for Science carreers publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "sciencemag\\.org/careers/" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "article__header" :class "byline--article" :tag 'a))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "article__header" :class "byline--article" :tag 'time :apply #'dom-text :apply #'org-capture-ref-extract-year-from-string))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "article__header" :class "article__headline"))
+      (org-capture-ref-set-bibtex-field :publisher "Science")
+      (org-capture-ref-set-bibtex-field :howpublished "Science")
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-lesswrong ()
   "Generate BiBTeX for LessWrong publication."
