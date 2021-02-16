@@ -83,6 +83,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-github-issue
                                    org-capture-ref-get-bibtex-github-pull-request
                                    org-capture-ref-get-bibtex-github-repo
+                                   org-capture-ref-get-bibtex-github-file
                                    org-capture-ref-get-bibtex-gitlab-repo
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
@@ -734,7 +735,7 @@ The generated value will be the website name."
 (defun org-capture-ref-get-bibtex-github-repo ()
   "Parse Github repo link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "github\\.com" link)
+    (when (string-match "github\\.com/[^/]+/[^/]+/?$" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       ;; Find author
       (unless (org-capture-ref-get-bibtex-field :author 'consider-placeholder)
@@ -749,6 +750,21 @@ The generated value will be the website name."
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
+
+(defun org-capture-ref-get-bibtex-github-file ()
+  "Parse Github file page and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "github\\.com/\\([^/]+\\)/\\([^/]+\\)/blob/\\([^/]+\\)/\\(.+\\)" link)
+      (let ((user (match-string 1 link))
+            (repo (match-string 2 link))
+            (branch (match-string 3 link))
+            (file (match-string 4 link)))
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "gh-header-meta" :class "author"))
+        (org-capture-ref-set-bibtex-field :title  (format "%s:%s" branch file))
+        (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+        (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s/%s" user repo))
+        (throw :finish t)))))
 
 (defun org-capture-ref-get-bibtex-github-pull-request ()
   "Parse Github pull request link and generate bibtex entry."
