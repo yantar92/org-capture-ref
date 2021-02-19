@@ -852,7 +852,11 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "author")))
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "name")))
+      (org-capture-ref-set-bibtex-field :title (s-concat (org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
+                                          (let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
+                                            (if (string-empty-p extra-title)
+                                                ""
+                                              (format " / %s" extra-title)))))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
 
 (defun org-capture-ref-get-bibtex-fantlab-edition ()
