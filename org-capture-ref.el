@@ -373,8 +373,10 @@ equal to the strin in the cons.
       (decode-coding-string
        (if (stringp dom)
            dom
-         (unless (listp (car dom)) (setq dom (list dom)))
-         (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom)))))
+         (unless (listp dom) (setq dom (list dom)))
+         (if (stringp (car dom))
+             (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p dom)))
+           (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom))))))
        'utf-8))))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
