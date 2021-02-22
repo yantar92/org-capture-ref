@@ -92,6 +92,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-authortoday-reader
                                    org-capture-ref-get-bibtex-authortoday-work
                                    org-capture-ref-get-bibtex-authortoday-post
+                                   org-capture-ref-get-bibtex-fantlab-author
                                    org-capture-ref-get-bibtex-fantlab-work
                                    org-capture-ref-get-bibtex-fantlab-edition
                                    org-capture-ref-get-bibtex-ficbook
@@ -843,6 +844,22 @@ The generated value will be the website name."
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^post__title-text$"))
 	  ;; Find year
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "^post__time$"))))))))
+
+(defun org-capture-ref-get-bibtex-fantlab-author ()
+  "Generate BiBTeX for a fantlab.ru author page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "fantlab\\.ru/autor" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
+      (org-capture-ref-set-bibtex-field :publisher "Fantlab")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :title (let ((author-string (org-capture-ref-query-dom :class "main-info-block-header" :tag 'h1 :attr '(itemprop . "name"))))
+                                  (when (string-match "\\(.+?\\) *(\\(.+\\))" author-string)
+                                    (format "%s / %s" (match-string 1 author-string) (match-string 2 author-string)))))
+      (org-capture-ref-set-bibtex-field :author org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value))))
 
 (defun org-capture-ref-get-bibtex-fantlab-work ()
   "Generate BiBTeX for a fantlab.ru book page."
