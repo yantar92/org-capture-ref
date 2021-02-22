@@ -375,7 +375,7 @@ equal to the strin in the cons.
       (decode-coding-string
        (if (stringp dom)
            dom
-         (unless (listp dom) (setq dom (list dom)))
+         (unless (and (listp dom) (listp (car dom))) (setq dom (list dom)))
          (if (stringp (car dom))
              (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p dom)))
            (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom))))))
