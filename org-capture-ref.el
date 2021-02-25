@@ -89,6 +89,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-youtube-watch
                                    org-capture-ref-get-bibtex-habr
                                    org-capture-ref-get-bibtex-weixin
+                                   org-capture-ref-get-bibtex-samlib-book
                                    org-capture-ref-get-bibtex-authortoday-reader
                                    org-capture-ref-get-bibtex-authortoday-work
                                    org-capture-ref-get-bibtex-authortoday-post
@@ -844,6 +845,25 @@ The generated value will be the website name."
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^post__title-text$"))
 	  ;; Find year
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "^post__time$"))))))))
+
+(defun org-capture-ref-get-bibtex-samlib-book ()
+  "Generate BiBTeX for a samlib.ru book page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (and (string-match "samlib\\.ru/[a-z]/[^/]+/\\(.+html\\)" link)
+               (match-string 1 link)
+               (not (s-match "index\\(title\\)?" (match-string 1 link))))
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :howpublished "Samlib")
+      (org-capture-ref-set-bibtex-field :publisher "Samlib")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (let ((mstring (org-capture-ref-query-dom :tag 'h3 :apply #'car)))
+                                   (when (string-match "\\(.+\\):" mstring) (match-string 1 mstring))))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :tag 'center :tag 'h2 :apply #'car))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'center :tag 'table :apply (apply-partially #'nth 4)
+                                           :tag 'ul :tag 'li :apply (apply-partially #'nth 2)
+                                           :apply #'dom-text :apply #'org-capture-ref-extract-year-from-string)))))
 
 (defun org-capture-ref-get-bibtex-fantlab-author ()
   "Generate BiBTeX for a fantlab.ru author page."
