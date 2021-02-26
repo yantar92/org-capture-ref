@@ -690,7 +690,7 @@ The generated value will be the website name."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
       (if (match-string 1 link)
-	  (progn
+	  (org-capture-ref-unless-set '(:title :howpublished)
             (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
             (org-capture-ref-set-bibtex-field :title
 			       (replace-regexp-in-string
