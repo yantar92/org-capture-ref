@@ -77,6 +77,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
+                                   org-capture-ref-get-bibtex-wiki
                                    org-capture-ref-get-bibtex-goodreads
                                    org-capture-ref-get-bibtex-amazon
                                    org-capture-ref-get-bibtex-github-commit
@@ -682,6 +683,17 @@ The generated value will be the website name."
 	(goto-char (point-min))
         (when (re-search-forward "=\"\\([0-9]\\{4\\}\\)-[0-9]\\{2\\}-[0-9]\\{2\\}\"")
           (org-capture-ref-set-bibtex-field :year (match-string 1)))))))
+
+(defun org-capture-ref-get-bibtex-wiki ()
+  "Parse Wikipedia page and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "\\(?:https?://\\)?\\([^.]+\\)\\.wikipedia\\.org" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " +- +Wikipedia" "" (org-capture-ref-get-capture-info :description)))
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :howpublished (format "Wikipedia(%s)" (match-string 1 link)))
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
