@@ -281,6 +281,12 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 		 (const :tag "Use `org-id-find'" org-id-find))
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-check-link-regexp '((org-search-view . "^:\\(Source|URL\\):[ \t]+%s$")
+                                (grep . "^:(Source|URL):[ \t]+%s$"))
+  "Regexp used to match the captured link against existing headlines.
+`%s' is replaced by the url.
+The value must be an alist of `org-capture-ref-check-regexp-method' and the corresponding regexp.")
+
 (defcustom org-capture-ref-warn-when-using-generic-parser t
   "Non-nil means warn user if some fields are trying to be parsed using generic parser.
 `debug' means show all the details."
@@ -1316,7 +1322,7 @@ avaible in :query -> :qutebrowser-fifo capture info."
   "Check if REGEXP exists in org files using `org-capture-ref-check-regexp-method'.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (pcase org-capture-ref-check-regexp-method
-    (`grep (org-capture-ref-check-regexp-grep regexp dont-show-match-p))
+    (`grep (org-capture-ref-check-regexp-grep (replace-regexp-in-string "\\\\\\." "\\\\." regexp) dont-show-match-p))
     (`org-search-view (org-capture-ref-check-regexp-search-view regexp dont-show-match-p))
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-regexp-method: %s" org-capture-ref-check-regexp-method) 'error))))
 
@@ -1406,11 +1412,13 @@ capture template."
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
-It is assumed that `:link' is captured into :SOURCE: property.
+The matching is done using `org-capture-ref-check-link-regexp'.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (org-capture-ref-get-capture-info :link)
-    (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-capture-info :link))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+    (org-capture-ref-check-regexp (format (alist-get org-capture-ref-check-regexp-method org-capture-ref-check-link-regexp)
+                           (regexp-quote (org-capture-ref-get-capture-info :link)))
+                   (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 ;;; Internal variables
 
