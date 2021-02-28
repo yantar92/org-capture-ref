@@ -754,6 +754,7 @@ The value will be inactive org timestamp."
     (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\([^/]+\\)\\)/comments/[^/]+/[^/]+/\\([^/]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "libredd\\.it" "reddit.com" (org-capture-ref-get-bibtex-field :url)))
       (if (match-string 1 link)
 	  (org-capture-ref-unless-set '(:title :howpublished)
             (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
@@ -769,7 +770,7 @@ The value will be inactive org timestamp."
 				        (org-capture-ref-get-capture-info :description)))))
 	(org-capture-ref-set-bibtex-field :howpublished "Reddit"))
       (when-let ((id (match-string 2 link)))
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id id :class "comment_author"))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id id :class "comment_author" :apply #'car))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id id :class "created" :attr 'title :apply #'car :apply #'org-capture-ref-extract-year-from-string)))
       ;; Generic parser works ok.
       (let (org-capture-ref-warn-when-using-generic-parser)
