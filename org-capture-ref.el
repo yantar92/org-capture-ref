@@ -920,10 +920,10 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-samlib-book ()
   "Generate BiBTeX for a samlib.ru book page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (and (string-match "samlib\\.ru/[a-z]/[^/]+/\\(.+html\\)" link)
+    (when (and (string-match "\\(?:samlib\\|budclub\\)\\.ru/[a-z]/[^/]+/\\(.+html\\)" link)
                (match-string 1 link)
                (not (s-match "index\\(title\\)?" (match-string 1 link))))
-      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "budclub" "samlib" link))
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Samlib")
       (org-capture-ref-set-bibtex-field :publisher "Samlib")
