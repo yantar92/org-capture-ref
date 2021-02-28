@@ -78,6 +78,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
+                                   org-capture-ref-get-bibtex-google-scholar-bibtex-page
                                    org-capture-ref-get-bibtex-wiki
                                    org-capture-ref-get-bibtex-goodreads
                                    org-capture-ref-get-bibtex-amazon
@@ -1182,6 +1183,12 @@ The value will be inactive org timestamp."
     (when (string-match "doi\\.org/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-google-scholar-bibtex-page ()
+  "Harvest bibtex entry from Google Scholar bibtex page."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "scholar\\.googleusercontent\\.com/scholar\\.bib" link)
+      (org-capture-ref-clean-bibtex (org-capture-ref-query-dom) 'no-hooks))))
 
 ;; Getting BiBTeX from elfeed entries
 
