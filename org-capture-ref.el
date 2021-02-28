@@ -1597,6 +1597,7 @@ The entry will not have leading stars.
 The function uses `org-bibtex-write' internally. Relevant
 customisations may apply.
 Overridden customisations: `org-bibtex-headline-format-function'."
+  (require 'ol-bibtex)
   (with-temp-buffer
     (insert (org-capture-ref-get-bibtex-field :bibtex-string))
     (org-bibtex-read)
