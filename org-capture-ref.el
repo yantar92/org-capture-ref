@@ -206,6 +206,18 @@ may throw error and hence prevent any laster function to be executed."
   :type 'hook
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-headline-format-function #'org-capture-ref-headline-format
+  "Function with no arguments returning the headline text for `org-capture-ref-get-org-entry'."
+  :type 'function
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-headline-tags '("BOOKMARK" :type)
+  "List of tags to be added to org entry in `org-capture-ref-get-org-entry'.
+Each element of the list can be either a string representing the tag
+or a symbol representing the metadata to be used as a tag."
+  :type '(repeat (choice string symbol))
+  :group 'org-capture-ref)
+
 ;; Customisation for default functions
 
 (defcustom org-capture-ref-field-rules '((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
@@ -678,6 +690,14 @@ The generated value will be the website name."
 (defun org-capture-ref-set-access-date ()
   "Set `:urldate' field of the BiBTeX entry to now."
   (org-capture-ref-set-bibtex-field :urldate (format-time-string "%d %B %Y")))
+
+(defun org-capture-ref-set-access-date-timestamp ()
+  "Set `:created' field of the BiBTeX entry to now.
+The value will be inactive org timestamp."
+  (let ((stamp (with-temp-buffer
+                 (org-insert-time-stamp (current-time) t t)
+                 (buffer-substring-no-properties (point-min) (point-max)))))
+    (org-capture-ref-set-bibtex-field :created stamp)))
 
 (defun org-capture-ref-get-bibtex-weixin ()
   "Parse BiBTeX for Wechat article."
@@ -1420,6 +1440,38 @@ capture template."
                            (regexp-quote (org-capture-ref-get-capture-info :link)))
                    (org-capture-ref-get-capture-template-info :immediate-finish))))
 
+;;; Formatting Org entry
+
+(defun org-capture-ref-headline-format ()
+  "Format title as the following:
+First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
+  (format "%s%s%s%s"
+	  (or (when (org-capture-ref-get-bibtex-field :author)
+                (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
+		       (author-surnames (mapcar (lambda (author)
+						  (car (last (s-split " +" author))))
+						authors)))
+                  (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
+                    (setq author-surnames authors))
+		  (if (= 1 (length author-surnames))
+                      (format "%s " (car author-surnames))
+                    (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
+              "")
+          (or (when (org-capture-ref-get-bibtex-field :journal)
+		(format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
+              (when (org-capture-ref-get-bibtex-field :school)
+		(format "[%s] " (org-capture-ref-get-bibtex-field :school)))
+              (when (org-capture-ref-get-bibtex-field :publisher)
+		(format "[%s] " (org-capture-ref-get-bibtex-field :publisher)))
+              (when (org-capture-ref-get-bibtex-field :howpublished)
+                (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
+              "")
+          (or (when (org-capture-ref-get-bibtex-field :year)
+                (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
+              "")
+          (or (org-capture-ref-get-bibtex-field :title)
+              "")))
+
 ;;; Internal variables
 
 (defvar org-capture-ref--store-link-plist nil
@@ -1537,6 +1589,29 @@ used inside capture template."
 	(org-capture-ref-message "Capturing BiBTeX... done"))
     (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer)))
   "")
+
+(defun org-capture-ref-get-org-entry ()
+  "Return org entry according to :bibtex-string.
+The entry will not have leading stars.
+The function uses `org-bibtex-write' internally. Relevant
+customisations may apply.
+Overridden customisations: `org-bibtex-headline-format-function'."
+  (with-temp-buffer
+    (insert (org-capture-ref-get-bibtex-field :bibtex-string))
+    (org-bibtex-read)
+    (with-temp-buffer
+      (org-mode)
+      (let ((org-bibtex-headline-format-function (lambda (_) (funcall org-capture-ref-headline-format-function))))
+        (org-bibtex-write)
+        (goto-char 1)
+        (when org-capture-ref-headline-tags
+          (org-set-tags (append (org-get-tags nil t)
+                                (mapcar (lambda (tag)
+                                          (pcase tag
+                                            ((pred stringp) tag)
+                                            (field (org-capture-ref-get-bibtex-field field))))
+                                        org-capture-ref-headline-tags)))))
+      (replace-regexp-in-string "^\\*+ *" "" (substring-no-properties (buffer-string))))))
 
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
