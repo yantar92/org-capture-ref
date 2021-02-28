@@ -62,6 +62,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 				   org-capture-ref-get-bibtex-howpublished-from-url
                                    org-capture-ref-set-default-type
                                    org-capture-ref-set-access-date
+                                   org-capture-ref-set-access-date-timestamp
                                    ;; Elfeed parsers
 				   org-capture-ref-get-bibtex-from-elfeed-data
                                    ;; DOI retrieval
@@ -260,6 +261,7 @@ There is no need to attempt finding the value for this key.")
       publisher = {${:publisher}},
       keywords     = {${:keywords}},
       note         = {Online; accessed ${:urldate}}
+      created         = {${:created}}
       }"
   "Default template used to format BiBTeX entry.
 If a keyword from the template is missing, it will remain empty."
