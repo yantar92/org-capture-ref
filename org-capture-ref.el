@@ -294,8 +294,8 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 		 (const :tag "Use `org-id-find'" org-id-find))
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-check-link-regexp '((org-search-view . "^:\\(Source|URL\\):[ \t]+%s$")
-                                (grep . "^:(Source|URL):[ \t]+%s$"))
+(defcustom org-capture-ref-check-link-regexp '((org-search-view . "^:\\(Source|URL\\):[ \t[]+%s[]]*$")
+                                (grep . "^:(Source|URL):[ \t[]+%s[]]*$"))
   "Regexp used to match the captured link against existing headlines.
 `%s' is replaced by the url.
 The value must be an alist of `org-capture-ref-check-regexp-method' and the corresponding regexp.")
