@@ -962,7 +962,7 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :publisher "Fantlab")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "author")))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "author")))
       (org-capture-ref-set-bibtex-field :title (s-concat (org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
                                           (let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
                                             (if (string-empty-p extra-title)
