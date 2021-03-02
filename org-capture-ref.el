@@ -325,6 +325,7 @@ This calls `org-capture-ref-get-buffer-functions'."
   (let ((buffer (or org-capture-ref--buffer
 		    (run-hook-with-args-until-success 'org-capture-ref-get-buffer-functions))))
     (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
+    (setq org-capture-ref--buffer-dom nil)
     (setq org-capture-ref--buffer buffer)))
 
 (defun org-capture-ref-get-dom ()
@@ -1005,8 +1006,12 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-authortoday-reader ()
   "Generate BiBTeX for an author.today book opened for reading."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "author\\.today/reader" link)
-      (org-capture-ref-set-bibtex-field :url (org-capture-ref-query-dom :class "^navbar-left$" :tag 'a :attr 'href))
+    (when (string-match "author\\.today/reader/\\([^/]+\\)" link)
+      (org-capture-ref-set-bibtex-field :url (format "https://author.today/work/%s" (match-string 1 link)))
+      ;; Asquire the new URL.
+      (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
+      (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
+        (org-capture-ref-get-buffer))
       (org-capture-ref-get-bibtex-authortoday-work))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
