@@ -967,9 +967,13 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "author")))
       (org-capture-ref-set-bibtex-field :title (s-concat (org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
                                           (let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
-                                            (if (string-empty-p extra-title)
-                                                ""
-                                              (format " / %s" extra-title)))))
+                                            (pcase extra-title
+                                              ("" "")
+                                              ((rx (or "год" "цикл"))
+                                               "")
+                                              ((rx "Другие названия: " (let extra-title (1+ nonl)))
+                                               (format " / %s" extra-title))
+                                              (_ (format " / %s" extra-title))))))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
 
 (defun org-capture-ref-get-bibtex-fantlab-edition ()
