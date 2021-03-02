@@ -186,7 +186,8 @@ The functions will be called in sequence until any of them returns non-nil value
 
 (defcustom org-capture-ref-check-bibtex-functions '(org-capture-ref-check-key
 				     org-capture-ref-check-url
-				     org-capture-ref-check-link)
+				     org-capture-ref-check-link
+                                     org-capture-ref-check-article-title)
   "Functions used to check the validity of generated BiBTeX.
   
 The functions are called in sequence without arguments.
@@ -1447,6 +1448,14 @@ capture template."
     (org-capture-ref-check-regexp (format (alist-get org-capture-ref-check-regexp-method org-capture-ref-check-link-regexp)
                            (regexp-quote (org-capture-ref-get-capture-info :link)))
                    (org-capture-ref-get-capture-template-info :immediate-finish))))
+
+(defun org-capture-ref-check-article-title ()
+  "Check if `:title' already exists in some heading title.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (when (and (string= "article" (org-capture-ref-get-bibtex-field :type))
+             (org-capture-ref-get-bibtex-field :title))
+    (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote (org-capture-ref-get-bibtex-field :title))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 ;;; Formatting Org entry
 
