@@ -1519,7 +1519,7 @@ capture template."
 First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
   (format "%s%s%s%s"
 	  (or (when (org-capture-ref-get-bibtex-field :author)
-                (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
+                (let* ((authors (s-split " +and +" (org-capture-ref-get-bibtex-field :author)))
 		       (author-surnames (mapcar (lambda (author)
                                                   (pcase author
                                                     ((rx (let surname (1+ (not whitespace))) ",")
