@@ -306,6 +306,9 @@ The value must be an alist of `org-capture-ref-check-regexp-method' and the corr
   :type 'boolean
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-quiet-verbosity t
+  "Show less messages.")
+
 ;;; API
 
 (defmacro org-capture-ref-unless-set (fields &rest body)
@@ -625,6 +628,9 @@ false-positive results in such websites."
                  (org-capture-ref-get-capture-info :link))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
+(defvar org-capture-ref--doi-record-cache (make-hash-table :test #'equal)
+  "Hash table storing downloaded DOI records.")
+
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
 Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record.
@@ -636,19 +642,21 @@ Return nil if DOI record is not found."
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
-      (org-capture-ref-message (format "Retrieving DOI record %s ..." doi))
-      (let ((bibtex-string (condition-case err
-			       ;; Ignore errors and avoid opening the DOI url.
-			       (cl-letf (((symbol-function 'browse-url) #'ignore))
-				 (doi-utils-doi-to-bibtex-string doi))
-                             (t nil))))
-        ;; (unless bibtex-string (org-capture-ref-set-bibtex-field :doi nil 'force))
+      (unless org-capture-ref-quiet-verbosity
+        (org-capture-ref-message (format "Retrieving DOI record %s ..." doi)))
+      (let ((bibtex-string (or (gethash doi org-capture-ref--doi-record-cache)
+                               (condition-case err
+		                   ;; Ignore errors and avoid opening the DOI url.
+		                   (cl-letf (((symbol-function 'browse-url) #'ignore))
+		                     (doi-utils-doi-to-bibtex-string doi))
+                                 (t nil)))))
         (if (not bibtex-string)
             (prog1 nil
               (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                   (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning)))
-          (org-capture-ref-message "Retrieving DOI record... done")
+          (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving DOI record... done"))
+          (puthash doi bibtex-string org-capture-ref--doi-record-cache)
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
 
@@ -656,7 +664,8 @@ Return nil if DOI record is not found."
   "Generate BiBTeX using ISBN number found `:isbn' field."
   (let ((isbn (org-capture-ref-get-bibtex-field :isbn)))
     (when isbn
-      (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn))
+      (unless org-capture-ref-quiet-verbosity
+        (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn)))
       (let ((bibtex-string (condition-case err
 			       ;; Ignore errors and avoid opening the ISBN url.
 			       (org-capture-ref--get-bibtex-string-from-isbn isbn)
@@ -664,7 +673,7 @@ Return nil if DOI record is not found."
         (unless bibtex-string (org-capture-ref-set-bibtex-field :isbn nil 'force))
         (if (not bibtex-string)
             (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceding with fallback options." isbn) 'warning)
-          (org-capture-ref-message "Retrieving ISBN record... done")
+          (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving ISBN record... done"))
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
           (throw :finish t))))))
 
@@ -1610,14 +1619,14 @@ used inside capture template."
   (unwind-protect
       (progn
 	(org-capture-ref-reset-state)
-	(org-capture-ref-message "Capturing BiBTeX...")
+	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX..."))
         ;; Early check if the entry is already captured.
         (org-capture-ref-check-bibtex)
 	(org-capture-ref-get-bibtex)
 	(org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
 	(org-capture-ref-check-bibtex)
-	(org-capture-ref-message "Capturing BiBTeX... done"))
+	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done")))
     (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer)))
   "")
 
