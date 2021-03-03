@@ -1639,14 +1639,17 @@ used inside capture template."
 The entry will not have leading stars.
 The function uses `org-bibtex-write' internally. Relevant
 customisations may apply.
-Overridden customisations: `org-bibtex-headline-format-function'."
+Overridden customisations:
+- `org-bibtex-headline-format-function' = `org-capture-ref-headline-format-function'
+- `org-bibtex-key-property' = \"ID\"."
   (require 'ol-bibtex)
   (with-temp-buffer
     (insert (org-capture-ref-get-bibtex-field :bibtex-string))
     (org-bibtex-read)
     (with-temp-buffer
       (org-mode)
-      (let ((org-bibtex-headline-format-function (lambda (_) (funcall org-capture-ref-headline-format-function))))
+      (let ((org-bibtex-headline-format-function (lambda (_) (funcall org-capture-ref-headline-format-function)))
+            (org-bibtex-key-property "ID"))
         (org-bibtex-write)
         (goto-char 1)
         (when org-capture-ref-headline-tags
