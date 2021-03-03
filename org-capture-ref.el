@@ -1112,7 +1112,7 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-tandfonline ()
   "Generate BiBTeX for Tandfonline publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abd\\)/\\([0-9a-z-_/.]+\\)" link)
+    (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abs\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
         (let ((pagerangehistory (org-capture-ref-query-dom :class "itemPageRangeHistory")))
