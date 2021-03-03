@@ -1490,7 +1490,10 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
 	  (or (when (org-capture-ref-get-bibtex-field :author)
                 (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
 		       (author-surnames (mapcar (lambda (author)
-						  (car (last (s-split " +" author))))
+                                                  (pcase author
+                                                    ((rx (let surname (1+ (not whitespace))) ",")
+                                                     surname)
+						    (_ (car (last (s-split " +" author))))))
 						authors)))
                   (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
                     (setq author-surnames authors))
