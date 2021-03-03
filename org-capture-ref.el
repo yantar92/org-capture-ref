@@ -1212,6 +1212,7 @@ The value will be inactive org timestamp."
   "Harvest bibtex entry from Google Scholar bibtex page."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "scholar\\.googleusercontent\\.com/scholar\\.bib" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-clean-bibtex (org-capture-ref-query-dom) 'no-hooks))))
 
 ;; Getting BiBTeX from elfeed entries
