@@ -148,7 +148,9 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
 				orcb-fix-spacing
                                 org-capture-ref-clear-nil-bibtex-entries
                                 org-capture-ref-normalize-type
-                                org-capture-ref-replace-%)
+                                org-capture-ref-replace-%
+                                org-capture-ref-remove-garbage-symbols-from-authors
+                                org-capture-ref-capitalize-author)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
 Each function is called with point at undefined position inside buffer
@@ -1334,6 +1336,35 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
     (goto-char (match-beginning 0))
     (insert "\\")
     (goto-char (match-end 0))))
+
+(defvar org-capture-ref-bibtex-author-garbage-symbols '("*" "§" "¶")
+  "Garbage that sometimes appear in author bibtex entries for scientific articles.")
+
+(defun org-capture-ref-remove-garbage-symbols-from-authors ()
+  "Remove *, symbols from author field."
+  (goto-char 1)
+  (when (org-capture-ref-get-bibtex-field :journal)
+    (when-let ((author-field (bibtex-search-forward-field "author")))
+      (when (cdr author-field)
+        (goto-char (cadr author-field))
+        (while (re-search-forward (regexp-opt (mapcar #'regexp-quote org-capture-ref-bibtex-author-garbage-symbols))
+                                  (caddr author-field)
+                                  t)
+          (replace-match ""))))))
+
+(defun org-capture-ref-capitalize-author ()
+  "Capitalize authors in bibtex entries with :journal."
+  (goto-char 1)
+  (when (org-capture-ref-get-bibtex-field :journal)
+    (when-let ((author-field (bibtex-search-forward-field "author")))
+      (when (cdr author-field)
+        (goto-char (cadr author-field))
+        (while (re-search-forward (rx (1+ word))
+                                  (caddr author-field)
+                                  t)
+          (unless (string= "and" (save-match-data (match-string 0)))
+            (setf (buffer-substring (match-beginning 0) (match-end 0)) (capitalize (save-match-data (match-string 0))))
+            (goto-char (match-end 0))))))))
 
 ;;; Message functions
 
