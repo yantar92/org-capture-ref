@@ -644,8 +644,7 @@ Return nil if DOI record is not found."
       (org-capture-ref-parse-generic)))
   (let ((doi (org-capture-ref-get-bibtex-field :doi)))
     (when doi
-      (unless org-capture-ref-quiet-verbosity
-        (org-capture-ref-message (format "Retrieving DOI record %s ..." doi)))
+      (org-capture-ref-message (format "Retrieving DOI record %s ..." doi))
       (let ((bibtex-string (or (gethash doi org-capture-ref--doi-record-cache)
                                (condition-case err
 		                   ;; Ignore errors and avoid opening the DOI url.
@@ -666,8 +665,7 @@ Return nil if DOI record is not found."
   "Generate BiBTeX using ISBN number found `:isbn' field."
   (let ((isbn (org-capture-ref-get-bibtex-field :isbn)))
     (when isbn
-      (unless org-capture-ref-quiet-verbosity
-        (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn)))
+      (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn))
       (let ((bibtex-string (condition-case err
 			       ;; Ignore errors and avoid opening the ISBN url.
 			       (org-capture-ref--get-bibtex-string-from-isbn isbn)
