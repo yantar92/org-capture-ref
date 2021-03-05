@@ -244,7 +244,8 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
                               "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
                               "science\\.sciencemag\\.org"
                               "nature\\.com"
-                              "aip\\.scitation\\.org")
+                              "aip\\.scitation\\.org"
+                              "worldscientific\\.com")
   "List of regexps matching URLs that must have DOI.
 
 If DOI retrieval fails on these URLs, fallback options are not used -
