@@ -75,6 +75,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-sciencedirect-article
                                    org-capture-ref-get-bibtex-sciencemag-careers-article
                                    org-capture-ref-get-bibtex-proquest
+                                   org-capture-ref-get-bibtex-arxiv
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
@@ -1201,6 +1202,17 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))))))
+
+(defun org-capture-ref-get-bibtex-arxiv ()
+  "Generate BiBTeX for ArXiv publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "arxiv\\.org/abs" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :howpublished "ArXiv")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'citation_author))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'citation_title))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta 'citation_date :apply #'org-capture-ref-extract-year-from-string)))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
