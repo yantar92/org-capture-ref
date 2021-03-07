@@ -76,6 +76,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-sciencemag-careers-article
                                    org-capture-ref-get-bibtex-proquest
                                    org-capture-ref-get-bibtex-arxiv
+                                   org-capture-ref-get-bibtex-ams-cn
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
@@ -1195,6 +1196,19 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :publisher "Science")
       (org-capture-ref-set-bibtex-field :howpublished "Science")
       (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-ams-cn ()
+  "Generate BiBTeX for Acta Metallurgica Sinica publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "ams\\.org\\.cn/[^/]+/\\([^/]+/[^/]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
+      (unless (org-capture-ref-get-bibtex-from-first-doi)
+        (org-capture-ref-clean-bibtex (with-current-buffer (url-retrieve-synchronously (org-capture-ref-query-dom :id "bibtex_export" :attr 'href))
+                         (goto-char 1)
+                         (re-search-forward "@article{")
+                         ;; The key they provide is garbage.
+                         (setf (buffer-substring (point) (line-end-position)) (format "%s," (org-capture-ref-generate-key-from-url)))
+                         (string-clean-whitespace (buffer-substring url-http-end-of-headers (point-max)))))))))
 
 (defun org-capture-ref-get-bibtex-lesswrong ()
   "Generate BiBTeX for LessWrong publication."
