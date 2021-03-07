@@ -984,6 +984,10 @@ The value will be inactive org timestamp."
                                               ((rx "Другие названия: " (let extra-title (1+ nonl)))
                                                (format " / %s" extra-title))
                                               (_ (format " / %s" extra-title))))))
+      (when (let ((case-fold-search nil)) (string-match-p "Цикл" (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'cadr)))
+        (org-capture-ref-set-bibtex-field :title (format "Series: %s" (org-capture-ref-get-bibtex-field :title)))
+        (org-capture-ref-set-bibtex-field :type "misc")
+        (throw :finish t))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
 
 (defun org-capture-ref-get-bibtex-fantlab-edition ()
