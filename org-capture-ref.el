@@ -1010,7 +1010,7 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for an author.today/work book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (s-match "author\\.today/work" link)
-      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "?[^?]+$" "" link))
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
@@ -1037,7 +1037,7 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for an author.today/post post."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (s-match "author\\.today/post" link)
-      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "?[^?]+$" "" link))
       (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
       ;; Mark unneeded fields
