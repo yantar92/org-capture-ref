@@ -463,7 +463,7 @@ See `org-capture-ref--bibtex-alist' for common field names."
   (if return-placeholder-p
       (alist-get field org-capture-ref--bibtex-alist)
     (let ((res (alist-get field org-capture-ref--bibtex-alist)))
-      (unless (string-equal res org-capture-ref-placeholder-value) res))))
+      (unless (and (stringp res) (string-equal res org-capture-ref-placeholder-value)) res))))
 
 (defun org-capture-ref-get-capture-template-info (key)
   "Return value of KEY from `org-capture-plist'."
@@ -488,7 +488,7 @@ FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names.
 If VAL is empty string, do not do anything.
 Bypass VAL check when FORCE is non-nil."
-  (unless (and (not force) (or (string-empty-p val) (not val)))
+  (unless (and (not force) (or (and (stringp val) (string-empty-p val)) (not val)))
     (setf (alist-get field org-capture-ref--bibtex-alist) val)))
 
 (defun org-capture-ref-set-capture-info (key val)
@@ -1473,7 +1473,11 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 	(switch-to-buffer (marker-buffer (car matches)))
 	(goto-char (car matches))
         (org-back-to-heading t)
-	(org-show-entry))
+	(org-show-entry)
+        (when (yes-or-no-p "Update the entry according to the new capture? ")
+          (org-capture-ref-get-bibtex-org-heading)
+          (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+          (throw :finish t)))
       (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error))))
 
 (defun org-capture-ref-check-regexp-search-view (regexp &optional dont-show-match-p)
@@ -1494,7 +1498,11 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 	   (goto-char (car headlines))
            (if (functionp #'org-fold-reveal)
                (org-fold-reveal)
-	     (org-reveal)))
+	     (org-reveal))
+           (when (yes-or-no-p "Update the entry according to the new capture? ")
+             (org-capture-ref-get-bibtex-org-heading)
+             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+             (throw :finish t)))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))
       (_ (when dont-show-match-p (kill-buffer))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))))
@@ -1510,7 +1518,11 @@ capture template."
          (unless (org-capture-ref-get-capture-template-info :immediate-finish)
 	   (switch-to-buffer (marker-buffer mk))
 	   (goto-char mk)
-	   (org-show-entry))
+	   (org-show-entry)
+           (when (yes-or-no-p "Update the entry according to the new capture? ")
+             (org-capture-ref-get-bibtex-org-heading)
+             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+             (throw :finish t)))
          (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
       (`grep
        (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
@@ -1541,6 +1553,99 @@ capture template."
   (when (and (string= "article" (org-capture-ref-get-bibtex-field :type))
              (org-capture-ref-get-bibtex-field :title))
     (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote (org-capture-ref-get-bibtex-field :title))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+
+;;; Updating existing entry
+
+(defun org-capture-ref-get-bibtex-org-heading ()
+  "Generate BiBTeX for an org heading at point."
+  (when (and (eq 'org-mode major-mode)
+	     (org-at-heading-p))
+    (dolist (prop (org-entry-properties))
+      (pcase (car prop)
+	("ID" (org-capture-ref-set-bibtex-field :key (cdr prop)))
+        ((and name (or (guard (member name org-special-properties))
+		       (guard (member name org-default-properties))))
+         nil)
+        (name (org-capture-ref-set-bibtex-field (intern (format ":%s" (downcase name))) (cdr prop)))))
+    (org-capture-ref-set-bibtex-field :org-props (org-entry-properties))
+    (org-capture-ref-set-bibtex-field :org-hd-marker (save-restriction (org-back-to-heading) (point-marker)))))
+
+(defvar org-capture-ref-update-heading-history nil)
+
+(defun org-capture-ref-update-heading-maybe ()
+  "Use last captured heading to update existing heading at `:org-hd-marker' bibtex property."
+  (when (org-capture-ref-get-bibtex-field :org-hd-marker)
+    (unwind-protect
+        (progn
+          (org-capture-goto-last-stored)
+          (let ((current-heading-props (org-entry-properties))
+                (body (save-excursion
+                        (save-restriction
+                          (org-back-to-heading)
+                          (narrow-to-region (point) (save-excursion (or (outline-next-heading) (point-max))))
+                          (goto-char (point-at-bol 2))
+                          (when (org-at-planning-p) (goto-char (point-at-bol 1)))
+                          (re-search-forward org-property-drawer-re nil t)
+                          (when (re-search-forward ":LOGBOOK:" nil t)
+                            (re-search-forward ":END:"))
+                          (buffer-substring-no-properties (point) (point-max))))))
+            (org-back-to-heading)
+            (org-cut-subtree)
+            (switch-to-buffer (marker-buffer (org-capture-ref-get-bibtex-field :org-hd-marker)))
+            (goto-char (org-capture-ref-get-bibtex-field :org-hd-marker))
+            (org-show-set-visibility 'lineage)
+	    (dolist (prop current-heading-props)
+              (when prop
+                (unless (member (car prop) '("ALLTAGS" "FILE" "CATEGORY"))
+                  (unless (equal (org-entry-get nil (car prop)) (cdr prop))
+                    (pcase (or (seq-empty-p (org-entry-get nil (car prop) nil t))
+                               (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
+                                                          '(?y ?n ?c)))
+                      (?y (cond
+                           ((member (car prop) org-special-properties)
+                            (pcase (car prop)
+                              ("TAGS" (org-set-tags (cdr prop)))
+                              ("ITEM"
+                               (re-search-forward org-complex-heading-regexp)
+                               (replace-match (cdr prop) nil t nil 4)
+                               (org-back-to-heading))
+                              ("TODO"
+                               (org-todo (cdr prop)))
+                              (_ nil)))
+                           (t (org-entry-put nil (car prop) (cdr prop)))))
+                      (?n nil)
+                      (?c (setq org-capture-ref-update-heading-history (list (org-entry-get nil (car prop)) (cdr prop)))
+                          (when-let ((str (read-string (format "New value of %s [\"%s\", \"%s\"]: "
+                                                               (car prop)
+                                                               (org-entry-get nil (car prop))
+                                                               (cdr prop))
+                                                       nil
+                                                       'history)))
+                            (cond
+                             ((member (car prop) org-special-properties)
+                              (pcase (car prop)
+                                ("TAGS" (org-set-tags str))
+                                ("ITEM"
+                                 (re-search-forward org-complex-heading-regexp)
+                                 (replace-match str nil t nil 4)
+                                 (org-back-to-heading))
+                                ("TODO"
+                                 (org-todo str))
+                                (_ nil)))
+                             (t (org-entry-put nil (car prop) str)))))
+                      (_ nil))))))
+            (org-back-to-heading)
+            (when (and (re-search-forward "^:BIBTEX:$\n#+begin_src bibtex"  (save-excursion (or (outline-next-heading) (point-max))) t)
+                       (yes-or-no-p "Remove :BIBTEX: drawer? "))
+              (re-search-backward ":BIBTEX:")
+              (re-search-forward "^[ 	]*:BIBTEX:[ 	]*\n\\(?:[ 	]*:\\S-+:\\(?: .*\\)?[ 	]*\n\\)*?[ 	]*:END:[ 	]*$")
+              (replace-match ""))
+            (when (and (not (seq-empty-p body))
+                       (y-or-n-p (format "Append \"%s\" to body? " body)))
+              (or (outline-next-heading) (goto-char (point-max)))
+              (backward-char)
+              (insert body))))
+      (org-capture-ref-reset-state))))
 
 ;;; Formatting Org entry
 
@@ -1672,15 +1777,15 @@ This calls `org-capture-ref-generate-key-functions'."
 By default, we make sure that the key is unique, for example.
 
 This runs `org-capture-ref-check-bibtex-functions'"
-  (catch :finish
-    (run-hooks 'org-capture-ref-check-bibtex-functions)))
+  (unless (org-capture-ref-get-bibtex-field :org-hd-marker) ; Already found the match.
+    (catch :finish
+      (run-hooks 'org-capture-ref-check-bibtex-functions))))
 
 (defun org-capture-ref-process-capture ()
   "Extract BiBTeX info from currently captured link and generate unique key.
 
 The return value is always empty string, so that this function can be
 used inside capture template."
-  
   (unwind-protect
       (progn
 	(org-capture-ref-reset-state)
@@ -1688,7 +1793,8 @@ used inside capture template."
         ;; Early check if the entry is already captured.
         (org-capture-ref-check-bibtex)
 	(org-capture-ref-get-bibtex)
-	(org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key))
+        (unless (org-capture-ref-get-bibtex-field :key)
+	  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
 	(org-capture-ref-check-bibtex)
 	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done")))
