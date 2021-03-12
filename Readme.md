@@ -1,31 +1,33 @@
 
 # Table of Contents
 
-1.  [Auto-generating BiBTeX for more than just books and papers](#org31c6720)
-    1.  [Installation](#org5c0114d)
-        1.  [Using straight.el](#org03c9879)
-        2.  [Using quelpa](#org7c41f50)
-        3.  [Using direct download](#orga538867)
-    2.  [Usage](#org078085e)
-        1.  [Capture setup](#orga88f5c6)
-        2.  [Capturing links from browser](#org07be82f)
-        3.  [Capturing rss links from elfeed](#org4c50dec)
-    3.  [Extra features](#org267c778)
-        1.  [Detecting existing captures](#org6d82c36)
+1.  [Extracting metadata (including BiBTeX) from websites to be used by Org mode capture](#orgcd1987b)
+    1.  [Installation](#orgf11d90b)
+        1.  [Using straight.el](#orgf34295c)
+        2.  [Using quelpa](#orge259b50)
+        3.  [Using direct download](#orgb938b54)
+    2.  [Usage](#orgf8d9f2a)
+        1.  [Capture setup](#org1838ed1)
+        2.  [Capturing links from browser](#org7900429)
+        3.  [Capturing rss links from elfeed](#org888ee4d)
+    3.  [Extra features](#org93bca13)
+        1.  [Detecting existing captures](#org046db76)
         2.  [Integration with qutebrowser](#qute_integration)
-    4.  [Customisation](#orgd50116e)
-        1.  [Retrieving BiBTeX fields](#org9406f66)
-        2.  [Key generation](#org0d71b4e)
-        3.  [Formatting BiBTeX entry](#org459b28a)
-        4.  [Validating the BiBTeX entry](#org23025cf)
-    5.  [Planned features](#org070830b)
+    4.  [Customisation](#org3a50cd9)
+        1.  [Retrieving BiBTeX / metadata fields](#org8b3c0b5)
+        2.  [Key generation](#org92bc211)
+        3.  [Formatting BiBTeX entry](#org1c46f75)
+        4.  [Validating the BiBTeX entry](#orgf592c46)
+    5.  [Planned features](#org39eaad8)
 
 
-<a id="org31c6720"></a>
+<a id="orgcd1987b"></a>
 
-# Auto-generating BiBTeX for more than just books and papers
+# Extracting metadata (including BiBTeX) from websites to be used by Org mode capture
 
 This package is inspired by [org-ref](https://github.com/jkitchin/org-ref), extending org-ref's idea to auto-retrieve BiBTeX from scientific paper links. Instead of limiting BiBTeX generation to research purposes (scientific articles and books), this package auto-generates BiBTeX for any possible web link (Youtube videos, blog posts, reddit threads, etc).
+
+More precisely, relevant metadata, like author, title, publisher, publication date, etc, is extracted from an arbitrary web link. The metadata can be transformed into a BiBTeX entry or used directly in Org mode capture template.
 
 Unlike `org-ref`, this package is designed to be used together with [org-capture](https://orgmode.org/manual/Capture.html#Capture). The package is created assuming that the links/articles/books are captured from web sources using the following methods:
 
@@ -33,147 +35,38 @@ Unlike `org-ref`, this package is designed to be used together with [org-capture
 -   org-protocol from [elfeed](https://github.com/skeeto/elfeed/)
 
 The generated BiBTeX for web links can be directly inserted into a `.bib` file and handled by org-ref just like any other book/paper.
-Alternatively (recommended), the BiBTeX can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed). An example of such setup can be found in [this blog post](http://cachestocaches.com/2020/3/org-mode-annotated-bibliography/).
+Alternatively (recommended), the metadata can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed). An example of such setup can be found in [this blog post](http://cachestocaches.com/2020/3/org-mode-annotated-bibliography/).
 
-The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate.
+The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate. The duplicate can also be updated according to the newly extracted metadata. For example, a research publication published online does not initially contain the journal volume number. The captured online publication can be later update as the publication page is updated.
 
 Below are examples of captured web links. The links are captured as todo-entries in org-mode with BiBTeX stored and code block within the entry.
 
 ![img](info-output.png)
 
-Github page
+Github page with BiBTeX
 
 ![img](capture1.png)
 
-    * TODO  yantar92 [Github] org-capture-ref: Extract bibtex info from captured websites :BOOKMARK:
-    :PROPERTIES:
-    :ID:       9c0d656603f59abfb5bec098b1a6aeea7c823c4b
-    :CREATED:  [2020-08-24 Mon 21:21]
-    :Source:   https://github.com/yantar92/org-capture-ref
-    :END:
-    :BIBTEX:
-    #+begin_src bibtex
-    @misc{9c0d656603f59abfb5bec098b1a6aeea7c823c4b,
-      author =       {yantar92},
-      howpublished = {Github},
-      note =         {Online; accessed 24 August 2020},
-      title =        {org-capture-ref: Extract bibtex info from captured
-                      websites},
-      url =          {https://github.com/yantar92/org-capture-ref},
-    }
-    #+end_src
-    :END:
+Github page with metadata
+
+![img](capture1-v2.png)
 
 Reddit post
 
 ![img](capture2.png)
-
-    * TODO  /u/drencomix [Reddit:Gentoo] (2020) Best Gentoo install video or blog tutorial to supplement the handbook? :BOOKMARK:
-    :PROPERTIES:
-    :ID: d6046a9b50b86abd6ff5957a554466074f0ed78e
-    :CREATED: [2020-08-24 Mon 09:21]
-    :Source: https://www.reddit.com/r/Gentoo/comments/if7aow/best_gentoo_install_video_or_blog_tutorial_to/
-    :END:
-    :BIBTEX:
-    #+begin_src bibtex
-    @misc{d6046a9b50b86abd6ff5957a554466074f0ed78e,
-      author =       {/u/drencomix},
-      howpublished = {Reddit:Gentoo},
-      keywords =     {Gentoo},
-      note =         {Online; accessed 24 August 2020},
-      title =        {Best Gentoo install video or blog tutorial to
-                      supplement the handbook?},
-      url =
-                      {https://www.reddit.com/r/Gentoo/comments/if7aow/best_gentoo_install_video_or_blog_tutorial_to/},
-      year =         2020,
-    }
-    #+end_src
-    :END:
-
-Youtube link
-
-![img](capture3.png)
-
-    * TODO  Koncerthuset [Youtube] (2020) Those Ordinary Things // DR Big Band with Sinne Eeg (Live) :BOOKMARK:
-    :PROPERTIES:
-    :ID: e24aa466b27e06b30419d85f9fb17f891c965939
-    :CREATED: [2020-08-24 Mon 09:24]
-    :Source: https://www.youtube.com/watch?v=-P--Lh1YSw0
-    :END:
-    :BIBTEX:
-    #+begin_src bibtex
-    @misc{e24aa466b27e06b30419d85f9fb17f891c965939,
-      author =       {DR Koncerthuset},
-      howpublished = {Youtube},
-      note =         {Online; accessed 24 August 2020},
-      title =        {Those Ordinary Things // DR Big Band with Sinne Eeg
-                      (Live)},
-      url =          {https://www.youtube.com/watch?v=-P--Lh1YSw0},
-      year =         2020,
-    }
-    #+end_src
-    :END:
-
-Blog post
-
-![img](capture4.png)
-
-    * TODO  jcs [Irreal] (2020) Irreal: Gccemacs on Linux :BOOKMARK:
-    :PROPERTIES:
-    :ID: b7a0973131c78328b117096045ee5c1d974e0eb0
-    :CREATED: [2020-08-24 Mon 09:21]
-    :Source: https://irreal.org/blog/?p=9094
-    :END:
-    :BIBTEX:
-    #+begin_src bibtex
-    @misc{b7a0973131c78328b117096045ee5c1d974e0eb0,
-      author =       {jcs},
-      howpublished = {Irreal},
-      note =         {Online; accessed 24 August 2020},
-      title =        {Irreal: Gccemacs on Linux},
-      url =          {https://irreal.org/blog/?p=9094},
-      year =         2020,
-    }
-    #+end_src
-    :END:
-
 Scientific article
 
 ![img](capture5.png)
 
-    ****** TODO Brukner [Nature Physics] (2020) Facts are relative :BOOKMARK:
-    :PROPERTIES:
-    :ID: cd1ab39b6634e151b8ab0c6a56edf7d798f303dc
-    :CREATED: [2020-08-20 Thu 21:31]
-    :Source: https://doi.org/10.1038/s41567-020-0984-8
-    :END:
-    :LOGBOOK:
-    - Refiled on [2020-08-21 Fri 07:00]
-    :END:
-    :BIBTEX:
-    #+begin_src bibtex
-    @article{cd1ab39b6634e151b8ab0c6a56edf7d798f303dc,
-      author =       {Časlav Brukner},
-      title =        {Facts are relative},
-      journal =      {Nature Physics},
-      year =         2020,
-      doi =          {10.1038/s41567-020-0984-8},
-      url =          {https://doi.org/10.1038/s41567-020-0984-8},
-      howpublished = {Feeds.Nature},
-      note =         {Online; accessed 20 August 2020},
-    }
-    #+end_src
-    :END:
 
-
-<a id="org5c0114d"></a>
+<a id="orgf11d90b"></a>
 
 ## Installation
 
 The package is currently not on Melpa/Elpa now. It is possible to install package directly downloading the `.el` files from Github or using package managers with git support:
 
 
-<a id="org03c9879"></a>
+<a id="orgf34295c"></a>
 
 ### Using [straight.el](https://github.com/raxod502/straight.el/)
 
@@ -185,14 +78,14 @@ or with [use-package](https://github.com/jwiegley/use-package/)
       :straight (org-capture-ref :type git :host github :repo "yantar92/org-capture-ref"))
 
 
-<a id="org7c41f50"></a>
+<a id="orge259b50"></a>
 
 ### Using [quelpa](https://github.com/quelpa/quelpa)
 
     (quelpa '(org-capture-ref :repo "yantar92/org-capture-ref" :fetcher github))
 
 
-<a id="orga538867"></a>
+<a id="orgb938b54"></a>
 
 ### Using direct download
 
@@ -202,12 +95,12 @@ or with [use-package](https://github.com/jwiegley/use-package/)
 4.  Put `(require 'org-capture-ref)` somewhere in your init file
 
 
-<a id="org078085e"></a>
+<a id="orgf8d9f2a"></a>
 
 ## Usage
 
 
-<a id="orga88f5c6"></a>
+<a id="org1838ed1"></a>
 
 ### Capture setup
 
@@ -236,7 +129,7 @@ Below is example configuration defining org capture template using org-capture-r
 
 4.  Using direct download
 
-Follow instructions from [Using direct download](#orga538867). The packages can be downloaded from the following websites:
+Follow instructions from [Using direct download](#orgb938b54). The packages can be downloaded from the following websites:
 
 -   <https://github.com/troyp/asoc.el>
 -   <https://github.com/magnars/s.el>
@@ -257,61 +150,29 @@ These capture templates can later be called from inside Emacs or from browser (u
      			  :type entry
      			  :file "~/Org/inbox.org"
      			  :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
-    			  :bibtex (lambda () (org-capture-ref-get-bibtex-field :bibtex-string))
-                              :url (lambda () (org-capture-ref-get-bibtex-field :url))
-                              :type-tag (lambda () (org-capture-ref-get-bibtex-field :type))
-    			  :title (lambda () (format "%s%s%s%s"
-    					       (or (when (org-capture-ref-get-bibtex-field :author)
-                                                         (let* ((authors (s-split " *and *" (org-capture-ref-get-bibtex-field :author)))
-    							    (author-surnames (mapcar (lambda (author)
-    										       (car (last (s-split " +" author))))
-    										     authors)))
-                                                           (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
-                                                             (setq author-surnames authors))
-    						       (if (= 1 (length author-surnames))
-                                                               (format "%s " (car author-surnames))
-                                                             (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
-                                                       "")
-                                                   (or (when (org-capture-ref-get-bibtex-field :journal)
-    						     (format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
-                                                       (when (org-capture-ref-get-bibtex-field :howpublished)
-                                                         (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
-                                                       "")
-                                                   (or (when (org-capture-ref-get-bibtex-field :year)
-                                                         (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
-                                                       "")
-                                                   (or (org-capture-ref-get-bibtex-field :title)
-                                                       "")))
-    			  :id (lambda () (org-capture-ref-get-bibtex-field :key))
+                              :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
                               :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
     					   (s-join "\n"
     						   '("- [ ] download and attach pdf"
     						     "- [ ] check if bibtex entry has missing fields"
-    						     "- [ ] read paper"
+    						     "- [ ] read paper capturing interesting references"
     						     "- [ ] check citing articles"
-    						     "- [ ] check related articles"
-    						     "- [ ] check references"))
+    						     "- [ ] check related articles"))
                                              ""))
+                              :org-entry (lambda () (org-capture-ref-get-org-entry))
     			  :template
-    			  ("%{fetch-bibtex}* TODO %? %{title} :BOOKMARK:%{type-tag}:"
-    			   ":PROPERTIES:"
-    			   ":ID: %{id}"
-    			   ":CREATED: %U"
-    			   ":Source: [[%{url}]]"
-    			   ":END:"
-                               ":BIBTEX:"
-    			   "#+begin_src bibtex"
-    			   "%{bibtex}"
-    			   "#+end_src"
-                               ":END:"
-                               "%{extra}")
+                              ("%{fetch-bibtex}* TODO %?%{space}%{org-entry}"
+                               "%{extra}"
+                               "- Keywords: #%{link-type}")
     			  :children (("Interactive link"
     				      :keys "b"
     				      :clock-in t
+                                          :space " "
     				      :clock-resume t
     				      )
     				     ("Silent link"
     				      :keys "B"
+                                          :space ""
     				      :immediate-finish t))))))
       (dolist (template templates)
         (asoc-put! org-capture-templates
@@ -319,10 +180,10 @@ These capture templates can later be called from inside Emacs or from browser (u
     	       (cdr  template)
     	       'replace)))
 
-**TL;DR how the above code works**: Call `org-capture-ref-process-capture` at the beginning to scrape BiBTeX from the link. Then use `org-capture-ref-get-bibtex-field` to get BiBTeX fields (`:bibtex-string` field will contain formatted BiBTeX entry).
+**TL;DR how the above code works**: Call `org-capture-ref-process-capture` at the beginning to scrape BiBTeX from the link. Then use `org-capture-ref-get-org-entry` to format the heading (according to `org-capture-ref-headline-format`). Alternatively it is possible to use `org-capture-ref-get-bibtex-field` to get metadata directly (`:bibtex-string` field will contain formatted BiBTeX entry).
 
 
-<a id="org07be82f"></a>
+<a id="org7900429"></a>
 
 ### Capturing links from browser
 
@@ -332,7 +193,7 @@ The above capture templates can be used via  [org-protocol](https://orgmode.org/
 -   For Qutebrowser, see [Integration with qutebrowser](#qute_integration) section below.
 
 
-<a id="org4c50dec"></a>
+<a id="org888ee4d"></a>
 
 ### Capturing rss links from [elfeed](https://github.com/skeeto/elfeed/)
 
@@ -360,18 +221,18 @@ Example configuration for capturing `elfeed` entries (assuming the capture templ
 The above function should be ran (`M-x yant/elfeed-capture-entry <RET>`) with point at an `elfeed` entry.
 
 
-<a id="org267c778"></a>
+<a id="org93bca13"></a>
 
 ## Extra features
 
 
-<a id="org6d82c36"></a>
+<a id="org046db76"></a>
 
 ### Detecting existing captures
 
-Org-capture-ref checks if there are any existing headlines containing the captured link already. By default, :ID: {cite key of the BiBTeX} and :Source: {URL} properties of headlines are checked in all files searchable by `org-search-view`.
+Org-capture-ref checks if there are any existing headlines containing the captured link already. By default, :ID: {cite key of the BiBTeX}, :Source: {URL}, :URL: {URL} properties, and article title for journal publications  are checked in all files searchable by `org-search-view`.
 
-If org-capture-ref finds that the captured link already exist in org files the matching entry is shown by default unless capture template has `:immediate-finish t`.
+If org-capture-ref finds that the captured link already exist in org files the matching entry is shown by default unless capture template has `:immediate-finish t`. The is the queried to update the existing entry according to the current metadata. If the user agrees, normal Org capture buffer will be displayed and the captured heading will be interactively merged with the existing link capture.
 
 
 <a id="qute_integration"></a>
@@ -386,17 +247,76 @@ In addition, package logs can be shown as qutebrowser messages if `qutebrowser-f
 
 An example of bookmarking userscript is below:
 
-    #!/bin/bash
+    rawurlencode() {
+        local string="${1}"
+        local strlen=${#string}
+        local encoded=""
+        local pos c o
+    
+        for (( pos=0 ; pos<strlen ; pos++ )); do
+    	c=${string:$pos:1}
+    	case "$c" in
+                [-_.~a-zA-Zа-яА-Я0-9] ) o="${c}" ;;
+    	    [\[\]] ) o="|" ;;
+    	    * )               printf -v o '%%%02x' "'$c"
+    	esac
+    	encoded+="${o}"
+        done
+        echo "${encoded}"    # You can either set a return variable (FASTER) 
+        REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
+    }
+    
+    # Returns a string in which the sequences with percent (%) signs followed by
+    # two hex digits have been replaced with literal characters.
+    rawurldecode() {
+    
+        # This is perhaps a risky gambit, but since all escape characters must be
+        # encoded, we can replace %NN with \xNN and pass the lot to printf -b, which
+        # will decode hex for us
+    
+        printf -v REPLY '%b' "${1//%/\\x}" # You can either set a return variable (FASTER)
+    
+        #  echo "${REPLY}"  #+or echo the result (EASIER)... or both... :p
+    }
+    
+    
+    # Initialize all the option variables.
+    # This ensures we are not contaminated by variables from the environment.
     TEMPLATE="b"
-    QUTE_URL=$(echo $QUTE_URL | sed -r 's/^[^/]+//')
+    FORCE=""
+    
+    while :; do
+        case $1 in
+    	--force)       # Takes an option argument; ensure it has been specified.
+    	    FORCE="t"
+    	    shift
+                ;;
+            --silent)
+    	    TEMPLATE="B"
+                shift
+                ;;
+            --rss)
+                TEMPLATE="r"
+                shift
+                ;;
+            *)
+                break
+        esac
+        shift 
+    done 
+    
+    rawurlencode "$QUTE_URL"
     URL="$REPLY"
+    
     TITLE="$(echo $QUTE_TITLE | sed -r 's/&//g')"
+    
     SELECTED_TEXT="$QUTE_SELECTED_TEXT"
+    
     (emacsclient "org-protocol://capture?template=$TEMPLATE&url=$URL&title=$TITLE&body=$SELECTED_TEXT&html=$QUTE_HTML&qutebrowser-fifo=$QUTE_FIFO"\
-         && echo "message-info \"Bookmark saved to inbox.org/Inbox\"" >> "$QUTE_FIFO" || echo "message-error \"Bookmark not saved!\"" >> "$QUTE_FIFO");
+         && echo "message-info '$(cat ~/Org/inbox.org | grep \* | tail -n1)'" >> "$QUTE_FIFO" || echo "message-error \"Bookmark not saved!\"" >> "$QUTE_FIFO");
 
 
-<a id="orgd50116e"></a>
+<a id="org3a50cd9"></a>
 
 ## Customisation
 
@@ -408,9 +328,9 @@ The main function used in the package is `org-capture-ref-process-capture`. It t
 4.  The generated entry is verified (by default, it is checked if the link is already present in org files) according to `org-capture-ref-check-bibtex-functions`
 
 
-<a id="org9406f66"></a>
+<a id="org8b3c0b5"></a>
 
-### Retrieving BiBTeX fields
+### Retrieving BiBTeX / metadata fields
 
 When capture is done from `elfeed`, org-capture-ref first attempts to use the feed entry metadata to obtain all the necessary information. Otherwise, the BiBTeX information is retrieved by scraping the web-page (downloading it when necessary according to `org-capture-ref-get-buffer-functions`).
 
@@ -421,29 +341,39 @@ Any captured link is assigned with `howpublished` field, which is simply web-sit
 By default, the BiBTeX entry has `@misc` type (see `org-capture-ref-default-type`).
 
 If capture information or website contains a DOI, <https://doi.org> is used to obtain the BiBTeX.
+If capture information or website contains a ISBN, <https://ottobib.com> is used to obtain the BiBTeX.
 
 Parsers for the following websites are available:
 
--   Scientific articles from APS, Springer, Wiley, and Tandfonline publishers
--   Github repos
+-   Scientific articles from APS, Springer, Wiley, Tandfonline, Semanticscholar, Sciencedirect, Sciencemag, ProQuest, ArXiv, and AMS publishers
+-   Google scholar BiBTeX page
+-   Wikipedia
+-   Goodreads
+-   Amazon (books)
+-   Github repos, commits, issues, files, and pull requests
+-   Reddit threads and comments
 -   Youtube video pages
 -   <https://habr.com> articles
 -   Wechat articles
 -   <https://author.today> books
+-   <https://fantlab.ru> book pages
+-   <https://ficbook.net> book pages
+-   <https://lesswrong.com> articles
 
 Special parsers for the following RSS feeds are available (via `elfeed`):
 
 -   <https://habr.com> articles
 -   Reddit
+-   TED rss feeds
 
 **Contributions implementing additional parsers are welcome.**
 
-If the above parsers did not scrape (or mark missing) all the fields from `org-capture-ref-field-regexps`, generic html parser is used to obtain them. This is often sufficient, but may not be accurate.
+If the above parsers did not scrape (or mark missing) all the fields from `org-capture-ref-field-regexps`, generic html parser looking for DOIs, html metadata, and OpenGraph metadata is used to obtain them. This is often sufficient, but may not be accurate.
 
 One can find information about writing own parsers in docstrings of `org-capture-ref-get-bibtex-functions` and `org-capture-ref-get-bibtex-from-elfeed-functions`.
 
 
-<a id="org0d71b4e"></a>
+<a id="org92bc211"></a>
 
 ### Key generation
 
@@ -452,7 +382,7 @@ org-capture-ref relies on the fact the BiBTeX keys are unique for each entry and
 The key generation methods are defined in `org-capture-ref-generate-key-functions`. By default, sha1 hash of DOI (if present) or the URL are used as BiBTeX keys. The more readable built-in `bibtex-generate-autokey` is often not sufficient to generate unique keys since many link titles are too long and repetitive to be unique. **Though any contributions to generate human-readable BiBTeX keys are welcome.**
 
 
-<a id="org459b28a"></a>
+<a id="org1c46f75"></a>
 
 ### Formatting BiBTeX entry
 
@@ -462,7 +392,7 @@ Then some common cleanups are applied to the entry (similar to org-ref, see `org
 The behaviour can be customised by customising `org-capture-ref-get-formatted-bibtex-functions`.
 
 
-<a id="org23025cf"></a>
+<a id="orgf592c46"></a>
 
 ### Validating the BiBTeX entry
 
@@ -475,7 +405,7 @@ The validation can be customised in `org-capture-ref-check-bibtex-functions`.
 By default, search is done via `grep` (if installed). It can be switched to built-in `org-search-view` (for URL validation) and to `org-id-find` (for BiBTeX key validation) by customising `org-capture-ref-check-regexp-method` and `org-capture-ref-check-key-method`, respectively.
 
 
-<a id="org070830b"></a>
+<a id="org39eaad8"></a>
 
 ## Planned features
 
