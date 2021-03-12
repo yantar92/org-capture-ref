@@ -1598,7 +1598,7 @@ capture template."
               (when prop
                 (unless (member (car prop) '("ALLTAGS" "FILE" "CATEGORY"))
                   (unless (equal (org-entry-get nil (car prop)) (cdr prop))
-                    (pcase (or (seq-empty-p (org-entry-get nil (car prop) nil t))
+                    (pcase (or (and (seq-empty-p (org-entry-get nil (car prop) nil t)) ?y)
                                (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
                                                           '(?y ?n ?c)))
                       (?y (cond
