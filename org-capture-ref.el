@@ -1574,7 +1574,8 @@ capture template."
 
 (defun org-capture-ref-update-heading-maybe ()
   "Use last captured heading to update existing heading at `:org-hd-marker' bibtex property."
-  (when (org-capture-ref-get-bibtex-field :org-hd-marker)
+  (when (and (org-capture-ref-get-bibtex-field :org-hd-marker)
+             (not org-note-abort))
     (unwind-protect
         (progn
           (org-capture-goto-last-stored)
