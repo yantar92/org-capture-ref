@@ -1706,8 +1706,8 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
                                (when (org-capture-ref-get-bibtex-field :howpublished)
                                  (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
                                "")))
-            (let ((repl (or (caddr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (cadr el)))) org-ref-bibtex-journal-abbreviations)))
-                            (cdr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (car el)))) org-capture-ref-journal-abbreviations)))
+            (let ((repl (or (cdr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (car el)))) org-capture-ref-journal-abbreviations)))
+                            (caddr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (cadr el)))) org-ref-bibtex-journal-abbreviations)))
                             full-name)))
               (if (string= full-name repl)
                   repl
