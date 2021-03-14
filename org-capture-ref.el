@@ -1671,6 +1671,7 @@ capture template."
               (re-search-forward "^[ 	]*:BIBTEX:[ 	]*\n\\(?:.*\n\\)*?[ 	]*:END:[ 	]*$")
               (replace-match ""))
             (when (and (not (seq-empty-p body))
+                       (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t)))
                        (y-or-n-p (format "Append \"%s\" to body? " body)))
               (or (outline-next-heading) (goto-char (point-max)))
               (backward-char)
