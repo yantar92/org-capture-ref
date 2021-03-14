@@ -1600,8 +1600,13 @@ capture template."
                 (unless (member (car prop) '("ALLTAGS" "FILE" "CATEGORY"))
                   (unless (equal (org-entry-get nil (car prop)) (cdr prop))
                     (pcase (or (and (seq-empty-p (org-entry-get nil (car prop) nil t)) ?y)
-                               (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
-                                                          '(?y ?n ?c)))
+                               (pcase (car prop)
+                                 ("TAGS"
+                                  (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[m]erge/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
+                                                             '(?y ?n ?c ?m)))
+                                 (_
+                                  (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
+                                                             '(?y ?n ?c)))))
                       (?y (cond
                            ((member (car prop) org-special-properties)
                             (pcase (car prop)
@@ -1615,6 +1620,12 @@ capture template."
                               (_ nil)))
                            (t (org-entry-put nil (car prop) (cdr prop)))))
                       (?n nil)
+                      (?m (pcase (car prop)
+                            ("TAGS"
+                             (let ((old-tags (s-split ":" (org-entry-get nil (car prop)) t))
+                                   (new-tags (s-split ":" (cdr prop) t)))
+                               (org-set-tags (cl-remove-duplicates (seq-filter #'identity (append old-tags new-tags)) :test #'string=))))
+                            (_ (error "Unhandled case"))))
                       (?c (setq org-capture-ref-update-heading-history (list (org-entry-get nil (car prop)) (cdr prop)))
                           (when-let ((str (read-string (format "New value of %s [\"%s\", \"%s\"]: "
                                                                (car prop)
