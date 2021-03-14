@@ -287,6 +287,24 @@ If a keyword from the template is missing, it will remain empty."
   :type 'string
   :group 'org-capture-ref)
 
+(defcustom org-capture-ref-use-journal-abbreviations t
+  "Shorten journal/howpublished names in `org-capture-ref-headline-format'.
+The full names are replaced in the hadline by
+`org-capture-ref-journal-abbreviations' or
+`org-ref-bibtex-journal-abbreviations'."
+  :type 'boolean
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-journal-abbreviations '(("Nature Materials" . "NatureMat")
+                                    ("Physical Review Materials" . "PRMat")
+                                    ("Physical Review Letters" . "PRL")
+                                    ("Materials Science and Engineering: A" . "MSEA")
+                                    ("Acta Materialia" . "ActaMat")
+                                    ("Scripta Materialia" . "ScriptaMat"))
+  "List of personal journal abbreviations.  See `org-capture-ref-use-journal-abbreviations'."
+  :type '(list (cons string string))
+  :group 'org-capture-ref)
+
 (defcustom org-capture-ref-check-regexp-method 'grep
   "Search method in `org-capture-ref-check-regexp'.
 This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-link'."
@@ -1679,15 +1697,21 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
                       (format "%s " (car author-surnames))
                     (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
               "")
-          (or (when (org-capture-ref-get-bibtex-field :journal)
-		(format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
-              (when (org-capture-ref-get-bibtex-field :school)
-		(format "[%s] " (org-capture-ref-get-bibtex-field :school)))
-              (when (org-capture-ref-get-bibtex-field :publisher)
-		(format "[%s] " (org-capture-ref-get-bibtex-field :publisher)))
-              (when (org-capture-ref-get-bibtex-field :howpublished)
-                (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
-              "")
+          (let ((full-name (or (when (org-capture-ref-get-bibtex-field :journal)
+		                 (format "[%s] " (org-capture-ref-get-bibtex-field :journal)))
+                               (when (org-capture-ref-get-bibtex-field :school)
+		                 (format "[%s] " (org-capture-ref-get-bibtex-field :school)))
+                               (when (org-capture-ref-get-bibtex-field :publisher)
+		                 (format "[%s] " (org-capture-ref-get-bibtex-field :publisher)))
+                               (when (org-capture-ref-get-bibtex-field :howpublished)
+                                 (format "[%s] " (org-capture-ref-get-bibtex-field :howpublished)))
+                               "")))
+            (let ((repl (or (caddr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (cadr el)))) org-ref-bibtex-journal-abbreviations)))
+                            (cdr (car (cl-member-if (lambda (el) (string= full-name (format "[%s] " (car el)))) org-capture-ref-journal-abbreviations)))
+                            full-name)))
+              (if (string= full-name repl)
+                  repl
+                (format "[%s] " repl))))
           (or (when (org-capture-ref-get-bibtex-field :year)
                 (format "(%s) " (org-capture-ref-get-bibtex-field :year)))
               "")
