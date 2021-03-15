@@ -1244,6 +1244,9 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for ArXiv publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "arxiv\\.org/abs" link)
+      (when-let ((doi (org-capture-ref-query-dom :class "metatable" :class "link-https link-external" :attr 'data-doi)))
+        (org-capture-ref-set-bibtex-field :doi doi)
+        (org-capture-ref-get-bibtex-from-first-doi))
       (org-capture-ref-set-bibtex-field :type "misc")
       (org-capture-ref-set-bibtex-field :howpublished "ArXiv")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
