@@ -1395,7 +1395,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
     (when-let ((author-field (bibtex-search-forward-field "author")))
       (when (cdr author-field)
         (goto-char (cadr author-field))
-        (while (re-search-forward (regexp-opt (mapcar #'regexp-quote org-capture-ref-bibtex-author-garbage-symbols))
+        (while (re-search-forward (format "[%s]" (mapconcat #'identity org-capture-ref-bibtex-author-garbage-symbols ""))
                                   (caddr author-field)
                                   t)
           (replace-match ""))))))
