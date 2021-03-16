@@ -323,7 +323,7 @@ One can find information about writing own parsers in docstrings of =org-capture
 
 org-capture-ref relies on the fact the BiBTeX keys are unique for each entry and will remain unique if the same entry will be captured in future.
 
-The key generation methods are defined in =org-capture-ref-generate-key-functions=. By default, sha1 hash of DOI (if present) or the URL are used as BiBTeX keys. The more readable built-in =bibtex-generate-autokey= is often not sufficient to generate unique keys since many link titles are too long and repetitive to be unique. *Though any contributions to generate human-readable BiBTeX keys are welcome.*
+The key generation methods are defined in =org-capture-ref-generate-key-functions=.
 
 *** Formatting BiBTeX entry
 

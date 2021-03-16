@@ -182,9 +182,7 @@ Return value of the first function returning non-nil will be used as final forma
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-generate-key-functions '(org-capture-ref-generate-key-from-doi
-                                     org-capture-ref-generate-key-from-isbn
-				     org-capture-ref-generate-key-from-url)
+(defcustom org-capture-ref-generate-key-functions '(org-capture-ref-generate-key-human-readable)
   "Functions used to generate citation key if it is not yet present.
 The functions will be called in sequence until any of them returns non-nil value."
   :type 'hook
@@ -1371,6 +1369,36 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   (when-let ((isbn (org-capture-ref-get-bibtex-field :isbn)))
     (sha1 isbn)))
 
+(defun org-capture-ref-generate-key-human-readable ()
+  "Use `bibtex-generate-autokey' to generate key.
+Most of the relevant bibtex.el customisations apply.
+The overridden autokey customisations are:
+- `bibtex-autokey-year-length'
+- `bibtex-autokey-year-title-separator'
+- `bibtex-autokey-titleword-ignore'
+- `bibtex-autokey-title-terminators'."
+  (unless (org-capture-ref-get-bibtex-field :key)
+    (org-capture-ref-set-bibtex-field :key "placeholder"))
+  (let ((bibtex-string (org-capture-ref-format-bibtex))
+        (bibtex-autokey-year-length 4)
+        (bibtex-autokey-year-title-separator "")
+        (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das"
+                                           "a" "an" "on" "the" "eine?" "der" "die" "das"
+                                           ;; "[^[:upper:]].*"
+                                           ".*[^[:upper:][:lower:]0-9].*"))
+        (bibtex-autokey-title-terminators (rx unmatchable)))
+    (when (string= (org-capture-ref-get-bibtex-field :key) "placeholder")
+      (org-capture-ref-set-bibtex-field :key nil 'force))
+    (with-temp-buffer
+      (bibtex-mode)
+      (bibtex-set-dialect 'BibTeX)
+      (insert bibtex-string)
+      (goto-char 1)
+      ;; Work around requirement to have year in the BiBTeX entry.
+      (cl-letf (((symbol-function 'bibtex-autokey-get-year) (condition-case err
+                                                                `(lambda () ,(bibtex-autokey-get-year))
+                                                              (t (lambda () "")))))
+        (bibtex-generate-autokey)))))
 
 ;; Formatting BibTeX entry
 
