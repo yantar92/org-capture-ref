@@ -1393,7 +1393,8 @@ The overridden autokey customisations are:
 - `bibtex-autokey-year-length'
 - `bibtex-autokey-year-title-separator'
 - `bibtex-autokey-titleword-ignore'
-- `bibtex-autokey-title-terminators'."
+- `bibtex-autokey-title-terminators'
+- `bibtex-autokey-prefix-string'."
   (unless (org-capture-ref-get-bibtex-field :key)
     (org-capture-ref-set-bibtex-field :key "placeholder"))
   (let ((bibtex-string (org-capture-ref-format-bibtex))
@@ -1403,7 +1404,12 @@ The overridden autokey customisations are:
                                            "a" "an" "on" "the" "eine?" "der" "die" "das"
                                            ;; "[^[:upper:]].*"
                                            ".*[^[:upper:][:lower:]0-9].*"))
-        (bibtex-autokey-title-terminators (rx unmatchable)))
+        (bibtex-autokey-title-terminators (rx unmatchable))
+        (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
+                                          (concat (or (org-capture-ref-get-bibtex-field :publisher)
+                                                      (org-capture-ref-get-bibtex-field :howpublished))
+                                                  "_")
+                                        "")))
     (when (string= (org-capture-ref-get-bibtex-field :key) "placeholder")
       (org-capture-ref-set-bibtex-field :key nil 'force))
     (with-temp-buffer
