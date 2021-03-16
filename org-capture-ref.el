@@ -301,7 +301,9 @@ The full names are replaced in the hadline by
                                     ("Physical Review Letters" . "PRL")
                                     ("Materials Science and Engineering: A" . "MSEA")
                                     ("Acta Materialia" . "ActaMat")
-                                    ("Scripta Materialia" . "ScriptaMat"))
+                                    ("Scripta Materialia" . "ScriptaMat")
+                                    ("Journal of Materials Research" . "JMR")
+                                    ("Advanced Engineering Materials" . "AdvEngMat"))
   "List of personal journal abbreviations.  See `org-capture-ref-use-journal-abbreviations'."
   :type '(list (cons string string))
   :group 'org-capture-ref)
