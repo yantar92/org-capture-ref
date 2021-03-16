@@ -74,6 +74,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-semanticscholar
                                    org-capture-ref-get-bibtex-sciencedirect-article
                                    org-capture-ref-get-bibtex-sciencemag-careers-article
+                                   org-capture-ref-get-bibtex-nature-careers-article
                                    org-capture-ref-get-bibtex-proquest
                                    org-capture-ref-get-bibtex-arxiv
                                    org-capture-ref-get-bibtex-ams-cn
@@ -126,6 +127,7 @@ The following parsers will then be aware that there is no need to search for the
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-get-bibtex-from-elfeed-functions '(org-capture-ref-get-bibtex-generic-elfeed
+                                               org-capture-ref-get-bibtex-nature-elfeed
 					       org-capture-ref-get-bibtex-habr-elfeed
                                                org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
                                                org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished
@@ -343,12 +345,12 @@ The value must be an alist of `org-capture-ref-check-regexp-method' and the corr
 		   ,fields)
      ,@body))
 
-(defun org-capture-ref-get-buffer ()
+(defun org-capture-ref-get-buffer (&optional force)
   "Return buffer containing contents of the captured link.
 
-Retrieve the contents first if necessary.
+Retrieve the contents first if necessary or if FORCE is non-nil.
 This calls `org-capture-ref-get-buffer-functions'."
-  (let ((buffer (or org-capture-ref--buffer
+  (let ((buffer (or (and (not force) org-capture-ref--buffer)
 		    (run-hook-with-args-until-success 'org-capture-ref-get-buffer-functions))))
     (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
     (setq org-capture-ref--buffer-dom nil)
@@ -566,7 +568,8 @@ Use https://www.ottobib.com to retrieve the BiBTeX record."
   (let ((elfeed-entry (org-capture-ref-get-capture-info '(:query :elfeed-data))))
     (when elfeed-entry
       (require 'elfeed)
-      (run-hook-with-args 'org-capture-ref-get-bibtex-from-elfeed-functions elfeed-entry))))
+      (catch :finish
+        (run-hook-with-args 'org-capture-ref-get-bibtex-from-elfeed-functions elfeed-entry)))))
 
 (defun org-capture-ref-parse-opengraph ()
   "Generic parser for websites supporting OpenGraph protocol.
@@ -1049,7 +1052,7 @@ The value will be inactive org timestamp."
       ;; Asquire the new URL.
       (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
       (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
-        (org-capture-ref-get-buffer))
+        (org-capture-ref-get-buffer 'force))
       (org-capture-ref-get-bibtex-authortoday-work))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
@@ -1216,6 +1219,20 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :howpublished "Science")
       (throw :finish t))))
 
+(defun org-capture-ref-get-bibtex-nature-careers-article ()
+  "Generate BiBTeX for Nature carreers publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (and (string-match "nature\\.com/articles/" link)
+               (string-match "CAREER\\|NEWS" (org-capture-ref-query-dom :class "article__type")))
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :id "^author-affiliation-news-0-head$"))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "article__type" :class "article__date" :apply #'org-capture-ref-extract-year-from-string))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "article-item__header" :class "article-item__title"))
+      (org-capture-ref-set-bibtex-field :publisher "Nature")
+      (org-capture-ref-set-bibtex-field :howpublished "Nature")
+      (throw :finish t))))
+
 (defun org-capture-ref-get-bibtex-ams-cn ()
   "Generate BiBTeX for Acta Metallurgica Sinica publication."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
@@ -1324,6 +1341,16 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
       (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string (format " | %s" (regexp-quote (org-capture-ref-get-bibtex-field :author)))
                                                           ""
                                                           (org-capture-ref-get-bibtex-field :title))))))
+
+(defun org-capture-ref-get-bibtex-nature-elfeed (_)
+  "Fix redirect in nature RSS feeds."
+  (when (string-match "feeds\\.nature\\.com.+/\\([^/]+\\)" (org-capture-ref-get-bibtex-field :url))
+    (org-capture-ref-set-bibtex-field :url (format "https://www.nature.com/articles/%s" (match-string 1 (org-capture-ref-get-bibtex-field :url))))
+    ;; Asquire the new URL.
+    (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
+    (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
+      (org-capture-ref-get-buffer 'force))
+    (throw :finish t)))
 
 ;; Generating cite key
 
