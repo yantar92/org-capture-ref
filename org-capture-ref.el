@@ -78,6 +78,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-proquest
                                    org-capture-ref-get-bibtex-arxiv
                                    org-capture-ref-get-bibtex-ams-cn
+                                   org-capture-ref-get-bibtex-ohiolink
                                    org-capture-ref-mark-links-with-known-absent-doi
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
@@ -1173,6 +1174,20 @@ The value will be inactive org timestamp."
     (when (string-match "semanticscholar\\.org" link)
       (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "doi__link"))
       (org-capture-ref-get-bibtex-from-first-doi))))
+
+(defun org-capture-ref-get-bibtex-ohiolink ()
+  "Generate BiBTeX for Ohiolink PhD thesis page."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "ohiolink\\.edu" link)
+      (org-capture-ref-set-bibtex-field :type "phdthesis")
+      (org-capture-ref-set-bibtex-field :url (org-capture-ref-query-dom :id "^P10_PERMALINK$"))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^P10_TITLE$"))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "abstract-author"))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^P10_DEGREE_NAME$" :apply #'org-capture-ref-extract-year-from-string))
+      (org-capture-ref-set-bibtex-field :school (let ((info (org-capture-ref-query-dom :id "^P10_DEGREE_NAME$")))
+                                   (when (string-match "Doctor of Philosophy, \\(.+?\\)\\.?$" info)
+                                     (match-string 1 info))))
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value))))
 
 (defun org-capture-ref-get-bibtex-proquest ()
   "Generate BiBTeX for ProQuest page."
