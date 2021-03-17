@@ -117,10 +117,10 @@ These capture templates can later be called from inside Emacs or from browser (u
                           :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
 					   (s-join "\n"
 						   '("- [ ] download and attach pdf"
-						     "- [ ] check if bibtex entry has missing fields"
 						     "- [ ] read paper capturing interesting references"
 						     "- [ ] check citing articles"
-						     "- [ ] check related articles"))
+						     "- [ ] check related articles"
+                                                     "- [ ] check if bibtex entry has missing fields"))
                                          ""))
                           :org-entry (lambda () (org-capture-ref-get-org-entry))
 			  :template

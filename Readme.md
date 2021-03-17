@@ -1,27 +1,27 @@
 
 # Table of Contents
 
-1.  [Extracting metadata (including BiBTeX) from websites to be used by Org mode capture](#orgcce1182)
-    1.  [Installation](#org4cf414d)
-        1.  [Using straight.el](#org6d1f658)
-        2.  [Using quelpa](#orgcf3201c)
-        3.  [Using direct download](#org8488c55)
-    2.  [Usage](#orgb5d8901)
-        1.  [Capture setup](#org9711f5c)
-        2.  [Capturing links from browser](#org9fa0fee)
-        3.  [Capturing rss links from elfeed](#org27a6cb5)
-    3.  [Extra features](#orge178c6f)
-        1.  [Detecting existing captures](#org519faa3)
+1.  [Extracting metadata (including BiBTeX) from websites to be used by Org mode capture](#org215bcd9)
+    1.  [Installation](#org09bca64)
+        1.  [Using straight.el](#org0998f7d)
+        2.  [Using quelpa](#orgacbf6c1)
+        3.  [Using direct download](#org8abe8c1)
+    2.  [Usage](#org09dc46e)
+        1.  [Capture setup](#org405b607)
+        2.  [Capturing links from browser](#org3f7bffb)
+        3.  [Capturing rss links from elfeed](#org44d33e1)
+    3.  [Extra features](#org6868539)
+        1.  [Detecting existing captures](#org8ba4095)
         2.  [Integration with qutebrowser](#qute_integration)
-    4.  [Customisation](#org285ed20)
-        1.  [Retrieving BiBTeX / metadata fields](#orgdbe5590)
-        2.  [Key generation](#org2a3add5)
-        3.  [Formatting BiBTeX entry](#org57e3242)
-        4.  [Validating the BiBTeX entry](#orgc37820c)
-    5.  [Planned features](#orgb0088d8)
+    4.  [Customisation](#org0d00e7a)
+        1.  [Retrieving BiBTeX / metadata fields](#org550e648)
+        2.  [Key generation](#org89ca224)
+        3.  [Formatting BiBTeX entry](#orgbd94808)
+        4.  [Validating the BiBTeX entry](#org5ff4d5f)
+    5.  [Planned features](#orgc2a3e32)
 
 
-<a id="orgcce1182"></a>
+<a id="org215bcd9"></a>
 
 # Extracting metadata (including BiBTeX) from websites to be used by Org mode capture
 
@@ -59,14 +59,14 @@ Scientific article
 ![img](capture5.png)
 
 
-<a id="org4cf414d"></a>
+<a id="org09bca64"></a>
 
 ## Installation
 
 The package is currently not on Melpa/Elpa now. It is possible to install package directly downloading the `.el` files from Github or using package managers with git support:
 
 
-<a id="org6d1f658"></a>
+<a id="org0998f7d"></a>
 
 ### Using [straight.el](https://github.com/raxod502/straight.el/)
 
@@ -78,14 +78,14 @@ or with [use-package](https://github.com/jwiegley/use-package/)
       :straight (org-capture-ref :type git :host github :repo "yantar92/org-capture-ref"))
 
 
-<a id="orgcf3201c"></a>
+<a id="orgacbf6c1"></a>
 
 ### Using [quelpa](https://github.com/quelpa/quelpa)
 
     (quelpa '(org-capture-ref :repo "yantar92/org-capture-ref" :fetcher github))
 
 
-<a id="org8488c55"></a>
+<a id="org8abe8c1"></a>
 
 ### Using direct download
 
@@ -95,12 +95,12 @@ or with [use-package](https://github.com/jwiegley/use-package/)
 4.  Put `(require 'org-capture-ref)` somewhere in your init file
 
 
-<a id="orgb5d8901"></a>
+<a id="org09dc46e"></a>
 
 ## Usage
 
 
-<a id="org9711f5c"></a>
+<a id="org405b607"></a>
 
 ### Capture setup
 
@@ -129,7 +129,7 @@ Below is example configuration defining org capture template using org-capture-r
 
 4.  Using direct download
 
-Follow instructions from [Using direct download](#org8488c55). The packages can be downloaded from the following websites:
+Follow instructions from [Using direct download](#org8abe8c1). The packages can be downloaded from the following websites:
 
 -   <https://github.com/troyp/asoc.el>
 -   <https://github.com/magnars/s.el>
@@ -154,10 +154,10 @@ These capture templates can later be called from inside Emacs or from browser (u
                               :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
     					   (s-join "\n"
     						   '("- [ ] download and attach pdf"
-    						     "- [ ] check if bibtex entry has missing fields"
     						     "- [ ] read paper capturing interesting references"
     						     "- [ ] check citing articles"
-    						     "- [ ] check related articles"))
+    						     "- [ ] check related articles"
+                                                         "- [ ] check if bibtex entry has missing fields"))
                                              ""))
                               :org-entry (lambda () (org-capture-ref-get-org-entry))
     			  :template
@@ -183,7 +183,7 @@ These capture templates can later be called from inside Emacs or from browser (u
 **TL;DR how the above code works**: Call `org-capture-ref-process-capture` at the beginning to scrape BiBTeX from the link. Then use `org-capture-ref-get-org-entry` to format the heading (according to `org-capture-ref-headline-format`). Alternatively it is possible to use `org-capture-ref-get-bibtex-field` to get metadata directly (`:bibtex-string` field will contain formatted BiBTeX entry).
 
 
-<a id="org9fa0fee"></a>
+<a id="org3f7bffb"></a>
 
 ### Capturing links from browser
 
@@ -193,7 +193,7 @@ The above capture templates can be used via  [org-protocol](https://orgmode.org/
 -   For Qutebrowser, see [Integration with qutebrowser](#qute_integration) section below.
 
 
-<a id="org27a6cb5"></a>
+<a id="org44d33e1"></a>
 
 ### Capturing rss links from [elfeed](https://github.com/skeeto/elfeed/)
 
@@ -221,12 +221,12 @@ Example configuration for capturing `elfeed` entries (assuming the capture templ
 The above function should be ran (`M-x yant/elfeed-capture-entry <RET>`) with point at an `elfeed` entry.
 
 
-<a id="orge178c6f"></a>
+<a id="org6868539"></a>
 
 ## Extra features
 
 
-<a id="org519faa3"></a>
+<a id="org8ba4095"></a>
 
 ### Detecting existing captures
 
@@ -316,7 +316,7 @@ An example of bookmarking userscript is below:
          && echo "message-info '$(cat ~/Org/inbox.org | grep \* | tail -n1)'" >> "$QUTE_FIFO" || echo "message-error \"Bookmark not saved!\"" >> "$QUTE_FIFO");
 
 
-<a id="org285ed20"></a>
+<a id="org0d00e7a"></a>
 
 ## Customisation
 
@@ -328,7 +328,7 @@ The main function used in the package is `org-capture-ref-process-capture`. It t
 4.  The generated entry is verified (by default, it is checked if the link is already present in org files) according to `org-capture-ref-check-bibtex-functions`
 
 
-<a id="orgdbe5590"></a>
+<a id="org550e648"></a>
 
 ### Retrieving BiBTeX / metadata fields
 
@@ -373,7 +373,7 @@ If the above parsers did not scrape (or mark missing) all the fields from `org-c
 One can find information about writing own parsers in docstrings of `org-capture-ref-get-bibtex-functions` and `org-capture-ref-get-bibtex-from-elfeed-functions`.
 
 
-<a id="org2a3add5"></a>
+<a id="org89ca224"></a>
 
 ### Key generation
 
@@ -382,7 +382,7 @@ org-capture-ref relies on the fact the BiBTeX keys are unique for each entry and
 The key generation methods are defined in `org-capture-ref-generate-key-functions`.
 
 
-<a id="org57e3242"></a>
+<a id="orgbd94808"></a>
 
 ### Formatting BiBTeX entry
 
@@ -392,7 +392,7 @@ Then some common cleanups are applied to the entry (similar to org-ref, see `org
 The behaviour can be customised by customising `org-capture-ref-get-formatted-bibtex-functions`.
 
 
-<a id="orgc37820c"></a>
+<a id="org5ff4d5f"></a>
 
 ### Validating the BiBTeX entry
 
@@ -405,7 +405,7 @@ The validation can be customised in `org-capture-ref-check-bibtex-functions`.
 By default, search is done via `grep` (if installed). It can be switched to built-in `org-search-view` (for URL validation) and to `org-id-find` (for BiBTeX key validation) by customising `org-capture-ref-check-regexp-method` and `org-capture-ref-check-key-method`, respectively.
 
 
-<a id="orgb0088d8"></a>
+<a id="orgc2a3e32"></a>
 
 ## Planned features
 
