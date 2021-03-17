@@ -1759,11 +1759,21 @@ capture template."
               (re-search-forward "^[ 	]*:BIBTEX:[ 	]*\n\\(?:.*\n\\)*?[ 	]*:END:[ 	]*$")
               (replace-match ""))
             (when (and (not (seq-empty-p body))
-                       (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t)))
-                       (y-or-n-p (format "Append \"%s\" to body? " body)))
-              (or (outline-next-heading) (goto-char (point-max)))
-              (backward-char)
-              (insert body))))
+                       (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t))))
+              (when-let ((inp (read-char-from-minibuffer (format "Append \"%s\" to body? (y/n/[r]eplace)" body) '(?y ?n ?r))))
+                (pcase inp
+                  (?y
+                   (or (outline-next-heading) (goto-char (point-max)))
+                   (backward-char)
+                   (insert body))
+                  (?r
+                   (org-back-to-heading)
+                   (beginning-of-line 2)
+                   (when (looking-at-p org-planning-line-re) (beginning-of-line 2))
+                   (let ((next-heading (save-excursion (or (outline-next-heading) (point-max)))))
+                     (re-search-forward org-property-drawer-re next-heading t)
+                     (re-search-forward org-logbook-drawer-re next-heading t)
+                     (setf (buffer-substring (point) next-heading) body))))))))
       (org-capture-ref-reset-state))))
 
 ;;; Formatting Org entry
