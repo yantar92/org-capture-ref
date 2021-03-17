@@ -1408,8 +1408,10 @@ The overridden autokey customisations are:
                                            ".*[^[:upper:][:lower:]0-9].*"))
         (bibtex-autokey-title-terminators (rx unmatchable))
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
-                                          (concat (or (org-capture-ref-get-bibtex-field :publisher)
-                                                      (org-capture-ref-get-bibtex-field :howpublished))
+                                          (concat (replace-regexp-in-string
+                                                   " " "_"
+                                                   (or (org-capture-ref-get-bibtex-field :publisher)
+                                                       (org-capture-ref-get-bibtex-field :howpublished)))
                                                   "_")
                                         "")))
     (when (string= (org-capture-ref-get-bibtex-field :key) "placeholder")
