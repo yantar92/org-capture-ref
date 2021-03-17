@@ -142,7 +142,8 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-clean-bibtex-hook '(org-ref-bibtex-format-url-if-doi
+(defcustom org-capture-ref-clean-bibtex-hook '(org-capture-ref-create-key-maybe
+                                org-ref-bibtex-format-url-if-doi
 				orcb-key-comma
 				orcb-&
 				orcb-%
@@ -1439,6 +1440,14 @@ The overridden autokey customisations are:
 				      org-capture-ref--bibtex-alist)))
 
 ;; Cleaning up BiBTeX entry
+
+(defun org-capture-ref-create-key-maybe ()
+  "Generate BiBTeX key if it is missing."
+  (goto-char 1)
+  (unless (looking-at-p bibtex-entry-head)
+    (when (looking-at bibtex-any-entry-maybe-empty-head)
+      (line-end-position)
+      (insert (org-capture-ref-generate-key)))))
 
 (defun org-capture-ref-clear-nil-bibtex-entries ()
   "Remove {nil} in BiBTeX record."
