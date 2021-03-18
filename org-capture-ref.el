@@ -106,6 +106,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-fantlab-edition
                                    org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
+                                   org-capture-ref-get-bibtex-archive-book
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
 				   ;; Generic parser
@@ -1288,6 +1289,14 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'citation_author))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'citation_title))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta 'citation_date :apply #'org-capture-ref-extract-year-from-string)))))
+
+(defun org-capture-ref-get-bibtex-archive-book ()
+  "Generate BiBTeX to archive.org book page."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "archive\\.org/details/" link)
+      (when-let ((isbn (org-capture-ref-query-dom :class "metadata-expandable-list" :class "^metadata-definition$" :attr '(itemprop . "isbn") :apply #'car)))
+        (org-capture-ref-set-bibtex-field :isbn isbn)
+        (org-capture-ref-get-bibtex-from-isbn)))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
