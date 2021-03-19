@@ -1809,10 +1809,10 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
 	  (or (when (org-capture-ref-get-bibtex-field :author)
                 (let* ((authors (s-split " +and +" (string-clean-whitespace (org-capture-ref-get-bibtex-field :author))))
 		       (author-surnames (mapcar (lambda (author)
-                                                  (pcase author
-                                                    ((rx (let surname (1+ (not whitespace))) ",")
-                                                     surname)
-						    (_ (car (last (s-split " +" author))))))
+                                                  (cond
+                                                   ((string-match (rx (group (1+ (not whitespace))) ",") author)
+                                                    (match-string 1))
+                                                   (t (car (last (s-split " +" author))))))
 						authors)))
                   (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
                     (setq author-surnames authors))
