@@ -1243,8 +1243,14 @@ The value will be inactive org timestamp."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "nature\\.com/articles/" link)
       (org-capture-ref-set-bibtex-field :type "article")
-      (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :meta "citation_doi"))
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta "citation_author"))
+      (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :meta "DOI"))
+      (org-capture-ref-set-bibtex-field :author (let ((author (org-capture-ref-query-dom :join " and " :meta "citation_author")))
+                                   (if (string-empty-p author)
+                                       org-capture-ref-placeholder-value
+                                     author))
+                         'force)
+      ;; News articles do not even have author.
+      (unless (org-capture-ref-get-bibtex-field :author) (org-capture-ref-set-bibtex-field :type "misc"))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "citation_online_date" :apply #'org-capture-ref-extract-year-from-string))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "citation_title"))
       (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta "citation_journal_title"))
