@@ -1005,13 +1005,15 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "author")))
       (org-capture-ref-set-bibtex-field :title (s-concat (org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
                                           (let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
-                                            (pcase extra-title
-                                              ("" "")
-                                              ((rx (or "год" "цикл"))
-                                               "")
-                                              ((rx "Другие названия: " (let extra-title (1+ nonl)))
-                                               (format " / %s" extra-title))
-                                              (_ (format " / %s" extra-title))))))
+                                            (cond
+                                             ((seq-empty-p extra-title)
+                                              "")
+                                             ((string-match (rx (or "год" "цикл")) extra-title)
+                                              "")
+                                             ((string-match (rx "Другие названия: " (group (1+ nonl))) extra-title)
+                                              (format " / %s" (match-string 1 extra-title)))
+                                             (t
+                                              (format " / %s" extra-title))))))
       (when (let ((case-fold-search nil)) (string-match-p "Цикл" (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'cadr)))
         (org-capture-ref-set-bibtex-field :title (format "Series: %s" (org-capture-ref-get-bibtex-field :title)))
         (org-capture-ref-set-bibtex-field :type "misc")
@@ -1811,7 +1813,7 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
 		       (author-surnames (mapcar (lambda (author)
                                                   (cond
                                                    ((string-match (rx (group (1+ (not whitespace))) ",") author)
-                                                    (match-string 1))
+                                                    (match-string 1 author))
                                                    (t (car (last (s-split " +" author))))))
 						authors)))
                   (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
