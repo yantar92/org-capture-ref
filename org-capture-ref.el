@@ -1065,7 +1065,7 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-authortoday-post ()
   "Generate BiBTeX for an author.today/post post."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "author\\.today/post" link)
+    (when (s-match "author\\.today/\\(?:post\\|review\\)" link)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "?[^?]+$" "" link))
       (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
