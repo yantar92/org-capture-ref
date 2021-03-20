@@ -860,9 +860,12 @@ The value will be inactive org timestamp."
       (org-capture-ref-unless-set '(:title)
         (org-capture-ref-set-bibtex-field :title (format "%s: %s"
                                           (org-capture-ref-query-opengraph 'title)
-                                          (replace-regexp-in-string (format " - %s" (org-capture-ref-query-opengraph 'title))
-                                                                    ""
-                                                                    (org-capture-ref-query-opengraph 'description))))
+                                          (s-replace-all `((,(format " - %s" (org-capture-ref-query-opengraph 'title))
+                                                            . "")
+                                                           (,(concat (format " Contribute to %s development by creating" (org-capture-ref-query-opengraph 'title))
+                                                                     " an account on GitHub.")
+                                                            . ""))
+                                                         (org-capture-ref-query-opengraph 'description))))
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
