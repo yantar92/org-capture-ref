@@ -116,10 +116,10 @@ These capture templates can later be called from inside Emacs or from browser (u
                           :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
                           :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
 					   (s-join "\n"
-						   '("- [ ] download and attach pdf"
-						     "- [ ] read paper capturing interesting references"
-						     "- [ ] check citing articles"
-						     "- [ ] check related articles"
+                                                   '("- [ ] download and attach pdf"
+						     "- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
+						     "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
+						     "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
                                                      "- [ ] check if bibtex entry has missing fields"))
                                          ""))
                           :org-entry (lambda () (org-capture-ref-get-org-entry))
