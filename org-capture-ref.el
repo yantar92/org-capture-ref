@@ -1607,15 +1607,17 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (setq matches (remove nil matches))
     (when matches
       (unless dont-show-match-p
-	(switch-to-buffer (marker-buffer (car matches)))
-	(goto-char (car matches))
-        (org-back-to-heading t)
-	(org-show-set-visibility 'lineage)
-        (org-show-entry)
-        (when (yes-or-no-p "Update the entry according to the new capture? ")
-          (org-capture-ref-get-bibtex-org-heading)
-          (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
-          (throw :finish t)))
+        (save-excursion
+          (save-restriction
+	    (switch-to-buffer (marker-buffer (car matches)))
+	    (goto-char (car matches))
+            (org-back-to-heading t)
+	    (org-show-set-visibility 'lineage)
+            (org-show-entry)
+            (when (yes-or-no-p "Update the entry according to the new capture? ")
+              (org-capture-ref-get-bibtex-org-heading)
+              (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+              (throw :finish t)))))
       (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error))))
 
 (defun org-capture-ref-check-regexp-search-view (regexp &optional dont-show-match-p)
@@ -1632,15 +1634,17 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (pcase (length headlines)
       (0 t)
       (1 (unless dont-show-match-p
-	   (switch-to-buffer (marker-buffer (car headlines)))
-	   (goto-char (car headlines))
-           (if (functionp #'org-fold-reveal)
-               (org-fold-reveal)
-	     (org-reveal))
-           (when (yes-or-no-p "Update the entry according to the new capture? ")
-             (org-capture-ref-get-bibtex-org-heading)
-             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
-             (throw :finish t)))
+           (save-excursion
+             (save-restriction
+	       (switch-to-buffer (marker-buffer (car headlines)))
+	       (goto-char (car headlines))
+               (if (functionp #'org-fold-reveal)
+                   (org-fold-reveal)
+	         (org-reveal))
+               (when (yes-or-no-p "Update the entry according to the new capture? ")
+                 (org-capture-ref-get-bibtex-org-heading)
+                 (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+                 (throw :finish t)))))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))
       (_ (when dont-show-match-p (kill-buffer))
          (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))))
@@ -1654,14 +1658,16 @@ capture template."
       (`org-id-find
        (when-let ((mk (org-id-find (org-capture-ref-get-bibtex-field :key) 'marker)))
          (unless (org-capture-ref-get-capture-template-info :immediate-finish)
-	   (switch-to-buffer (marker-buffer mk))
-	   (goto-char mk)
-	   (org-show-set-visibility 'lineage)
-           (org-show-entry)
-           (when (yes-or-no-p "Update the entry according to the new capture? ")
-             (org-capture-ref-get-bibtex-org-heading)
-             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
-             (throw :finish t)))
+           (save-excursion
+             (save-restriction
+	       (switch-to-buffer (marker-buffer mk))
+	       (goto-char mk)
+	       (org-show-set-visibility 'lineage)
+               (org-show-entry)
+               (when (yes-or-no-p "Update the entry according to the new capture? ")
+                 (org-capture-ref-get-bibtex-org-heading)
+                 (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
+                 (throw :finish t)))))
          (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
       (`grep
        (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
@@ -1729,85 +1735,88 @@ capture template."
                           (when (re-search-forward ":LOGBOOK:" nil t)
                             (re-search-forward ":END:"))
                           (buffer-substring-no-properties (point) (point-max))))))
-            (org-back-to-heading)
-            (org-cut-subtree)
-            (switch-to-buffer (marker-buffer (org-capture-ref-get-bibtex-field :org-hd-marker)))
-            (goto-char (org-capture-ref-get-bibtex-field :org-hd-marker))
-            (org-show-set-visibility 'lineage)
-            (org-show-entry)
-	    (dolist (prop current-heading-props)
-              (when prop
-                (unless (member (car prop) '("ALLTAGS" "FILE" "CATEGORY"))
-                  (unless (equal (org-entry-get nil (car prop)) (cdr prop))
-                    (pcase (or (and (seq-empty-p (org-entry-get nil (car prop) nil t)) ?y)
-                               (pcase (car prop)
-                                 ("TAGS"
-                                  (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[m]erge/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
-                                                             '(?y ?n ?c ?m)))
-                                 (_
-                                  (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
-                                                             '(?y ?n ?c)))))
-                      (?y (cond
-                           ((member (car prop) org-special-properties)
-                            (pcase (car prop)
-                              ("TAGS" (org-set-tags (cdr prop)))
-                              ("ITEM"
-                               (re-search-forward org-complex-heading-regexp)
-                               (replace-match (cdr prop) nil t nil 4)
-                               (org-back-to-heading))
-                              ("TODO"
-                               (org-todo (cdr prop)))
-                              (_ nil)))
-                           (t (org-entry-put nil (car prop) (cdr prop)))))
-                      (?n nil)
-                      (?m (pcase (car prop)
-                            ("TAGS"
-                             (let ((old-tags (s-split ":" (org-entry-get nil (car prop)) t))
-                                   (new-tags (s-split ":" (cdr prop) t)))
-                               (org-set-tags (cl-remove-duplicates (seq-filter #'identity (append old-tags new-tags)) :test #'string=))))
-                            (_ (error "Unhandled case"))))
-                      (?c (setq org-capture-ref-update-heading-history (list (org-entry-get nil (car prop)) (cdr prop)))
-                          (when-let ((str (read-string (format "New value of %s [\"%s\", \"%s\"]: "
-                                                               (car prop)
-                                                               (org-entry-get nil (car prop))
-                                                               (cdr prop))
-                                                       nil
-                                                       'history)))
-                            (cond
-                             ((member (car prop) org-special-properties)
-                              (pcase (car prop)
-                                ("TAGS" (org-set-tags str))
-                                ("ITEM"
-                                 (re-search-forward org-complex-heading-regexp)
-                                 (replace-match str nil t nil 4)
-                                 (org-back-to-heading))
-                                ("TODO"
-                                 (org-todo str))
-                                (_ nil)))
-                             (t (org-entry-put nil (car prop) str)))))
-                      (_ nil))))))
-            (org-back-to-heading)
-            (when (and (re-search-forward "^:BIBTEX:\n#\\+begin_src bibtex"  (save-excursion (or (outline-next-heading) (point-max))) t)
-                       (yes-or-no-p "Remove :BIBTEX: drawer? "))
-              (re-search-backward ":BIBTEX:")
-              (re-search-forward "^[ 	]*:BIBTEX:[ 	]*\n\\(?:.*\n\\)*?[ 	]*:END:[ 	]*$")
-              (replace-match ""))
-            (when (and (not (seq-empty-p body))
-                       (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t))))
-              (when-let ((inp (read-char-from-minibuffer (format "Append \"%s\" to body? (y/n/[r]eplace)" body) '(?y ?n ?r))))
-                (pcase inp
-                  (?y
-                   (or (outline-next-heading) (goto-char (point-max)))
-                   (backward-char)
-                   (insert body))
-                  (?r
-                   (org-back-to-heading)
-                   (beginning-of-line 2)
-                   (when (looking-at-p org-planning-line-re) (beginning-of-line 2))
-                   (let ((next-heading (save-excursion (or (outline-next-heading) (point-max)))))
-                     (re-search-forward org-property-drawer-re next-heading t)
-                     (re-search-forward org-logbook-drawer-re next-heading t)
-                     (setf (buffer-substring (point) next-heading) body))))))))
+            (save-excursion
+              (save-restriction
+                (org-back-to-heading)
+                (org-cut-subtree)
+                (switch-to-buffer (marker-buffer (org-capture-ref-get-bibtex-field :org-hd-marker)))
+                (goto-char (org-capture-ref-get-bibtex-field :org-hd-marker))
+                (org-show-set-visibility 'lineage)
+                (org-show-entry)
+                (org-narrow-to-subtree)
+	        (dolist (prop current-heading-props)
+                  (when prop
+                    (unless (member (car prop) '("ALLTAGS" "FILE" "CATEGORY"))
+                      (unless (equal (org-entry-get nil (car prop)) (cdr prop))
+                        (pcase (or (and (seq-empty-p (org-entry-get nil (car prop) nil t)) ?y)
+                                   (pcase (car prop)
+                                     ("TAGS"
+                                      (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[m]erge/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
+                                                                 '(?y ?n ?c ?m)))
+                                     (_
+                                      (read-char-from-minibuffer (format "Update %s from \"%s\" to \"%s\"? (y/n/[c]ustom)" (car prop) (org-entry-get nil (car prop)) (cdr prop))
+                                                                 '(?y ?n ?c)))))
+                          (?y (cond
+                               ((member (car prop) org-special-properties)
+                                (pcase (car prop)
+                                  ("TAGS" (org-set-tags (cdr prop)))
+                                  ("ITEM"
+                                   (re-search-forward org-complex-heading-regexp)
+                                   (replace-match (cdr prop) nil t nil 4)
+                                   (org-back-to-heading))
+                                  ("TODO"
+                                   (org-todo (cdr prop)))
+                                  (_ nil)))
+                               (t (org-entry-put nil (car prop) (cdr prop)))))
+                          (?n nil)
+                          (?m (pcase (car prop)
+                                ("TAGS"
+                                 (let ((old-tags (s-split ":" (org-entry-get nil (car prop)) t))
+                                       (new-tags (s-split ":" (cdr prop) t)))
+                                   (org-set-tags (cl-remove-duplicates (seq-filter #'identity (append old-tags new-tags)) :test #'string=))))
+                                (_ (error "Unhandled case"))))
+                          (?c (setq org-capture-ref-update-heading-history (list (org-entry-get nil (car prop)) (cdr prop)))
+                              (when-let ((str (read-string (format "New value of %s [\"%s\", \"%s\"]: "
+                                                                   (car prop)
+                                                                   (org-entry-get nil (car prop))
+                                                                   (cdr prop))
+                                                           nil
+                                                           'history)))
+                                (cond
+                                 ((member (car prop) org-special-properties)
+                                  (pcase (car prop)
+                                    ("TAGS" (org-set-tags str))
+                                    ("ITEM"
+                                     (re-search-forward org-complex-heading-regexp)
+                                     (replace-match str nil t nil 4)
+                                     (org-back-to-heading))
+                                    ("TODO"
+                                     (org-todo str))
+                                    (_ nil)))
+                                 (t (org-entry-put nil (car prop) str)))))
+                          (_ nil))))))
+                (org-back-to-heading)
+                (when (and (re-search-forward "^:BIBTEX:\n#\\+begin_src bibtex"  (save-excursion (or (outline-next-heading) (point-max))) t)
+                           (yes-or-no-p "Remove :BIBTEX: drawer? "))
+                  (re-search-backward ":BIBTEX:")
+                  (re-search-forward "^[ 	]*:BIBTEX:[ 	]*\n\\(?:.*\n\\)*?[ 	]*:END:[ 	]*$")
+                  (replace-match ""))
+                (when (and (not (seq-empty-p body))
+                           (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t))))
+                  (when-let ((inp (read-char-from-minibuffer (format "Append \"%s\" to body? (y/n/[r]eplace)" body) '(?y ?n ?r))))
+                    (pcase inp
+                      (?y
+                       (or (outline-next-heading) (goto-char (point-max)))
+                       (backward-char)
+                       (insert body))
+                      (?r
+                       (org-back-to-heading)
+                       (beginning-of-line 2)
+                       (when (looking-at-p org-planning-line-re) (beginning-of-line 2))
+                       (let ((next-heading (save-excursion (or (outline-next-heading) (point-max)))))
+                         (re-search-forward org-property-drawer-re next-heading t)
+                         (re-search-forward org-logbook-drawer-re next-heading t)
+                         (setf (buffer-substring (point) next-heading) body))))))))))
       (org-capture-ref-reset-state))))
 
 ;;; Formatting Org entry
