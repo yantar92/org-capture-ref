@@ -1443,7 +1443,12 @@ The overridden autokey customisations are:
       (cl-letf (((symbol-function 'bibtex-autokey-get-year) (condition-case err
                                                                 `(lambda () ,(bibtex-autokey-get-year))
                                                               (t (lambda () "")))))
-        (bibtex-generate-autokey)))))
+        (concat (bibtex-generate-autokey)
+                ;; Add unique hash to avoid collisions.
+                (format "%.3s"
+                        (or (org-capture-ref-generate-key-from-doi)
+                            (org-capture-ref-generate-key-from-isbn)
+                            (org-capture-ref-generate-key-from-url))))))))
 
 ;; Formatting BibTeX entry
 
