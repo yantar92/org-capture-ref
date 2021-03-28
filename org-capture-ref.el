@@ -1121,6 +1121,13 @@ The value will be inactive org timestamp."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (s-match "amazon\\." link)
       (org-capture-ref-set-bibtex-field :url link)
+      (when-let ((asin-line (seq-find (lambda (str) (s-contains-p "ASIN" str))
+                                      (mapcar #'dom-texts
+                                              (dom-by-class (car (dom-by-id (org-capture-ref-get-dom)
+                                                                            "^detailBullets_feature_div$"))
+                                                            "^a-list-item$")))))
+        (when (string-match "\\([0-9a-zA-Z]\\{10\\}\\)" asin-line)
+          (org-capture-ref-set-bibtex-field :isbn (match-string 1 asin-line))))
       (when-let ((isbn-line (seq-find (lambda (str) (s-contains-p "ISBN-10" str))
                                       (mapcar #'dom-texts
                                               (dom-by-class (car (dom-by-id (org-capture-ref-get-dom)
