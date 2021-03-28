@@ -1679,7 +1679,7 @@ It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (org-capture-ref-get-bibtex-field :url)
-    (org-capture-ref-check-regexp (format "^:Source:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+    (org-capture-ref-check-regexp (format "^:\\(Source\\|URL\\):[ \t]+\\[*%s\\]*$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
