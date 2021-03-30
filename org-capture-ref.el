@@ -1629,7 +1629,7 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
               (org-capture-ref-get-bibtex-org-heading)
               (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
               (throw :finish t)))))
-      (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error))))
+      (when dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error)))))
 
 (defun org-capture-ref-check-regexp-search-view (regexp &optional dont-show-match-p)
   "Check if REGEXP exists in org files using `org-search-view'.
@@ -1656,9 +1656,9 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
                  (org-capture-ref-get-bibtex-org-heading)
                  (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
                  (throw :finish t)))))
-         (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))
-      (_ (when dont-show-match-p (kill-buffer))
-         (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))))
+         (when dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))
+      (_ (when dont-show-match-p (kill-buffer)
+               (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))))))
 
 (defun org-capture-ref-check-key ()
   "Check if `:key' already exists.
@@ -1679,7 +1679,7 @@ capture template."
                  (org-capture-ref-get-bibtex-org-heading)
                  (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
                  (throw :finish t)))))
-         (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error)))
+         (when (org-capture-ref-get-capture-info :immediate-finish) (org-capture-ref-message (org-capture-ref-get-message-string mk) 'error))))
       (`grep
        (org-capture-ref-check-regexp-grep (format "^:ID:[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :key))) (org-capture-ref-get-capture-template-info :immediate-finish)))
       (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-key-method: %s" org-capture-ref-check-key-method) 'error)))))
