@@ -192,6 +192,7 @@ The functions will be called in sequence until any of them returns non-nil value
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-check-bibtex-functions '(org-capture-ref-check-key
+                                     org-capture-ref-check-doi
 				     org-capture-ref-check-url
 				     org-capture-ref-check-link
                                      org-capture-ref-check-article-title)
@@ -1629,7 +1630,8 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
               (org-capture-ref-get-bibtex-org-heading)
               (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
               (throw :finish t)))))
-      (when dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error)))))
+      (if dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string matches) "\n") 'error)
+        (user-error "")))))
 
 (defun org-capture-ref-check-regexp-search-view (regexp &optional dont-show-match-p)
   "Check if REGEXP exists in org files using `org-search-view'.
@@ -1656,9 +1658,11 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
                  (org-capture-ref-get-bibtex-org-heading)
                  (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)
                  (throw :finish t)))))
-         (when dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)))
-      (_ (when dont-show-match-p (kill-buffer)
-               (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error))))))
+         (if dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)
+           (user-error "")))
+      (_ (when dont-show-match-p (kill-buffer))
+         (if dont-show-match-p (org-capture-ref-message (string-join (mapcar #'org-capture-ref-get-message-string headlines) "\n") 'error)
+           (user-error ""))))))
 
 (defun org-capture-ref-check-key ()
   "Check if `:key' already exists.
@@ -1691,6 +1695,14 @@ Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (org-capture-ref-get-bibtex-field :url)
     (org-capture-ref-check-regexp (format "^:\\(Source\\|URL\\):[ \t]+\\[*%s\\]*$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+
+(defun org-capture-ref-check-doi ()
+  "Check if `:doi' already exists.
+It is assumed that `:doi' is captured into :DOI: property.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (when (org-capture-ref-get-bibtex-field :doi)
+    (org-capture-ref-check-regexp (format "^:DOI:[ \t]+%s[ \t]*$" (replace-regexp-in-string "[()]" "." (regexp-quote (org-capture-ref-get-bibtex-field :doi)))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-link ()
   "Check if captured `:link' already exists.
