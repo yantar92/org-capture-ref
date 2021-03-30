@@ -1817,6 +1817,7 @@ capture template."
                   (when-let ((inp (read-char-from-minibuffer (format "Append \"%s\" to body? (y/n/[r]eplace)" body) '(?y ?n ?r))))
                     (pcase inp
                       (?y
+                       (widen)
                        (or (outline-next-heading) (goto-char (point-max)))
                        (backward-char)
                        (insert body))
