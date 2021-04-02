@@ -1196,7 +1196,13 @@ The value will be inactive org timestamp."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "semanticscholar\\.org" link)
       (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "doi__link"))
-      (org-capture-ref-get-bibtex-from-first-doi))))
+      (unless (org-capture-ref-get-bibtex-from-first-doi)
+        ;; Try arXiv papers.
+        (when-let ((arxiv-link (org-capture-ref-query-dom :class "primary-paper-link-button" :tag 'a :attr 'href)))
+          (when (string-match "arxiv\\.org/pdf/\\(.+\\)\\.pdf" arxiv-link)
+            (setq arxiv-link (format "https://arxiv.org/abs/%s" (match-string 1 arxiv-link)))
+            (org-capture-ref-set-new-url arxiv-link)
+            (org-capture-ref-get-bibtex-arxiv)))))))
 
 (defun org-capture-ref-get-bibtex-ohiolink ()
   "Generate BiBTeX for Ohiolink PhD thesis page."
