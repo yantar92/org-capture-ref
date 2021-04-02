@@ -351,6 +351,14 @@ The value must be an alist of `org-capture-ref-check-regexp-method' and the corr
 		   ,fields)
      ,@body))
 
+(defun org-capture-ref-set-new-url (url)
+  "Reset environment as if capture was invoked for URL."
+  (org-capture-ref-set-bibtex-field :url url)
+  ;; Asquire the new URL.
+  (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
+  (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
+    (org-capture-ref-get-buffer 'force)))
+
 (defun org-capture-ref-get-buffer (&optional force)
   "Return buffer containing contents of the captured link.
 
@@ -1059,11 +1067,7 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for an author.today book opened for reading."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "author\\.today/reader/\\([^/]+\\)" link)
-      (org-capture-ref-set-bibtex-field :url (format "https://author.today/work/%s" (match-string 1 link)))
-      ;; Asquire the new URL.
-      (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
-      (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
-        (org-capture-ref-get-buffer 'force))
+      (org-capture-ref-set-new-url (format "https://author.today/work/%s" (match-string 1 link)))
       (org-capture-ref-get-bibtex-authortoday-work))))
 
 (defun org-capture-ref-get-bibtex-authortoday-post ()
@@ -1391,11 +1395,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 (defun org-capture-ref-get-bibtex-nature-elfeed (_)
   "Fix redirect in nature RSS feeds."
   (when (string-match "feeds\\.nature\\.com.+/\\([^/]+\\)" (org-capture-ref-get-bibtex-field :url))
-    (org-capture-ref-set-bibtex-field :url (format "https://www.nature.com/articles/%s" (match-string 1 (org-capture-ref-get-bibtex-field :url))))
-    ;; Asquire the new URL.
-    (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
-    (let ((org-capture-ref-get-buffer-functions '(org-capture-ref-retrieve-url)))
-      (org-capture-ref-get-buffer 'force))
+    (org-capture-ref-set-new-url (format "https://www.nature.com/articles/%s" (match-string 1 (org-capture-ref-get-bibtex-field :url))))
     (throw :finish t)))
 
 ;; Generating cite key
