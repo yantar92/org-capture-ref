@@ -952,7 +952,7 @@ The value will be inactive org timestamp."
                                                  0)))))
       (org-capture-ref-unless-set '(:author :title :year)
 	;; Find author
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :attr '(itemprop . "author") :attr '(itemprop . "name")))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :attr '(itemprop . "author") :attr '(itemprop . "name") :attr 'content))
 	;; Find title
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'name))
 	;; Find year
