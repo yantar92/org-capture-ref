@@ -476,6 +476,7 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                                          (lambda (node)
                                            (and (eq (car node) 'meta)
                                                 (or (string= key (dom-attr node 'property))
+                                                    (string= key (dom-attr node 'itemprop)) ;; i.e. for Youtube video duration
                                                     (string= key (dom-attr node 'name))))))))))
     (if (string-empty-p ans) nil ans)))
 
@@ -936,12 +937,11 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-unless-set '(:author :title :year)
 	;; Find author
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :tag 'ytd-video-owner-renderer :tag 'ytd-channel-name :tag 'a))
-        
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :attr '(itemprop . "author") :attr '(itemprop . "name")))
 	;; Find title
-        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^title style-scope ytd-video-primary-info-renderer$" :tag 'yt-formatted-string))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'name))
 	;; Find year
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :id "^date$" :tag 'yt-formatted-string)))))))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta 'datePublished :apply #'org-capture-ref-extract-year-from-string))))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
