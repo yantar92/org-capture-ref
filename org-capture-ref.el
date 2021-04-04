@@ -92,6 +92,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-github-repo
                                    org-capture-ref-get-bibtex-github-file
                                    org-capture-ref-get-bibtex-gitlab-repo
+                                   org-capture-ref-get-bibtex-srht-repo
                                    org-capture-ref-get-bibtex-reddit-comment
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
@@ -880,6 +881,25 @@ The value will be inactive org timestamp."
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
+
+(defun org-capture-ref-get-bibtex-srht-repo ()
+  "Parse git.sr.ht repo link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "git\\.sr\\.ht/~\\([^/]+\\)/\\([^/]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (match-string 1 link))
+      (org-capture-ref-set-bibtex-field :title (format "%s: %s" (match-string 2 link) (org-capture-ref-query-dom :class "header-extension" :class "container")))
+      ;; Year has no meaning for repo
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :howpublished "Sourcehut")
+      (throw :finish t))
+    (when (string-match "sr\\.ht/~\\([^/]+\\)/\\([^/]+\\)" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (match-string 1 link))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :tag 'head :tag 'title))
+      ;; Year has no meaning for repo
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :howpublished "Sourcehut"))))
 
 (defun org-capture-ref-get-bibtex-github-file ()
   "Parse Github file page and generate bibtex entry."
