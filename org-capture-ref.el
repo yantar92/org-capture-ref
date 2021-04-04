@@ -285,6 +285,7 @@ There is no need to attempt finding the value for this key.")
       keywords     = {${:keywords}},
       note         = {Online; accessed ${:urldate}}
       created         = {${:created}}
+      effort       = {${:effort}}
       }"
   "Default template used to format BiBTeX entry.
 If a keyword from the template is missing, it will remain empty."
@@ -935,6 +936,20 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :effort (let ((time (org-capture-ref-query-dom :meta 'duration)))
+                                   ;; Youtube encodes duration using
+                                   ;; ISO 8601 specification. See
+                                   ;; https://en.wikipedia.org/wiki/ISO_8601.
+                                   (when (string-match "^PT\\(?:\\([0-9]+\\)H\\)?\\(?:\\([0-9]+\\)M\\)" time)
+                                     ;; We are interested in hours and
+                                     ;; minuts. Drop seconds.
+                                     (format "%.2d:%.2d"
+                                             (or (and (match-string 1 time)
+                                                      (string-to-number (match-string 1 time)))
+                                                 0)
+                                             (or (and (match-string 2 time)
+                                                      (string-to-number (match-string 2 time)))
+                                                 0)))))
       (org-capture-ref-unless-set '(:author :title :year)
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :attr '(itemprop . "author") :attr '(itemprop . "name")))
