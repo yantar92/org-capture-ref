@@ -863,7 +863,7 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-github-repo ()
   "Parse Github repo link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "github\\.com/[^/]+/[^/]+/?$" link)
+    (when (string-match "github\\.com/[^/]+/[^/]+/?\\(?:tree/[a-z0-9]+\\)?$" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       ;; Find author
       (unless (org-capture-ref-get-bibtex-field :author 'consider-placeholder)
