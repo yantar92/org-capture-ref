@@ -108,6 +108,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-ficbook
                                    org-capture-ref-get-bibtex-lesswrong
                                    org-capture-ref-get-bibtex-archive-book
+                                   org-capture-ref-get-bibtex-stallman
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
 				   ;; Generic parser
@@ -1339,6 +1340,17 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^PostsAuthors-authorName$" :tag 'a))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "PostsPageTitle"))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "PostsPageDate-date" :tag 'span)))))))
+
+(defun org-capture-ref-get-bibtex-stallman ()
+  "Generate BiBTeX for stallman.org publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "stallman\\.org" link)
+      (org-capture-ref-set-bibtex-field :howpublished "Stallman")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author "Richard Stallman")
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :tag 'head :tag 'title))
+      ;; Not publication date info here.
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
   "Generate BiBTeX for ArXiv publication."
