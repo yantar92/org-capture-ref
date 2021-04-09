@@ -945,13 +945,13 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-gitlab-repo ()
   "Parse GitLab repo link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "gitlab\\.com" link)
+    (when (string-match "gitlab\\.com/\\([^/]+\\)/\\([^/]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       ;; Find author
       (org-capture-ref-unless-set '(:author)
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "js-title-container" :tag 'a :apply #'car)))
+        (org-capture-ref-set-bibtex-field :author (match-string 1 link)))
       (org-capture-ref-unless-set '(:title)
-        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "home-panel-title-row" :attr '(itemprop . "name")))
+        (org-capture-ref-set-bibtex-field :title (format "%s/%s: %s" (match-string 1 link) (match-string 2 link) (org-capture-ref-query-dom :meta 'og:description)))
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "GitLab")))))
