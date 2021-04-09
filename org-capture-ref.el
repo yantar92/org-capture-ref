@@ -844,16 +844,30 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-github-issue ()
   "Parse Github issue page and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "github\\.com/\\(.+\\)/issues/\\([0-9]+\\)" link)
-      (let ((issue-number (match-string 2 link))
-            (issue-repo (match-string 1 link)))
-        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-        ;; Find author
-        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "gh-header-meta" :class "author"))
-        (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (org-capture-ref-query-dom :class "gh-header-title" :class "^js-issue-title$")))
-        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
-        (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
-        (throw :finish t)))))
+    (when (string-match "github\\.com/\\(.+\\)/issues/\\([0-9]+\\)\\(?:#\\(issuecomment-[0-9]+\\)\\)?" link)
+      (if (not (match-string 3 link))
+          ;; Just capture the whole issue
+          (let ((issue-number (match-string 2 link))
+                (issue-repo (match-string 1 link)))
+            (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+            ;; Find author
+            (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "gh-header-meta" :class "author"))
+            (org-capture-ref-set-bibtex-field :title  (format "issue#%s: %s" issue-number (org-capture-ref-query-dom :class "gh-header-title" :class "js-issue-title")))
+            (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
+            (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
+            (throw :finish t))
+        ;; Capture comment
+        (let ((issue-number (match-string 2 link))
+              (issue-repo (match-string 1 link))
+              (comment-id (match-string 3 link)))
+          (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+          ;; Find author
+          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id comment-id :class "author"))
+          (org-capture-ref-set-bibtex-field :title (format "comment on issue#%s: %s" issue-number (s-truncate fill-column (car (s-lines (org-capture-ref-query-dom :id comment-id :class "comment-body"))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id comment-id :class "timestamp" :tag 'relative-time :attr 'datetime :apply #'car :apply #'org-capture-ref-extract-year-from-string))
+          (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
+          (throw :finish t))
+        ))))
 
 (defun org-capture-ref-get-bibtex-github-repo ()
   "Parse Github repo link and generate bibtex entry."
