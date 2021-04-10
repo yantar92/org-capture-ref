@@ -1132,7 +1132,7 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for an ficbook.net book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (s-match "ficbook\\.net" link)
-      (when (string-match "^.+ficbook\\.net/readfic/[^/]+" link)
+      (when (string-match "^.+ficbook\\.net/readfic/[^/#]+" link)
         (setq link (match-string 0 link)))
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
