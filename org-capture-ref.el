@@ -1189,7 +1189,28 @@ The value will be inactive org timestamp."
                                                             "^a-list-item$")))))
         (when (string-match "\\([0-9X]\\{10,\\}\\)" isbn-line)
           (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
-      (org-capture-ref-get-bibtex-from-isbn))))
+      (unless (org-capture-ref-get-bibtex-from-isbn)
+        ;; Parse books
+        (when (s-match ": Books$" (org-capture-ref-query-dom :meta "title"))
+          (org-capture-ref-set-bibtex-field :type "book")
+          (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "productTitle"))
+          (org-capture-ref-set-bibtex-field :author (when (s-matches-p "Author" (org-capture-ref-query-dom :class "author" :class "contribution"))
+                                       (let ((author (org-capture-ref-query-dom :class "author" :class "contributorNameID")))
+                                         (if (string-empty-p author)
+                                             (org-capture-ref-query-dom :id "bylineInfo" :class "author" :class "a-link-normal" :tag 'a :apply #'car)
+                                           author))))
+          (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :class "detail-bullet-list"
+                                                    :apply #'dom-texts
+                                                    :apply (lambda (str)
+                                                             (string-match "Publisher[\n :]+\\([^\n]+?\\)\\(?:[;(][^\n]+?\\)" str)
+                                                             (match-string 1 str))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "detail-bullet-list"
+                                               :apply #'dom-texts
+                                               :apply (lambda (str)
+                                                        (string-match "Publisher[\n :]+\\(?:[^\n]+?\\)\\([;(][^\n]+\\)" str)
+                                                        (match-string 1 str))
+                                               :apply #'org-capture-ref-extract-year-from-string)))))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
