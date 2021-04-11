@@ -1393,7 +1393,7 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :howpublished "Karl-Voit")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :meta "author"))
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "description"))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "og:title"))
       (org-capture-ref-set-bibtex-field :key (org-capture-ref-query-dom :meta "orgmode-id"))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "article:published_time" :apply #'org-capture-ref-extract-year-from-string)))))
 
