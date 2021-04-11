@@ -109,6 +109,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-lesswrong
                                    org-capture-ref-get-bibtex-archive-book
                                    org-capture-ref-get-bibtex-stallman
+                                   org-capture-ref-get-bibtex-karl-voit
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
 				   ;; Generic parser
@@ -1359,6 +1360,17 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :tag 'head :tag 'title))
       ;; Not publication date info here.
       (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value))))
+
+(defun org-capture-ref-get-bibtex-karl-voit ()
+  "Generate BiBTeX for karl-voit.at publication."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "karl-voit\\.at" link)
+      (org-capture-ref-set-bibtex-field :howpublished "Karl-Voit")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :meta "author"))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "description"))
+      (org-capture-ref-set-bibtex-field :key (org-capture-ref-query-dom :meta "orgmode-id"))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "article:published_time" :apply #'org-capture-ref-extract-year-from-string)))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
   "Generate BiBTeX for ArXiv publication."
