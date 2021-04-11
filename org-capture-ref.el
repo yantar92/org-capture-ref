@@ -147,6 +147,7 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-clean-bibtex-hook '(org-capture-ref-create-key-maybe
+                                org-capture-ref-remove-double-comma
                                 org-ref-bibtex-format-url-if-doi
 				orcb-key-comma
 				orcb-&
@@ -718,7 +719,7 @@ Return nil if DOI record is not found."
         (if (not bibtex-string)
             (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceding with fallback options." isbn) 'warning)
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving ISBN record... done"))
-	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+	  (org-capture-ref-clean-bibtex bibtex-string)
           (throw :finish t))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
@@ -1549,6 +1550,10 @@ The overridden autokey customisations are:
 				      org-capture-ref--bibtex-alist)))
 
 ;; Cleaning up BiBTeX entry
+
+(defun org-capture-ref-remove-double-comma ()
+  "Remove malformatted \",\" from entry."
+  (replace-regexp ",,\n" ",\n"))
 
 (defun org-capture-ref-create-key-maybe ()
   "Generate BiBTeX key if it is missing."
