@@ -1574,7 +1574,8 @@ The overridden autokey customisations are:
 
 (defun org-capture-ref-remove-double-comma ()
   "Remove malformatted \",\" from entry."
-  (replace-regexp ",,\n" ",\n"))
+  (let ((inhibit-message t))
+    (replace-regexp ",,\n" ",\n")))
 
 (defun org-capture-ref-create-key-maybe ()
   "Generate BiBTeX key if it is missing."
