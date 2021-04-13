@@ -971,16 +971,20 @@ The value will be inactive org timestamp."
                                    ;; Youtube encodes duration using
                                    ;; ISO 8601 specification. See
                                    ;; https://en.wikipedia.org/wiki/ISO_8601.
-                                   (when (string-match "^PT\\(?:\\([0-9]+\\)H\\)?\\(?:\\([0-9]+\\)M\\)" time)
+                                   (when (string-match "^PT\\(?:\\([0-9]+\\)H\\)?\\(?:\\([0-9]+\\)M\\)\\(?:\\([0-9]+\\)S\\)" time)
                                      (let ((hours (or (and (match-string 1 time)
                                                            (string-to-number (match-string 1 time)))
                                                       0))
                                            (minutes (or (and (match-string 2 time)
                                                              (string-to-number (match-string 2 time)))
+                                                        0))
+                                           (seconds (or (and (match-string 3 time)
+                                                             (string-to-number (match-string 3 time)))
                                                         0)))
                                        (when (> minutes 60)
                                          (cl-incf hours (floor (/ minutes 60)))
                                          (setq minutes (% minutes 60)))
+                                       (when (> seconds 0) (cl-incf minutes))
                                        ;; We are interested in hours and
                                        ;; minuts. Drop seconds.
                                        (format "%.2d:%.2d" hours minutes)))))
