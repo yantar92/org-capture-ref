@@ -91,6 +91,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-github-pull-request
                                    org-capture-ref-get-bibtex-github-repo
                                    org-capture-ref-get-bibtex-github-file
+                                   org-capture-ref-get-bibtex-gitlab-commit
                                    org-capture-ref-get-bibtex-gitlab-repo
                                    org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
                                    org-capture-ref-get-bibtex-srht-repo
@@ -488,9 +489,10 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
 
 (defun org-capture-ref-extract-year-from-string (string-or-dom)
   "Extract year from date string or DOM element."
-  (let ((string (if (stringp string-or-dom)
-                    string-or-dom
-                  (dom-texts string-or-dom))))
+  (let ((string (cond
+                 ((stringp string-or-dom) string-or-dom)
+                 ((stringp (car string-or-dom)) (mapconcat #'identity string-or-dom ""))
+                 (t (dom-texts string-or-dom)))))
     (when (and string (string-match "[0-9]\\{4\\}" string))
       (match-string 0 string))))
 
@@ -959,6 +961,22 @@ The value will be inactive org timestamp."
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "GitLab")))))
+
+(defun org-capture-ref-get-bibtex-gitlab-commit ()
+  "Parse GitLab commit link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "gitlab\\.com/\\([^/]+/[^/]+\\)/-/commit/\\([0-9a-z]+\\)" link)
+      (let ((commit-number (match-string 2 link))
+            (commit-repo (match-string 1 link)))
+        (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+        ;; Find author
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-author-name$"))
+        (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
+                                           (s-truncate 10 commit-number)
+                                           (org-capture-ref-query-dom :class "^commit-title$")))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^header-main-content$" :class "^js-timeago$" :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
+        (org-capture-ref-set-bibtex-field :howpublished (format "GitLab:%s" commit-repo))
+        (throw :finish t)))))
 
 (defun org-capture-ref-get-bibtex-git-savannah-gnu-org-commit ()
   "Parse git.savannah.gnu.org comit page and generate bibtex entry."
