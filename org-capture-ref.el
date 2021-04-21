@@ -112,6 +112,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-archive-book
                                    org-capture-ref-get-bibtex-stallman
                                    org-capture-ref-get-bibtex-karl-voit
+                                   org-capture-ref-get-bibtex-imdb-movie
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
 				   ;; Generic parser
@@ -495,6 +496,30 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                  (t (dom-texts string-or-dom)))))
     (when (and string (string-match "[0-9]\\{4\\}" string))
       (match-string 0 string))))
+
+(defun org-capture-ref-parse-timestamp (time)
+  "Parse ISO8601 timestamp string.
+
+See https://en.wikipedia.org/wiki/ISO_8601.
+
+ISO8601 is, for example, used in Youtube video duration."
+  (when (string-match "^PT\\(?:\\([0-9]+\\)H\\)?\\(?:\\([0-9]+\\)M\\)?\\(?:\\([0-9]+\\)S\\)?" time)
+    (let ((hours (or (and (match-string 1 time)
+                          (string-to-number (match-string 1 time)))
+                     0))
+          (minutes (or (and (match-string 2 time)
+                            (string-to-number (match-string 2 time)))
+                       0))
+          (seconds (or (and (match-string 3 time)
+                            (string-to-number (match-string 3 time)))
+                       0)))
+      (when (> minutes 60)
+        (cl-incf hours (floor (/ minutes 60)))
+        (setq minutes (% minutes 60)))
+      (when (> seconds 0) (cl-incf minutes))
+      ;; We are interested in hours and
+      ;; minuts. Drop seconds.
+      (format "%.2d:%.2d" hours minutes))))
 
 (defun org-capture-ref-get-bibtex-field (field &optional return-placeholder-p)
   "Return the value of the BiBTeX FIELD or nil the FIELD is not set.
@@ -1003,27 +1028,7 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-      (org-capture-ref-set-bibtex-field :effort (let ((time (org-capture-ref-query-dom :meta 'duration)))
-                                   ;; Youtube encodes duration using
-                                   ;; ISO 8601 specification. See
-                                   ;; https://en.wikipedia.org/wiki/ISO_8601.
-                                   (when (string-match "^PT\\(?:\\([0-9]+\\)H\\)?\\(?:\\([0-9]+\\)M\\)\\(?:\\([0-9]+\\)S\\)" time)
-                                     (let ((hours (or (and (match-string 1 time)
-                                                           (string-to-number (match-string 1 time)))
-                                                      0))
-                                           (minutes (or (and (match-string 2 time)
-                                                             (string-to-number (match-string 2 time)))
-                                                        0))
-                                           (seconds (or (and (match-string 3 time)
-                                                             (string-to-number (match-string 3 time)))
-                                                        0)))
-                                       (when (> minutes 60)
-                                         (cl-incf hours (floor (/ minutes 60)))
-                                         (setq minutes (% minutes 60)))
-                                       (when (> seconds 0) (cl-incf minutes))
-                                       ;; We are interested in hours and
-                                       ;; minuts. Drop seconds.
-                                       (format "%.2d:%.2d" hours minutes)))))
+      (org-capture-ref-set-bibtex-field :effort (org-capture-ref-parse-timestamp (org-capture-ref-query-dom :meta 'duration)))
       (org-capture-ref-unless-set '(:author :title :year)
 	;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :attr '(itemprop . "author") :attr '(itemprop . "name") :attr 'content))
@@ -1436,6 +1441,20 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "og:title"))
       (org-capture-ref-set-bibtex-field :key (org-capture-ref-query-dom :meta "orgmode-id"))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "article:published_time" :apply #'org-capture-ref-extract-year-from-string)))))
+
+(defun org-capture-ref-get-bibtex-imdb-movie ()
+  "Generate BiBTeX for a IMDB movie page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "imdb\\.com/title/[a-z0-9]+" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :howpublished "IMDB")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :effort (org-capture-ref-parse-timestamp (org-capture-ref-query-dom :class "^title_wrapper$" :tag 'time :attr 'datetime)))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^plot_summary" :class "^credit_summary_item$" :apply #'car :tag 'a))
+      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " *([0-9]+) *- *IMDb" "" (org-capture-ref-query-dom :meta 'og:title)))
+      (org-capture-ref-set-bibtex-field :year (and (string-match " *(\\([0-9]+\\)) *- *IMDb" (org-capture-ref-query-dom :meta 'og:title))
+                                    (match-string 1 (org-capture-ref-query-dom :meta 'og:title)))))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
   "Generate BiBTeX for ArXiv publication."
