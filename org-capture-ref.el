@@ -811,11 +811,10 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\([^/]+\\)\\)?\\(?:/.+\\)?" link)
+    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\([^/]+\\)\\)?" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
-      (if (and (match-string 1 link)
-               (match-string 2 link))
+      (if (match-string 1 link)
 	  (org-capture-ref-unless-set '(:title :howpublished :author)
             (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
             (org-capture-ref-set-bibtex-field :author (format "/u/%s" (org-capture-ref-query-dom :class "content" :class "top-matter" :class "author")))
