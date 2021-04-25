@@ -83,6 +83,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-from-first-doi
 				   ;; Site-specific parsing
                                    org-capture-ref-get-bibtex-google-scholar-bibtex-page
+                                   org-capture-ref-get-bibtex-wikipedia-book
                                    org-capture-ref-get-bibtex-wiki
                                    org-capture-ref-get-bibtex-goodreads
                                    org-capture-ref-get-bibtex-amazon
@@ -1455,6 +1456,24 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " *([0-9]+) *- *IMDb" "" (org-capture-ref-query-dom :meta 'og:title)))
       (org-capture-ref-set-bibtex-field :year (and (string-match " *(\\([0-9]+\\)) *- *IMDb" (org-capture-ref-query-dom :meta 'og:title))
                                     (match-string 1 (org-capture-ref-query-dom :meta 'og:title)))))))
+
+(defun org-capture-ref-get-bibtex-wikipedia-book ()
+  "Generate BiBTeX for a Wikipedia book page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (and (string-match "wikipedia\\.org/wiki/" link)
+               (or (string-match "(book)" (org-capture-ref-query-dom :meta 'og:title))
+                   (and (string-match "Author" (org-capture-ref-query-dom :class "infobox vcard" :apply #'dom-texts))
+                        (string-match "\\(Publication[ \t\n]+date\\|Published\\)" (org-capture-ref-query-dom :class "infobox vcard" :apply #'dom-texts)))))
+      (org-capture-ref-set-bibtex-field :type "book")
+      (org-capture-ref-set-bibtex-field :howpublished "Wikipedia")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (let ((info-text (org-capture-ref-query-dom :class "infobox vcard" :tag 'tr :apply (lambda (els) (mapconcat #'dom-texts els "\n")))))
+        (org-capture-ref-set-bibtex-field :isbn (and (string-match "\\([0-9-]+\\{10,13\\}\\)" info-text) (match-string 1 info-text)))
+        (org-capture-ref-set-bibtex-field :publisher (and (string-match "Publisher[ \t\n]+\\([^\n]+\\)" info-text) (match-string 1 info-text)))
+        (org-capture-ref-set-bibtex-field :author (and (string-match "Author[ \t\n]+\\([^\n]+\\)" info-text) (match-string 1 info-text)))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "infobox-title"))
+        (org-capture-ref-set-bibtex-field :year (and (string-match "[0-9]\\{4\\}" info-text) (match-string 0 info-text))))
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
   "Generate BiBTeX for ArXiv publication."
