@@ -286,6 +286,7 @@ There is no need to attempt finding the value for this key.")
       pages        = {${:pages}},
       year         = {${:year}},
       doi          = {${:doi}},
+      isbn          = {${:isbn}},
       url          = {${:url}},
       howpublished = {${:howpublished}},
       publisher = {${:publisher}},
