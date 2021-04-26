@@ -1452,7 +1452,7 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :effort (org-capture-ref-parse-timestamp (org-capture-ref-query-dom :class "^title_wrapper$" :tag 'time :attr 'datetime)))
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^plot_summary" :class "^credit_summary_item$" :apply #'car :tag 'a))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^plot_summary" :class "^credit_summary_item$" :apply #'car :tag 'a))
       (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " *([0-9]+) *- *IMDb" "" (org-capture-ref-query-dom :meta 'og:title)))
       (org-capture-ref-set-bibtex-field :year (and (string-match " *(\\([0-9]+\\)) *- *IMDb" (org-capture-ref-query-dom :meta 'og:title))
                                     (match-string 1 (org-capture-ref-query-dom :meta 'og:title)))))))
