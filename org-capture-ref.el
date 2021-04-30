@@ -731,7 +731,7 @@ Return nil if DOI record is not found."
             (prog1 nil
               (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                   (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
-                (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceding with fallback options." doi) 'warning)))
+                (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceeding with fallback options." doi) 'warning)))
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving DOI record... done"))
           (puthash doi bibtex-string org-capture-ref--doi-record-cache)
 	  (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
@@ -748,7 +748,7 @@ Return nil if DOI record is not found."
                              (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
         (unless bibtex-string (org-capture-ref-set-bibtex-field :isbn nil 'force))
         (if (not bibtex-string)
-            (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceding with fallback options." isbn) 'warning)
+            (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceeding with fallback options." isbn) 'warning)
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving ISBN record... done"))
 	  (org-capture-ref-clean-bibtex bibtex-string)
           ;; The provided keys are sometimes not unique.
