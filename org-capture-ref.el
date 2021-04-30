@@ -114,6 +114,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-stallman
                                    org-capture-ref-get-bibtex-karl-voit
                                    org-capture-ref-get-bibtex-imdb-movie
+                                   org-capture-ref-get-bibtex-google-books
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
 				   ;; Generic parser
@@ -1510,6 +1511,15 @@ The value will be inactive org timestamp."
     (when (string-match "scholar\\.googleusercontent\\.com/scholar\\.bib" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-clean-bibtex (org-capture-ref-query-dom) 'no-hooks))))
+
+(defun org-capture-ref-get-bibtex-google-books ()
+  "Harvest bibtex entry from Google Books page."
+  (let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "books\\.google" link)
+      (when-let ((metadata (org-capture-ref-query-dom :id "metadata_content_table" :apply #'dom-texts)))
+        (when (string-match "[0-9]\\{10\\}" metadata)
+          (org-capture-ref-set-bibtex-field :isbn (match-string 0 metadata))
+          (org-capture-ref-get-bibtex-from-isbn))))))
 
 ;; Getting BiBTeX from elfeed entries
 
