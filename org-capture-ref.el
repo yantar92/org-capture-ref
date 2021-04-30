@@ -751,6 +751,8 @@ Return nil if DOI record is not found."
             (org-capture-ref-message (format "Retrieving ISBN record %s ... failed. Proceding with fallback options." isbn) 'warning)
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving ISBN record... done"))
 	  (org-capture-ref-clean-bibtex bibtex-string)
+          ;; The provided keys are sometimes not unique.
+          (org-capture-ref-set-bibtex-field :key nil 'force)
           (throw :finish t))))))
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
@@ -1623,11 +1625,10 @@ The overridden autokey customisations are:
                                            ".*[^[:upper:][:lower:]0-9].*"))
         (bibtex-autokey-title-terminators (rx unmatchable))
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
-                                          (concat (replace-regexp-in-string
-                                                   " " "_"
-                                                   (or (org-capture-ref-get-bibtex-field :publisher)
-                                                       (org-capture-ref-get-bibtex-field :howpublished)))
-                                                  "_")
+                                          (replace-regexp-in-string
+                                           " " "_"
+                                           (or (org-capture-ref-get-bibtex-field :publisher)
+                                               (org-capture-ref-get-bibtex-field :howpublished)))
                                         "")))
     (when (string= (org-capture-ref-get-bibtex-field :key) "placeholder")
       (org-capture-ref-set-bibtex-field :key nil 'force))
