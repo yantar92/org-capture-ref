@@ -1450,6 +1450,7 @@ The value will be inactive org timestamp."
   "Generate BiBTeX for a IMDB movie page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "imdb\\.com/title/[a-z0-9]+" link)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "/\\?ref_=.+$" "" link))
       (org-capture-ref-set-bibtex-field :type "misc")
       (org-capture-ref-set-bibtex-field :howpublished "IMDB")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
