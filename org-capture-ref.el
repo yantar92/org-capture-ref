@@ -1937,6 +1937,9 @@ capture template."
 
 (defvar org-capture-ref-update-heading-history nil)
 
+(defvar org-capture-ref-update-heading-properties-allow-duplicates `("HOWPUBLISHED" ,@org-special-properties)
+  "List of heading properties, whose values may be repeated in other properties.")
+
 (defun org-capture-ref-update-heading-maybe ()
   "Use last captured heading to update existing heading at `:org-hd-marker' bibtex property."
   (when (and (org-capture-ref-get-bibtex-field :org-hd-marker)
@@ -2037,7 +2040,25 @@ capture template."
                        (let ((next-heading (save-excursion (or (outline-next-heading) (point-max)))))
                          (re-search-forward org-property-drawer-re next-heading t)
                          (re-search-forward org-logbook-drawer-re next-heading t)
-                         (setf (buffer-substring (point) next-heading) body))))))))))
+                         (setf (buffer-substring (point) next-heading) body))))))
+                ;; Check for duplicate metadata
+                (let ((current-heading-props (sort (org-entry-properties) (lambda (a b) (string-lessp (cdr a) (cdr b)))))
+                      prop
+                      next-prop)
+                  (setq prop (pop current-heading-props))
+                  (while current-heading-props
+                    (setq next-prop (pop current-heading-props))
+                    (when (and (stringp (cdr prop)) (stringp (cdr next-prop))
+                               (not (member (car prop) org-capture-ref-update-heading-properties-allow-duplicates))
+                               (not (member (car next-prop) org-capture-ref-update-heading-properties-allow-duplicates))
+                               (string= (cdr prop) (cdr next-prop)))
+                      (pcase (read-char-from-minibuffer (format "Properties %s¹ and %s² have the same value %s. Remove? (1/2/n)"
+                                                                (car prop) (car next-prop) (cdr prop) (car next-prop))
+                                                        '(?1 ?2 ?n))
+                        (?1 (org-entry-delete (point) (car prop)))
+                        (?2 (org-entry-delete (point) (car next-prop)))
+                        (_ nil)))
+                    (setq prop next-prop)))))))
       (org-capture-ref-reset-state))))
 
 ;;; Formatting Org entry
