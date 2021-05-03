@@ -1989,6 +1989,12 @@ capture template."
                                    (org-back-to-heading))
                                   ("TODO"
                                    (org-todo (cdr prop)))
+                                  ("PRIORITY"
+                                   (org-priority (string-to-char (cdr prop))))
+                                  ("SCHEDULED"
+                                   (org-schedule nil (cdr prop)))
+                                  ("DEADLINE"
+                                   (org-deadline nil (cdr prop)))
                                   (_ nil)))
                                (t (org-entry-put nil (car prop) (cdr prop)))))
                           (?n nil)
