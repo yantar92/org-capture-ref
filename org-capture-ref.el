@@ -1458,9 +1458,10 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :effort (org-capture-ref-parse-timestamp (org-capture-ref-query-dom :class "^title_wrapper$" :tag 'time :attr 'datetime)))
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^plot_summary" :class "^credit_summary_item$" :apply #'car :tag 'a))
-      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " *([0-9]+) *- *IMDb" "" (org-capture-ref-query-dom :meta 'og:title)))
-      (org-capture-ref-set-bibtex-field :year (and (string-match " *(\\([0-9]+\\)) *- *IMDb" (org-capture-ref-query-dom :meta 'og:title))
-                                    (match-string 1 (org-capture-ref-query-dom :meta 'og:title)))))))
+      (let ((title-field (org-capture-ref-query-dom :class "title_wrapper" :tag 'h1)))
+        (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string (rx (0+ whitespace) "(" (0+ whitespace) (1+ digit) (0+ whitespace) ")") "" title-field))
+        (org-capture-ref-set-bibtex-field :year (and (string-match (rx "(" (0+ whitespace) (group (= 4 digit)) (0+ whitespace) ")") title-field)
+                                      (match-string 1 title-field)))))))
 
 (defun org-capture-ref-get-bibtex-wikipedia-book ()
   "Generate BiBTeX for a Wikipedia book page."
