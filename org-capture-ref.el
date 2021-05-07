@@ -204,7 +204,8 @@ The functions will be called in sequence until any of them returns non-nil value
                                      org-capture-ref-check-doi
 				     org-capture-ref-check-url
 				     org-capture-ref-check-link
-                                     org-capture-ref-check-article-title)
+                                     org-capture-ref-check-article-title
+                                     org-capture-ref-check-author-title)
   "Functions used to check the validity of generated BiBTeX.
   
 The functions are called in sequence without arguments.
@@ -1916,9 +1917,20 @@ capture template."
   "Check if `:title' already exists in some heading title.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
-  (when (and (string= "article" (org-capture-ref-get-bibtex-field :type))
+  (when (and (member (org-capture-ref-get-bibtex-field :type) '("article"))
              (org-capture-ref-get-bibtex-field :title))
     (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote (org-capture-ref-get-bibtex-field :title))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+
+(defun org-capture-ref-check-author-title ()
+  "Check if `:author' and `:title' already exists in some heading title.
+Show the matching entry unless `:immediate-finish' is set in the
+capture template."
+  (when (and (org-capture-ref-get-bibtex-field :author)
+             (org-capture-ref-get-bibtex-field :title))
+    (org-capture-ref-check-regexp (format "^\\*+.+%s.+%s"
+                           (regexp-quote (org-capture-ref-get-bibtex-field :author))
+                           (regexp-quote (org-capture-ref-get-bibtex-field :title)))
+                   (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 ;;; Updating existing entry
 
