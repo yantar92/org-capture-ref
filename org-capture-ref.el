@@ -1030,7 +1030,7 @@ The value will be inactive org timestamp."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "youtube\\.com/watch" link)
       ;; Remove garbage from the link
-      (let ((video-id (and (string-match "v=[0-9a-zA-Z_]+" link) (match-string 0 link))))
+      (let ((video-id (and (string-match "v=[0-9a-zA-Z_-]+" link) (match-string 0 link))))
         (setq link (replace-regexp-in-string "\\?[^/]+$" (concat "?" video-id) link)))
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-capture-info :link link)
