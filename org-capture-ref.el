@@ -114,6 +114,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-stallman
                                    org-capture-ref-get-bibtex-karl-voit
                                    org-capture-ref-get-bibtex-imdb-movie
+                                   org-capture-ref-get-bibtex-orgmode-ml
                                    org-capture-ref-get-bibtex-google-books
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
@@ -1480,6 +1481,20 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :author (and (string-match "Author[ \t\n]+\\([^\n]+\\)" info-text) (match-string 1 info-text)))
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "infobox-title"))
         (org-capture-ref-set-bibtex-field :year (and (string-match "[0-9]\\{4\\}" info-text) (match-string 0 info-text))))
+      (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-orgmode-ml ()
+  "Generate BiBTeX for a Org-mode mailing list page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "orgmode\\.org/list/\\([^/]+\\)" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :howpublished "ML:Org mode")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :key (match-string 1 link))
+      (let ((body-text (org-capture-ref-query-dom :id "^b$")))
+        (org-capture-ref-set-bibtex-field :author (and (string-match "^From: \\(.+\\)$" body-text) (match-string 1 body-text)))
+        (org-capture-ref-set-bibtex-field :title (and (string-match "^Subject: \\(.+\\)$" body-text) (match-string 1 body-text)))
+        (org-capture-ref-set-bibtex-field :year (and (string-match "^Date: .+?\\([0-9]\\{4\\}\\)" body-text) (match-string 1 body-text))))
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
