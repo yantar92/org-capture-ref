@@ -1213,15 +1213,16 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-meta 'books:isbn))
       (if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
-          (org-capture-ref-set-bibtex-field :isbn nil 'force)
+          (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value 'force)
         (org-capture-ref-get-bibtex-from-isbn))
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^authoName$"))
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "metacol" :id "bookAuthors" :join " and " :class "^authorName$"))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
       (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
-        (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(]+\\)\\(?:More details...\\).*?(?\\)?" details)
+        (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;]+?\\)\\(?:(\\|More details...\\|Original title\\)\\)" details)
           (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (s-trim (match-string 2 details))))
-          (org-capture-ref-set-bibtex-field :year (match-string 1 details)))))))
+          (org-capture-ref-set-bibtex-field :year (match-string 1 details))))
+      (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-amazon ()
   "Generate BiBTeX for Amazon book."
