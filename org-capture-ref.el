@@ -1672,12 +1672,14 @@ The overridden autokey customisations are:
 
 (defun org-capture-ref-get-formatted-bibtex-default ()
   "Default BiBTeX formatter."
-  (replace-regexp-in-string (format "^.+{\\(%s\\)?},$" org-capture-ref-placeholder-value) ""
-			    (s-format org-capture-ref-default-bibtex-template
-				      (lambda (key &optional _)
-					(or (org-capture-ref-get-bibtex-field (intern key))
-					    ""))
-				      org-capture-ref--bibtex-alist)))
+  (replace-regexp-in-string
+   (format "^.+{\\(%s\\)?},$" org-capture-ref-placeholder-value) ""
+   (s-format org-capture-ref-default-bibtex-template
+	     (lambda (key &optional _)
+	       (or (and (org-capture-ref-get-bibtex-field (intern key))
+                        (s-trim (org-capture-ref-get-bibtex-field (intern key))))
+		   ""))
+	     org-capture-ref--bibtex-alist)))
 
 ;; Cleaning up BiBTeX entry
 
