@@ -1243,6 +1243,13 @@ The value will be inactive org timestamp."
                                                             "^a-row$")))))
         (when (string-match "\\([0-9X]\\{10,\\}\\)" isbn-line)
           (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
+      (when-let ((isbn-line (seq-find (lambda (str) (s-contains-p "ISBN-10" str))
+                                      (mapcar #'dom-texts
+                                              (dom-by-class (car (dom-by-id (org-capture-ref-get-dom)
+                                                                            "^rich_product_information$"))
+                                                            "a-section")))))
+        (when (string-match "\\([0-9X]\\{10,\\}\\)" isbn-line)
+          (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
       (unless (org-capture-ref-get-bibtex-from-isbn)
         ;; Parse books
         (when (s-match ": Books$" (org-capture-ref-query-dom :meta "title"))
