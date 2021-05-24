@@ -2072,7 +2072,7 @@ capture template."
                   (replace-match ""))
                 ;; Add any extra text
                 (when (and (not (seq-empty-p body))
-                           (not (string-match-p (rx string-start (1+ (any whitespace "\n"))) body))
+                           (not (string-match-p (rx string-start (1+ (any whitespace "\n")) string-end) body))
                            (not (save-excursion (search-forward body (save-excursion (outline-next-heading)) t))))
                   (when-let ((inp (read-char-from-minibuffer (format "Append \"%s\" to body? (y/n/[r]eplace)" body) '(?y ?n ?r))))
                     (pcase inp
