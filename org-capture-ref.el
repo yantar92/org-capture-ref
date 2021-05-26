@@ -258,7 +258,6 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :type '(alist :key-type symbol :value-type (set string (set symbol string))))
 
 (defcustom org-capture-ref-demand-doi-list '("aps\\.org"
-                              "springer\\.com/\\(?:chapter/\\)?\\([0-9a-z-_/.]+\\)"
                               "science\\.sciencemag\\.org"
                               "nature\\.com"
                               "aip\\.scitation\\.org"
@@ -1287,7 +1286,14 @@ The value will be inactive org timestamp."
     (setq link (replace-regexp-in-string "%2F" "/" link))
     (when (string-match "springer\\.com/\\(?:chapter/\\|article/\\)?\\(.+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
-      (org-capture-ref-get-bibtex-from-first-doi))))
+      (if (org-capture-ref-get-bibtex-from-first-doi)
+          (throw :finish t)
+        (org-capture-ref-set-bibtex-field :type "article")
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'citation_title))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :meta 'prism.publicationDate)))
+        (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta 'citation_journal_title))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'dc.creator))
+        (org-capture-ref-set-bibtex-field :pages (format "%s-%s" (org-capture-ref-query-dom :meta 'citation_firstpage) (org-capture-ref-query-dom :meta 'citation_lastpage)))))))
 
 (defun org-capture-ref-get-bibtex-tandfonline ()
   "Generate BiBTeX for Tandfonline publication."
