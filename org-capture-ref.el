@@ -1144,6 +1144,8 @@ The value will be inactive org timestamp."
       ;; We still parse manually since internation ISBN for Russian books is ugly
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^titles-block-center$" :attr '(itemprop . "author")))
+      (when (seq-empty-p (org-capture-ref-get-bibtex-field :author))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "^titles-block-center$" :id "autors" :tag 'a)))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^titles-block-center$" :id "^name$"))
       (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :class "^titles-block-center$" :id "^publisher$"))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^titles-block-center$" :id "^year$" :apply #'dom-text :apply #'org-capture-ref-extract-year-from-string))
