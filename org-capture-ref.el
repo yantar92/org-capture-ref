@@ -115,6 +115,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-karl-voit
                                    org-capture-ref-get-bibtex-imdb-movie
                                    org-capture-ref-get-bibtex-orgmode-ml
+                                   org-capture-ref-get-bibtex-steam
                                    org-capture-ref-get-bibtex-google-books
                                    ;; OpenGraph parser
                                    org-capture-ref-parse-opengraph
@@ -1274,6 +1275,32 @@ The value will be inactive org timestamp."
                                                         (string-match "Publisher[\n :]+\\(?:[^\n]+?\\)\\([;(][^\n]+\\)" str)
                                                         (match-string 1 str))
                                                :apply #'org-capture-ref-extract-year-from-string)))))))
+
+(defun org-capture-ref-get-bibtex-steam ()
+  "Generate BiBTeX for Steam page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (s-match "store\\.steampowered\\.com/app/" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (when-let ((info (org-capture-ref-query-dom :class "game_details"
+                                   :class "details_block"
+                                   ;; We need to distinguish "<br>" tags or string becomes unparseable.
+                                   :apply (lambda (block) (mapcar (lambda (div)
+                                                               (mapcar
+                                                                (lambda (el)
+                                                                  (if (and (listp el) (eq (car el) 'br)) "\n" el))
+                                                                div))
+                                                             block))
+                                   :apply #'dom-texts)))
+        (when (string-match "Title:[ \n\t]+\\([^:\n\t]+\\)" info)
+          (org-capture-ref-set-bibtex-field :title (match-string 1 info)))
+        (when (string-match "Developer:[ \n\t]+\\([^:\n\t]+\\)" info)
+          (org-capture-ref-set-bibtex-field :author (match-string 1 info)))
+        (when (string-match "Publisher:[ \n\t]+\\([^:\n\t]+\\)" info)
+          (org-capture-ref-set-bibtex-field :publisher (match-string 1 info)))
+        (when (string-match "Release date:[ \n\t]+\\([^:\n\t]+\\)" info)
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (match-string 1 info))))))))
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
