@@ -1674,7 +1674,6 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 Most of the relevant bibtex.el customisations apply.
 The overridden autokey customisations are:
 - `bibtex-autokey-year-length'
-- `bibtex-autokey-year-title-separator'
 - `bibtex-autokey-titleword-ignore'
 - `bibtex-autokey-title-terminators'
 - `bibtex-autokey-prefix-string'."
@@ -1682,7 +1681,6 @@ The overridden autokey customisations are:
     (org-capture-ref-set-bibtex-field :key "placeholder"))
   (let ((bibtex-string (org-capture-ref-format-bibtex))
         (bibtex-autokey-year-length 4)
-        (bibtex-autokey-year-title-separator "")
         (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das"
                                            "a" "an" "on" "the" "eine?" "der" "die" "das"
                                            ;; "[^[:upper:]].*"
@@ -1690,7 +1688,7 @@ The overridden autokey customisations are:
         (bibtex-autokey-title-terminators (rx unmatchable))
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
                                           (replace-regexp-in-string
-                                           " " "_"
+                                           " " bibtex-autokey-titleword-separator
                                            (or (org-capture-ref-get-bibtex-field :publisher)
                                                (org-capture-ref-get-bibtex-field :howpublished)))
                                         "")))
