@@ -1705,6 +1705,7 @@ The overridden autokey customisations are:
                                                               (t (lambda () "")))))
         (concat (bibtex-generate-autokey)
                 ;; Add unique hash to avoid collisions.
+                bibtex-autokey-titleword-separator
                 (format "%.3s"
                         (or (org-capture-ref-generate-key-from-doi)
                             (org-capture-ref-generate-key-from-isbn)
