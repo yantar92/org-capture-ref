@@ -96,6 +96,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                    org-capture-ref-get-bibtex-gitlab-repo
                                    org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
                                    org-capture-ref-get-bibtex-srht-repo
+                                   org-capture-ref-get-bibtex-reddit-planetemacs
                                    org-capture-ref-get-bibtex-reddit-comment
                                    org-capture-ref-get-bibtex-reddit
                                    org-capture-ref-get-bibtex-youtube-watch
@@ -818,6 +819,14 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :howpublished (format "Wikipedia(%s)" (match-string 1 link)))
       (throw :finish t))))
 
+(defun org-capture-ref-get-bibtex-reddit-planetemacs ()
+  "Parse Planetemacs subreddit link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\(planetemacs\\)\\)?" link)
+      (when-let ((url (org-capture-ref-query-dom :class "content" :class "top-matter" :class "title" :attr 'href)))
+        (org-capture-ref-set-new-url url)
+        (org-capture-ref-get-bibtex)
+        (throw :finish t)))))
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
