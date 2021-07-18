@@ -367,6 +367,7 @@ The value must be an alist of `org-capture-ref-check-regexp-method' and the corr
 
 (defun org-capture-ref-set-new-url (url)
   "Reset environment as if capture was invoked for URL."
+  (org-capture-ref-reset-state)
   (org-capture-ref-set-bibtex-field :url url)
   ;; Asquire the new URL.
   (org-capture-ref-set-capture-info :link (org-capture-ref-get-bibtex-field :url))
