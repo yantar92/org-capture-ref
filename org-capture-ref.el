@@ -1681,8 +1681,8 @@ The overridden autokey customisations are:
     (org-capture-ref-set-bibtex-field :key "placeholder"))
   (let ((bibtex-string (org-capture-ref-format-bibtex))
         (bibtex-autokey-year-length 4)
-        (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das"
-                                           "a" "an" "on" "the" "eine?" "der" "die" "das"
+        (bibtex-autokey-titleword-ignore '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das" "For"
+                                           "a" "an" "on" "the" "eine?" "der" "die" "das" "for"
                                            ;; "[^[:upper:]].*"
                                            ".*[^[:upper:][:lower:]0-9].*"))
         (bibtex-autokey-title-terminators (rx unmatchable))
