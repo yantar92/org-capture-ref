@@ -1991,7 +1991,7 @@ Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (and (org-capture-ref-get-bibtex-field :author)
              (org-capture-ref-get-bibtex-field :title))
-    (org-capture-ref-check-regexp (format "^\\*+.+%s.+%s"
+    (org-capture-ref-check-regexp (format "^\\*+.+%s.+%s\\(?:[ \t]+:.+:\\)?$"
                            (regexp-quote (org-capture-ref-get-bibtex-field :author))
                            (regexp-quote (org-capture-ref-get-bibtex-field :title)))
                    (org-capture-ref-get-capture-template-info :immediate-finish))))
