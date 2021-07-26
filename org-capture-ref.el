@@ -822,11 +822,12 @@ The value will be inactive org timestamp."
 (defun org-capture-ref-get-bibtex-reddit-planetemacs ()
   "Parse Planetemacs subreddit link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\(planetemacs\\)\\)?" link)
-      (when-let ((url (org-capture-ref-query-dom :class "content" :class "top-matter" :class "title" :attr 'href)))
-        (org-capture-ref-set-new-url url)
-        (org-capture-ref-get-bibtex)
-        (throw :finish t)))))
+    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\(planetemacs\\)\\)" link)
+      (when-let ((url (org-capture-ref-query-dom :class "top-matter" :class "title" :attr 'href)))
+        (unless (string-empty-p url)
+          (org-capture-ref-set-new-url url)
+          (org-capture-ref-get-bibtex)
+          (throw :finish t))))))
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
