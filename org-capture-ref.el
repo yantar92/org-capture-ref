@@ -1450,12 +1450,18 @@ The value will be inactive org timestamp."
                                        org-capture-ref-placeholder-value
                                      author))
                          'force)
-      ;; News articles do not even have author.
-      (unless (org-capture-ref-get-bibtex-field :author) (org-capture-ref-set-bibtex-field :type "misc"))
-      (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "citation_online_date" :apply #'org-capture-ref-extract-year-from-string))
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "citation_title"))
-      (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta "citation_journal_title"))
-      (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :meta "citation_publisher"))
+      (if (org-capture-ref-get-bibtex-field :author)
+          (progn
+            (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "citation_online_date" :apply #'org-capture-ref-extract-year-from-string))
+            (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "citation_title"))
+            (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta "citation_journal_title"))
+            (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :meta "citation_publisher")))
+        ;; News articles store author in different field.
+        (org-capture-ref-set-bibtex-field :type "misc")
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and" :meta "dc.creator"))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta "dc.date" :apply #'org-capture-ref-extract-year-from-string))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta "dc.title"))
+        (org-capture-ref-set-bibtex-field :publisher (org-capture-ref-query-dom :meta "dc.publisher")))
       (org-capture-ref-set-bibtex-field :howpublished "Nature")
       (throw :finish t))))
 
