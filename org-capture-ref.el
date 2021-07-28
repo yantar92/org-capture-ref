@@ -2359,11 +2359,12 @@ Overridden customisations:
         (goto-char 1)
         (when org-capture-ref-headline-tags
           (org-set-tags (append (org-get-tags nil t)
-                                (mapcar (lambda (tag)
-                                          (pcase tag
-                                            ((pred stringp) tag)
-                                            (field (org-capture-ref-get-bibtex-field field))))
-                                        org-capture-ref-headline-tags)))))
+                                (delq nil
+                                      (mapcar (lambda (tag)
+                                                (pcase tag
+                                                  ((pred stringp) tag)
+                                                  (field (org-capture-ref-get-bibtex-field field))))
+                                              org-capture-ref-headline-tags))))))
       (replace-regexp-in-string "^\\*+ *" "" (substring-no-properties (buffer-string))))))
 
 (provide 'org-capture-ref)
