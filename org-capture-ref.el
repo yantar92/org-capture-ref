@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (org "9.3") (org-ref "1.1.1"))
+;; Package-Requires: ((s "1.12.0") (f "0.20.0") (asoc "0.6.1") (org "9.3") (org-ref "1.1.1") (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,8 @@
 (require 'dom)
 (require 'dash)
 (require 's)
-
+(require 'f)
+(require 'asoc)
 ;;; Customization:
 
 (defgroup org-capture-ref nil
@@ -239,6 +240,48 @@ may throw error and hence prevent any laster function to be executed."
 Each element of the list can be either a string representing the tag
 or a symbol representing the metadata to be used as a tag."
   :type '(repeat (choice string symbol))
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-capture-target `(:file ,(f-join org-directory "inbox.org"))
+  "Capture template target specification to be used in `org-capture-ref-capture-template'.
+The specification will be inserted as is into a `doct' template. See
+Target section of the `doct' docstring for details."
+  :type 'sexp
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-capture-keys '("z" "Z")
+  "List of the capture template keys to be used for interactive and silent templates respectively."
+  :type '(list string string)
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-capture-template `( :group "org-capture-ref template"
+ 			        :type entry
+                                ,@org-capture-ref-capture-target
+ 			        :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
+                                :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
+                                :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
+					         (s-join "\n"
+						         '("- [ ] download and attach pdf"
+						           "- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
+						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
+						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
+                                                           "- [ ] check if bibtex entry has missing fields"
+                                                           "- [ ] Consider subscribing to new citations"))
+                                               ""))
+                                :org-entry (lambda () (org-capture-ref-get-org-entry))
+			        :template
+                                ("%{fetch-bibtex}* TODO %?%{space}%{org-entry}"
+                                 "%{extra}")
+			        :children (("Interactive org-capture-ref template"
+					    :keys ,(car org-capture-ref-capture-keys)
+                                            :space " ")
+				           ("Silent org-capture-ref template"
+					    :keys ,(cadr org-capture-ref-capture-keys)
+                                            :space ""
+					    :immediate-finish t)))
+  "Default capture template. The template is a template defined using
+  `doct' syntax. See docstring of `doct' for details."
+  :type 'list
   :group 'org-capture-ref)
 
 ;; Customisation for default functions
@@ -2257,7 +2300,8 @@ Special field :bibtex-string contains formatted BiBTeX entry as a string.")
 
 (defvar org-capture-ref--buffer-dom nil
   "Parsed html of the captured page.")
-
+(defvar org-capture-ref-capture-template-set-p nil
+  "Non-nil when `org-capture-ref-capture-template' is set.")
 ;;; Main capturing routine
 
 (defun org-capture-ref-reset-state ()
@@ -2366,6 +2410,19 @@ Overridden customisations:
                                                   (field (org-capture-ref-get-bibtex-field field))))
                                               org-capture-ref-headline-tags))))))
       (replace-regexp-in-string "^\\*+ *" "" (substring-no-properties (buffer-string))))))
+
+(defun org-capture-ref-set-capture-template ()
+  "Set default capture template according to `org-capture-ref-capture-template'."
+  (setq org-capture-ref-capture-template-set-p t)
+  (custom-reevaluate-setting 'org-capture-ref-capture-target)
+  (custom-reevaluate-setting 'org-capture-ref-capture-keys)
+  (custom-reevaluate-setting 'org-capture-ref-capture-template)
+  (let ((templates (doct org-capture-ref-capture-template)))
+    (dolist (template templates)
+      (asoc-put! org-capture-templates
+	         (car template)
+	         (cdr  template)
+	         'replace))))
 
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
