@@ -2475,5 +2475,41 @@ Overridden customisations:
 	         (cdr  template)
 	         'replace))))
 
+(defun org-capture-ref-capture-url (url &optional interactive-capture)
+  "Capture URL using `org-capture-ref-capture-template'.
+With prefix argument, use interactive version of the template."
+  (interactive "sURL: \nP")
+  (unless org-capture-ref-capture-template-set-p
+    (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
+  (org-protocol-capture
+   (list :template (if interactive-capture
+                       (car org-capture-ref-capture-keys)
+                     (cadr org-capture-ref-capture-keys))
+         :url url)))
+
+(defun org-capture-ref-capture-doi (doi &optional interactive-capture)
+  "Capture DOI using `org-capture-ref-capture-template'.
+With prefix argument, use interactive version of the template."
+  (interactive "sDOI: \nP")
+  (unless org-capture-ref-capture-template-set-p
+    (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
+  (org-protocol-capture
+   (list :template (if interactive-capture
+                       (car org-capture-ref-capture-keys)
+                     (cadr org-capture-ref-capture-keys))
+         :url (format "https://doi.org/%s" doi))))
+
+(defun org-capture-ref-capture-at-point (interactive-capture)
+  "Capture object at point using `org-capture-ref-capture-template'
+With prefix argument, use interactive version of the template."
+  (interactive "P")
+  (unless org-capture-ref-capture-template-set-p
+    (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
+  (org-protocol-capture
+   (list :template (if interactive-capture
+                       (car org-capture-ref-capture-keys)
+                     (cadr org-capture-ref-capture-keys))
+         :buffer-marker (point-marker))))
+
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
