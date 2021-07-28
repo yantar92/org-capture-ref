@@ -234,7 +234,7 @@ may throw error and hence prevent any laster function to be executed."
   :type 'function
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-headline-tags '("BOOKMARK" :type)
+(defcustom org-capture-ref-headline-tags '("BOOKMARK" :type :typealt)
   "List of tags to be added to org entry in `org-capture-ref-get-org-entry'.
 Each element of the list can be either a string representing the tag
 or a symbol representing the metadata to be used as a tag."
@@ -282,6 +282,7 @@ the capture exits with error."
 There is no need to attempt finding the value for this key.")
 
 (defcustom org-capture-ref-default-bibtex-template "@${:type}{${:key},
+      typealt     = {${:typealt}},
       author       = {${:author}},
       title        = {${:title}},
       journal      = {${:journal}},
@@ -1046,6 +1047,7 @@ The value will be inactive org timestamp."
       (let ((video-id (and (string-match "v=[0-9a-zA-Z_-]+" link) (match-string 0 link))))
         (setq link (replace-regexp-in-string "\\?[^/]+$" (concat "?" video-id) link)))
       (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :typealt "video")
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :effort (org-capture-ref-parse-timestamp (org-capture-ref-query-dom :meta 'duration)))
@@ -1108,6 +1110,7 @@ The value will be inactive org timestamp."
     (when (s-match "fantlab\\.ru/autor" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "author")
       (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
       (org-capture-ref-set-bibtex-field :publisher "Fantlab")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
@@ -1143,6 +1146,7 @@ The value will be inactive org timestamp."
       (when (let ((case-fold-search nil)) (string-match-p "Цикл" (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'cadr)))
         (org-capture-ref-set-bibtex-field :title (format "Series: %s" (org-capture-ref-get-bibtex-field :title)))
         (org-capture-ref-set-bibtex-field :type "misc")
+        (org-capture-ref-set-bibtex-field :typealt "series")
         (throw :finish t))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id "^work-names-unit$" :attr '(itemprop . "datePublished"))))))
 
@@ -1293,6 +1297,7 @@ The value will be inactive org timestamp."
     (when (s-match "store\\.steampowered\\.com/app/" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "game")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (when-let ((info (org-capture-ref-query-dom :class "game_details"
                                    :class "details_block"
@@ -1517,6 +1522,7 @@ The value will be inactive org timestamp."
     (when (string-match "imdb\\.com/title/[a-z0-9]+" link)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "/\\?ref_=.+$" "" link))
       (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "movie")
       (org-capture-ref-set-bibtex-field :howpublished "IMDB")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
