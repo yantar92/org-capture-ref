@@ -1873,13 +1873,21 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (`org-search-view (org-capture-ref-check-regexp-search-view regexp dont-show-match-p))
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-regexp-method: %s" org-capture-ref-check-regexp-method) 'error))))
 
+(defvar org-capture-ref--org-agenda-files-cached nil
+  "Cached value of `org-agenda-files' from previous run.")
+(defvar org-capture-ref--org-agenda-files-and-archives-cached nil
+  "Cached value of `org-agenda-files' + archives from previous run.")
 (defun org-capture-ref-check-regexp-grep (regexp &optional dont-show-match-p)
   "Check if REGEXP exists in org files using grep.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (unless (executable-find "grep") (org-capture-ref-message "Cannot find grep executable" 'error))
   (let (files
 	matches)
-    (setq files (org-agenda-files t t))
+    (if (eq org-capture-ref--org-agenda-files-cached org-agenda-files)
+        (setq files org-capture-ref--org-agenda-files-and-archives-cached)
+      (setq files (org-agenda-files t t))
+      (setq org-capture-ref--org-agenda-files-cached org-agenda-files)
+      (setq org-capture-ref--org-agenda-files-and-archives-cached files))
     (when (eq (car org-agenda-text-search-extra-files) 'agenda-archives)
       (pop org-agenda-text-search-extra-files))
     (setq files (append files org-agenda-text-search-extra-files))
