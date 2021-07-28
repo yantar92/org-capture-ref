@@ -297,9 +297,10 @@ There is no need to attempt finding the value for this key.")
       howpublished = {${:howpublished}},
       publisher = {${:publisher}},
       keywords     = {${:keywords}},
-      note         = {Online; accessed ${:urldate}}
-      created         = {${:created}}
-      effort       = {${:effort}}
+      note         = {Online; accessed ${:urldate}},
+      created         = {${:created}},
+      effort       = {${:effort}},
+      link         = {${:link}}
       }"
   "Default template used to format BiBTeX entry.
 If a keyword from the template is missing, it will remain empty."
