@@ -1827,8 +1827,8 @@ The overridden autokey customisations are:
 (defun org-capture-ref-message-emacs (msg &optional severity)
   "Show message in Emacs."
   (pcase severity
-    (`error (user-error msg))
-    (`warning (message msg))
+    (`error (user-error "%s" msg))
+    (`warning (message "%s" msg))
     (_ (message msg))))
 
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
