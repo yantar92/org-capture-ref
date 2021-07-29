@@ -1732,6 +1732,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Fix redirect in nature RSS feeds."
   (when (string-match "feeds\\.nature\\.com.+/\\([^/]+\\)" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-new-url (format "https://www.nature.com/articles/%s" (match-string 1 (org-capture-ref-get-bibtex-field :url))))
+    (org-capture-ref-get-bibtex-nature-careers-article)
     (throw :finish t)))
 
 ;; Getting BiBTeX from Emacs buffer
