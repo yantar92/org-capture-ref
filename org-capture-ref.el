@@ -158,7 +158,8 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
   :group 'org-capture-ref)
 (defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions '(org-capture-ref-get-bibtex-bibtex-mode
                                                      org-capture-ref-get-bibtex-notmuch-show-mode
-                                                     org-capture-ref-get-bibtex-notmuch-search-mode)
+                                                     org-capture-ref-get-bibtex-notmuch-search-mode
+                                                     org-capture-ref-update-bibtex-at-org-heading)
   "Functions used to generate BibTeX entry from Emacs buffer at point defined in `:buffer-marker' field of the `org-protocol' capture query.
 
 This variable is only used if `org-capture-ref-get-bibtex-from-emacs-buffer' is listed in `org-capture-ref-get-bibtex-functions'.
@@ -1772,6 +1773,18 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
       (org-capture-ref-set-bibtex-field :typealt "email")
       (org-capture-ref-set-bibtex-field :link (format "notmuch:thread:%s" (plist-get thread-info :thread)))
       (throw :finish t))))
+
+(defun org-capture-ref-update-bibtex-at-org-heading ()
+  "Update BiBTeX entry from Org heading at point."
+  (when (and (eq major-mode 'org-mode)
+             (org-at-heading-p))
+    (when-let ((bibtex-string (org-bibtex-headline)))
+      (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+      (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
+        (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value))
+      (org-capture-ref-get-bibtex-org-heading)
+      ;; Not throwing :finish here to update things as needed.
+      )))
 
 ;; Generating cite key
 
