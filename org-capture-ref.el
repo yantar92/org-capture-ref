@@ -1772,6 +1772,11 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 ;; Generating cite key
 
+(defun org-capture-ref-generate-key-from-link ()
+  "Generate citation key from LINK."
+  (when-let ((link (org-capture-ref-get-bibtex-field :link)))
+    (sha1 link)))
+
 (defun org-capture-ref-generate-key-from-url ()
   "Generate citation key from URL."
   (when-let (url (org-capture-ref-get-bibtex-field :url))
@@ -1829,7 +1834,8 @@ The overridden autokey customisations are:
                 (format "%.3s"
                         (or (org-capture-ref-generate-key-from-doi)
                             (org-capture-ref-generate-key-from-isbn)
-                            (org-capture-ref-generate-key-from-url))))))))
+                            (org-capture-ref-generate-key-from-url)
+                            (org-capture-ref-generate-key-from-link))))))))
 
 ;; Formatting BibTeX entry
 
