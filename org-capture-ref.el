@@ -1812,10 +1812,12 @@ The overridden autokey customisations are:
                                            ".*[^[:upper:][:lower:]0-9].*"))
         (bibtex-autokey-title-terminators (rx unmatchable))
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
-                                          (replace-regexp-in-string
-                                           " " bibtex-autokey-titleword-separator
-                                           (or (org-capture-ref-get-bibtex-field :publisher)
-                                               (org-capture-ref-get-bibtex-field :howpublished)))
+                                          (concat
+                                           (replace-regexp-in-string
+                                            " " bibtex-autokey-titleword-separator
+                                            (or (org-capture-ref-get-bibtex-field :publisher)
+                                                (org-capture-ref-get-bibtex-field :howpublished)))
+                                           bibtex-autokey-titleword-separator)
                                         "")))
     (when (string= (org-capture-ref-get-bibtex-field :key) "placeholder")
       (org-capture-ref-set-bibtex-field :key nil 'force))
