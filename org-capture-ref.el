@@ -647,7 +647,8 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
 
 (defun org-capture-ref-retrieve-url ()
   "Retrieve html buffer from `:link' field of capture data."
-  (let ((link (org-capture-ref-get-capture-info :link)))
+  (let ((link (or (org-capture-ref-get-capture-info :link)
+                  (org-capture-ref-get-bibtex-field :url))))
     (when link
       (url-retrieve-synchronously link))))
 
@@ -771,7 +772,9 @@ false-positive results in such websites."
                                "scholar.google.com"
                                "gwern.net"
                                "habr.com"))
-                 (org-capture-ref-get-capture-info :link))
+                 (or (org-capture-ref-get-capture-info :link)
+                     (org-capture-ref-get-bibtex-field :url)
+                     ""))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
 (defvar org-capture-ref--doi-record-cache (make-hash-table :test #'equal)
@@ -825,7 +828,7 @@ Return nil if DOI record is not found."
 
 (defun org-capture-ref-get-bibtex-url-from-capture-data ()
   "Get the `:url' using :link data from capture."
-  (let ((url (org-capture-ref-get-capture-info :link)))
+  (when-let ((url (org-capture-ref-get-capture-info :link)))
     (when (string-match "/#[^/]*$" url)
       (setq url (replace-match "" nil nil url)))
     (org-capture-ref-set-bibtex-field :url url)))
@@ -2439,6 +2442,12 @@ used inside capture template."
         (unless (org-capture-ref-get-bibtex-field :key)
 	  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
+        ;; Set `:org-hd-marker' if it was provided during capture call.
+        (when (org-capture-ref-get-capture-info '(:query :org-hd-marker))
+          (org-with-point-at (org-capture-ref-get-capture-info '(:query :org-hd-marker))
+            (org-back-to-heading)
+            (org-capture-ref-get-bibtex-org-heading)
+            (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)))
 	(org-capture-ref-check-bibtex)
 	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done")))
     (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer)))
@@ -2487,8 +2496,8 @@ Overridden customisations:
 
 (defun org-capture-ref-capture-url (url &optional interactive-capture)
   "Capture URL using `org-capture-ref-capture-template'.
-With prefix argument, use interactive version of the template."
-  (interactive "sURL: \nP")
+With `\\[universal-argument]' argument, use interactive version of the template.
+With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
   (interactive (list (read-string "URL: " (thing-at-point 'url t))
                      current-prefix-arg))
   (unless org-capture-ref-capture-template-set-p
@@ -2497,11 +2506,14 @@ With prefix argument, use interactive version of the template."
    (list :template (if interactive-capture
                        (car org-capture-ref-capture-keys)
                      (cadr org-capture-ref-capture-keys))
+         :org-hd-marker (when (equal interactive-capture '(16))
+                          (point-marker))
          :url url)))
 
 (defun org-capture-ref-capture-doi (doi &optional interactive-capture)
   "Capture DOI using `org-capture-ref-capture-template'.
-With prefix argument, use interactive version of the template."
+With prefix argument, use interactive version of the template.
+With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
   (interactive "sDOI: \nP")
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
@@ -2509,6 +2521,8 @@ With prefix argument, use interactive version of the template."
    (list :template (if interactive-capture
                        (car org-capture-ref-capture-keys)
                      (cadr org-capture-ref-capture-keys))
+         :org-hd-marker (when (eq interactive-capture '(16))
+                          (point-marker))
          :url (format "https://doi.org/%s" doi))))
 
 (defun org-capture-ref-capture-at-point (interactive-capture)
