@@ -1391,6 +1391,7 @@ The value will be inactive org timestamp."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     ;; Sometimes, / in doi is coded as %2F.
     (setq link (replace-regexp-in-string "%2F" "/" link))
+    (setq link (replace-regexp-in-string "%3A" ":" link))
     (when (string-match "springer\\.com/\\(?:chapter/\\|article/\\)?\\(.+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (if (org-capture-ref-get-bibtex-from-first-doi)
