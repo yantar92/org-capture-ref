@@ -2489,6 +2489,8 @@ Overridden customisations:
   "Capture URL using `org-capture-ref-capture-template'.
 With prefix argument, use interactive version of the template."
   (interactive "sURL: \nP")
+  (interactive (list (read-string "URL: " (thing-at-point 'url t))
+                     current-prefix-arg))
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
   (org-protocol-capture
