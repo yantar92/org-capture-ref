@@ -1676,7 +1676,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "doi\\.org/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
@@ -1799,13 +1799,14 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Update BiBTeX entry from Org heading at point."
   (when (and (eq major-mode 'org-mode)
              (org-at-heading-p))
-    (when-let ((bibtex-string (org-bibtex-headline)))
-      (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
-      (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
-        (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value))
-      (org-capture-ref-get-bibtex-org-heading)
-      ;; Not throwing :finish here to update things as needed.
-      )))
+    (let ((bibtex-string (org-bibtex-headline)))
+      (if (not bibtex-string)
+          (org-capture-ref-set-bibtex-field :url (or (org-entry-get (point) "URL")
+                                      (org-entry-get (point) "SOURCE")))
+        (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+        (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
+          (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value)))
+      (org-capture-ref-get-bibtex-org-heading))))
 
 ;; Generating cite key
 
@@ -2476,8 +2477,10 @@ used inside capture template."
 	  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
         ;; Set `:org-hd-marker' if it was provided during capture call.
-        (when (org-capture-ref-get-capture-info '(:query :org-hd-marker))
-          (org-with-point-at (org-capture-ref-get-capture-info '(:query :org-hd-marker))
+        (when (or (org-capture-ref-get-capture-info '(:query :org-hd-marker))
+                  (org-capture-ref-get-bibtex-field :org-hd-marker))
+          (org-with-point-at (or (org-capture-ref-get-capture-info '(:query :org-hd-marker))
+                                 (org-capture-ref-get-bibtex-field :org-hd-marker))
             (org-back-to-heading)
             (org-capture-ref-get-bibtex-org-heading)
             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)))
