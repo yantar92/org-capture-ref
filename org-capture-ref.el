@@ -1355,10 +1355,11 @@ The value will be inactive org timestamp."
           (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
       (unless (org-capture-ref-get-bibtex-from-isbn)
         ;; Parse books
-        (when (s-match ": Books$" (org-capture-ref-query-dom :meta "title"))
+        (when (or (s-match ": Books$" (org-capture-ref-query-dom :meta "title"))
+                  (s-match ": Audible Audiobooks$" (org-capture-ref-query-dom :meta "title")))
           (org-capture-ref-set-bibtex-field :type "book")
           (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
-          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "productTitle"))
+          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^productTitle$"))
           (org-capture-ref-set-bibtex-field :author (when (s-matches-p "Author" (org-capture-ref-query-dom :class "author" :class "contribution"))
                                        (let ((author (org-capture-ref-query-dom :class "author" :class "contributorNameID")))
                                          (if (string-empty-p author)
