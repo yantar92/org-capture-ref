@@ -2007,7 +2007,6 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
                                                  ("'" . ".") ; We use ' as external quotes.
                                                  ("\\(" . "(")
                                                  ("\\)" . ")")
-                                                 ("|" . "\\|")
                                                  )
                                                regexp)
                                dont-show-match-p))
