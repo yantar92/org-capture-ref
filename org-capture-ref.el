@@ -99,6 +99,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-gitlab-repo
                                     org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
                                     org-capture-ref-get-bibtex-srht-repo
+                                    org-capture-ref-get-bibtex-reddit-wiki
                                     org-capture-ref-get-bibtex-reddit-planetemacs
                                     org-capture-ref-get-bibtex-reddit-comment
                                     org-capture-ref-get-bibtex-reddit
@@ -944,6 +945,20 @@ The value will be inactive org timestamp."
       ;; Generic parser works ok.
       (let (org-capture-ref-warn-when-using-generic-parser)
 	(org-capture-ref-parse-generic))
+      (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-reddit-wiki ()
+  "Parse reddit wiki link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)/r/\\([^/]+\\)/wiki" link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
+      (when (match-string 1 link)
+	(org-capture-ref-unless-set '(:title :howpublished :author)
+          (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
+          (org-capture-ref-set-bibtex-field :author org-capture-ref-placeholder-value)
+          (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+          (org-capture-ref-set-bibtex-field :title "Wiki")))
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-github-commit ()
