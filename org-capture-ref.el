@@ -2338,7 +2338,12 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
                                                    (t (car (last (s-split " +" author))))))
 						authors)))
                   (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
-                    (setq author-surnames authors))
+                    (setq author-surnames (mapcar
+                                           (lambda (author)
+                                             (if (string-match (rx (group (1+ word) whitespace (1+ word)) whitespace "<") author)
+                                                 (match-string 1 author)
+                                               author))
+                                           authors)))
 		  (if (= 1 (length author-surnames))
                       (format "%s " (car author-surnames))
                     (format "%s, %s " (car author-surnames) (car (last author-surnames))))))
