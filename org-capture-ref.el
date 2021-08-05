@@ -1801,8 +1801,11 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
              (org-at-heading-p))
     (let ((bibtex-string (org-bibtex-headline)))
       (if (not bibtex-string)
-          (org-capture-ref-set-bibtex-field :url (or (org-entry-get (point) "URL")
-                                      (org-entry-get (point) "SOURCE")))
+          (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string
+                                   "^\\(?:\\[\\[\\)?\\(.+?\\)\\(?:\\[\\[\\)?$"
+                                   "\\1"
+                                   (or (org-entry-get (point) "URL")
+                                       (org-entry-get (point) "SOURCE"))))
         (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
         (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
           (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value)))
