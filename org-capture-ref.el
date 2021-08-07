@@ -585,7 +585,7 @@ ISO8601 is, for example, used in Youtube video duration."
           (seconds (or (and (match-string 3 time)
                             (string-to-number (match-string 3 time)))
                        0)))
-      (when (> minutes 60)
+      (when (>= minutes 60)
         (cl-incf hours (floor (/ minutes 60)))
         (setq minutes (% minutes 60)))
       (when (> seconds 0) (cl-incf minutes))
