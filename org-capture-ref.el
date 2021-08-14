@@ -1491,11 +1491,26 @@ The value will be inactive org timestamp."
       (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "doi__link"))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
         ;; Try arXiv papers.
-        (when-let ((arxiv-link (org-capture-ref-query-dom :class "primary-paper-link-button" :tag 'a :attr 'href)))
+        (when-let ((arxiv-link (org-capture-ref-query-dom :attr '(data-selenium-selector . "paper-link") :attr 'href)))
           (when (string-match "arxiv\\.org/pdf/\\(.+\\)\\.pdf" arxiv-link)
             (setq arxiv-link (format "https://arxiv.org/abs/%s" (match-string 1 arxiv-link)))
             (org-capture-ref-set-new-url arxiv-link)
-            (org-capture-ref-get-bibtex-arxiv)))))))
+            (org-capture-ref-get-bibtex-arxiv)
+            (throw :finish t))
+          ;; Parse generic metadata. Note that generic parsing may not
+          ;; work because Semanticscholar duplicates metadata and puts
+          ;; confusing "undefined" value when some metadata is missing.
+          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :tag 'meta :attr '(name . "citation_author") :attr 'content))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'meta :attr '(name . "citation_publication_date") :attr 'content))
+          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :tag 'meta :attr '(name . "citation_title") :attr 'content))
+          (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :tag 'meta
+                                                  :attr '(name . "citation_journal_title")
+                                                  :attr 'content
+                                                  :apply
+                                                  (lambda (journal)
+                                                    (unless (or (not (stringp journal))
+                                                                (string= "undefined" journal))
+                                                      journal)))))))))
 
 (defun org-capture-ref-get-bibtex-ohiolink ()
   "Generate BiBTeX for Ohiolink PhD thesis page."
