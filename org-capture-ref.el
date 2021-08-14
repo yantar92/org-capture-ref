@@ -302,16 +302,20 @@ Target section of the `doct' docstring for details."
 
 ;; Customisation for default functions
 
-(defcustom org-capture-ref-field-rules '((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
+(defcustom org-capture-ref-field-rules `((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
 				   "citation_doi\" content=\"\\([^\"]*?\\)\""
 				   "data-doi=\"\\([^\"]*?\\)\""
 				   "content=\"\\([^\"]*?\\)\" name=\"citation_doi"
 				   "objectDOI\" : \"\\([^\"]*?\\)\""
 				   "doi = '\\([^']*?\\)'"))
-                          (:year . ("class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
+                          (:journal . ((:meta "citation_journal_title")))
+                          (:year . ((:meta "citation_publication_date" :apply ,#'org-capture-ref-extract-year-from-string)
+                                    "class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
                           (:author . ((:meta "author")
+                                      (:meta "citation_author")
 				      "\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
-                          (:title . ("<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
+                          (:title . ((:meta "citation_title")
+                                     "<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
   "Alist holding rules used by `org-capture-ref-parse-generic' to populate common BiBTeX fields from html.
 Keys of the alist are the field names (example: `:author') and the values are lists of regexps or `org-capture-ref-query-dom' rules.
 The regexps are searched one by one in the html buffer and the group 1 match is used as value in the BiBTeX field."
