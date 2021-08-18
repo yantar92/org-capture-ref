@@ -975,7 +975,7 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-author user-mention$"))
         (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
                                            (s-truncate 10 commit-number)
-                                           (org-capture-ref-query-dom :class "^commit-title$")))
+                                           (org-capture-ref-query-dom :class "commit-title")))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" commit-repo))
         (throw :finish t)))))
