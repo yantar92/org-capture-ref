@@ -1805,7 +1805,8 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Get BiBTeX entry at point from bibtex buffer."
   (when (eq major-mode 'bibtex-mode)
     (when-let* ((beg (bibtex-beginning-of-entry))
-                (end (bibtex-end-of-entry))
+                (entry-valid-p (bibtex-valid-entry t))
+                (end (progn (beginning-of-line 2) (bibtex-end-of-entry)))
                 (bibtex-string (buffer-substring-no-properties beg end)))
       (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
       (throw :finish t))))
