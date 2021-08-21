@@ -323,7 +323,6 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :type '(alist :key-type symbol :value-type (set string (set symbol string))))
 
 (defcustom org-capture-ref-demand-doi-list '("aps\\.org"
-                              "science\\.sciencemag\\.org"
                               "nature\\.com"
                               "aip\\.scitation\\.org"
                               "worldscientific\\.com"
