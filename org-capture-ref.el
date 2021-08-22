@@ -1017,7 +1017,7 @@ The value will be inactive org timestamp."
 	(when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
           (org-capture-ref-set-bibtex-field :author (match-string 1 link))))
       (org-capture-ref-unless-set '(:title)
-        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-opengraph 'title))
+        (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string "Github +- +" "" (org-capture-ref-query-opengraph 'title)))
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
