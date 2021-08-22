@@ -1927,7 +1927,7 @@ The overridden autokey customisations are:
    (s-format org-capture-ref-default-bibtex-template
 	     (lambda (key &optional _)
 	       (or (and (org-capture-ref-get-bibtex-field (intern key))
-                        (s-trim (org-capture-ref-get-bibtex-field (intern key))))
+                        (s-trim (replace-regexp-in-string "[{}]" "" (org-capture-ref-get-bibtex-field (intern key)))))
 		   ""))
 	     org-capture-ref--bibtex-alist)))
 
