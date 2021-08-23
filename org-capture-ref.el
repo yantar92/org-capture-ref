@@ -1707,9 +1707,11 @@ The value will be inactive org timestamp."
   "Generate BiBTeX to archive.org book page."
   (let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "archive\\.org/details/" link)
-      (when-let ((isbn (org-capture-ref-query-dom :class "metadata-expandable-list" :class "^metadata-definition$" :attr '(itemprop . "isbn") :apply #'car)))
-        (org-capture-ref-set-bibtex-field :isbn isbn)
-        (org-capture-ref-get-bibtex-from-isbn)))))
+      (when-let ((isbns (org-capture-ref-query-dom :join "\n" :class "metadata-expandable-list" :class "metadata-definition" :attr '(itemprop . "isbn"))))
+        (mapc (lambda (isbn)
+                (org-capture-ref-set-bibtex-field :isbn isbn)
+                (org-capture-ref-get-bibtex-from-isbn))
+              (s-split "\n" isbns))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
