@@ -98,6 +98,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-gitlab-commit
                                     org-capture-ref-get-bibtex-gitlab-repo
                                     org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
+                                    org-capture-ref-get-bibtex-gnu-org
                                     org-capture-ref-get-bibtex-nullprogram
                                     org-capture-ref-get-bibtex-srht-repo
                                     org-capture-ref-get-bibtex-reddit-wiki
@@ -1118,7 +1119,12 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^commit-info$" :tag 'tr :apply #'car :tag 'td :apply #'cadr :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "git.savannah.gnu.org:%s" commit-repo))
         (throw :finish t)))))
-
+(defun org-capture-ref-get-bibtex-gnu-org ()
+  "Parse gnu.org page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "gnu\\.org" link)
+      (org-capture-ref-unless-set '(:title))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^top$")))))
 (defun org-capture-ref-get-bibtex-nullprogram ()
   "Parse nullprogram.com blog and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
