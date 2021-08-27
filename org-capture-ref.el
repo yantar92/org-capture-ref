@@ -478,62 +478,63 @@ equal to the strin in the cons.
 :meta runs query to html metadata. All other query fields (except
 :join) are ignored then. :meta must be the first symbol in the query.
 :apply applies provided function symbol to the result of preceding query."
-  (let ((dom (if (eq ':dom (car query))
-                 (prog1 (cadr query)
-                   (setq query (cddr query)))
-               (org-capture-ref-get-dom)))
-        (return-dom (and (eq (car query) ':dom)
-                         (prog1 (cadr query)
-                           (setq query (cddr query)))))
-        (separator " "))
-    (while query
-      (unless (or (stringp dom)
-                  (stringp (car dom))
-                  (listp (car dom)))
-        (setq dom (list dom)))
-      (setq dom
-            (pcase (car query)
-              (:apply
-               (prog1 (funcall (cadr query) dom)
-                 (setq query (cddr query))))
-              (:meta
-               (prog1 (org-capture-ref-query-meta (cadr query) (or (plist-get query :join) separator))
-                 (setq query (cddr query))))
-              (:tag
-               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-tag dom (cadr query))) dom))
-                 (setq query (cddr query))))
-              (:class
-               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-class dom (cadr query))) dom))
-                 (setq query (cddr query))))
-              (:id
-               (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-id dom (cadr query))) dom))
-                 (setq query (cddr query))))
-              (:attr
-               (pcase (cadr query)
-                 ((and (pred consp)
-                       (app car name)
-                       (app cdr value))
-                  (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-search dom (lambda (node) (string= value (dom-attr node name))))) dom))
-                    (setq query (cddr query))))
-                 ((pred symbolp)
-                  (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-attr dom (cadr query))) dom))
-                    (setq query (cddr query))))
-                 (_ (error "Invalid :attr query: %s" (cadr query)))))
-              (:join
-               (prog1 dom
-                 (setq separator (cadr query))
-                 (setq query (cddr query))))
-              (_ (error "Invalid query: %s" query)))))
-    (if return-dom
-        dom
-      (decode-coding-string
-       (if (stringp dom)
-           dom
-         (unless (and (listp dom) (or (listp (car dom)) (stringp (car dom)))) (setq dom (list dom)))
-         (if (stringp (car dom))
-             (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p dom)))
-           (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom))))))
-       'utf-8))))
+  (save-match-data
+    (let ((dom (if (eq ':dom (car query))
+                   (prog1 (cadr query)
+                     (setq query (cddr query)))
+                 (org-capture-ref-get-dom)))
+          (return-dom (and (eq (car query) ':dom)
+                           (prog1 (cadr query)
+                             (setq query (cddr query)))))
+          (separator " "))
+      (while query
+        (unless (or (stringp dom)
+                    (stringp (car dom))
+                    (listp (car dom)))
+          (setq dom (list dom)))
+        (setq dom
+              (pcase (car query)
+                (:apply
+                 (prog1 (funcall (cadr query) dom)
+                   (setq query (cddr query))))
+                (:meta
+                 (prog1 (org-capture-ref-query-meta (cadr query) (or (plist-get query :join) separator))
+                   (setq query (cddr query))))
+                (:tag
+                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-tag dom (cadr query))) dom))
+                   (setq query (cddr query))))
+                (:class
+                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-class dom (cadr query))) dom))
+                   (setq query (cddr query))))
+                (:id
+                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-id dom (cadr query))) dom))
+                   (setq query (cddr query))))
+                (:attr
+                 (pcase (cadr query)
+                   ((and (pred consp)
+                         (app car name)
+                         (app cdr value))
+                    (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-search dom (lambda (node) (string= value (dom-attr node name))))) dom))
+                      (setq query (cddr query))))
+                   ((pred symbolp)
+                    (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-attr dom (cadr query))) dom))
+                      (setq query (cddr query))))
+                   (_ (error "Invalid :attr query: %s" (cadr query)))))
+                (:join
+                 (prog1 dom
+                   (setq separator (cadr query))
+                   (setq query (cddr query))))
+                (_ (error "Invalid query: %s" query)))))
+      (if return-dom
+          dom
+        (decode-coding-string
+         (if (stringp dom)
+             dom
+           (unless (and (listp dom) (or (listp (car dom)) (stringp (car dom)))) (setq dom (list dom)))
+           (if (stringp (car dom))
+               (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p dom)))
+             (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom))))))
+         'utf-8)))))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
   "Query opengraph KEY from the website.
