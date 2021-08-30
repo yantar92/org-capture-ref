@@ -873,7 +873,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-weixin ()
   "Parse BiBTeX for Wechat article."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "mp\\.weixin\\.qq\\.com" link)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "\\(sn=[^&]+\\).*$" "\\1" link))
       (org-capture-ref-set-bibtex-field :howpublished "Wechat")
@@ -1428,14 +1428,14 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "aps\\.org/doi/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-springer ()
   "Generate BiBTeX for Springer publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     ;; Sometimes, / in doi is coded as %2F.
     (setq link (replace-regexp-in-string "%2F" "/" link))
     (setq link (replace-regexp-in-string "%3A" ":" link))
@@ -1452,7 +1452,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-tandfonline ()
   "Generate BiBTeX for Tandfonline publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "tandfonline\\.com/doi/\\(?:full\\|abs\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
@@ -1472,7 +1472,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-wiley ()
   "Generate BiBTeX for Wiley publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "wiley\\.com/doi/\\(?:abs\\|full\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
@@ -1498,7 +1498,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-semanticscholar ()
   "Generate BiBTeX for Semanticscholar page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "semanticscholar\\.org" link)
       (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "doi__link"))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
@@ -1526,7 +1526,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-ohiolink ()
   "Generate BiBTeX for Ohiolink PhD thesis page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "ohiolink\\.edu" link)
       (org-capture-ref-set-bibtex-field :type "phdthesis")
       (org-capture-ref-set-bibtex-field :url (org-capture-ref-query-dom :id "^P10_PERMALINK$"))
@@ -1540,7 +1540,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-proquest ()
   "Generate BiBTeX for ProQuest page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "search\\.proquest\\.com" link)
       (with-current-buffer (org-capture-ref-get-buffer)
         (goto-char 1)
@@ -1550,7 +1550,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-sciencedirect-article ()
   "Generate BiBTeX for Sciencedirect publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "sciencedirect\\.com/science/article" link)
       (org-capture-ref-set-bibtex-field :doi (replace-regexp-in-string "https?://doi\\.org/" "" (org-capture-ref-query-dom :class "^doi$")))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
@@ -1570,7 +1570,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-sciencemag-careers-article ()
   "Generate BiBTeX for Science carreers publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "sciencemag\\.org/careers/" link)
       (org-capture-ref-set-bibtex-field :type "misc")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
@@ -1583,7 +1583,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-nature-careers-article ()
   "Generate BiBTeX for Nature carreers publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "nature\\.com/articles/" link)
       (org-capture-ref-set-bibtex-field :type "article")
       (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :meta "DOI"))
@@ -1609,7 +1609,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-ams-cn ()
   "Generate BiBTeX for Acta Metallurgica Sinica publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "ams\\.org\\.cn/[^/]+/\\([^/]+/[^/]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (unless (org-capture-ref-get-bibtex-from-first-doi)
@@ -1622,7 +1622,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-lesswrong ()
   "Generate BiBTeX for LessWrong publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "lesswrong\\.com" link)
       (org-capture-ref-set-bibtex-field :howpublished "Lesswrong")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
@@ -1633,7 +1633,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-stallman ()
   "Generate BiBTeX for stallman.org publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "stallman\\.org" link)
       (org-capture-ref-set-bibtex-field :howpublished "Stallman")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
@@ -1644,7 +1644,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-karl-voit ()
   "Generate BiBTeX for karl-voit.at publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "karl-voit\\.at" link)
       (org-capture-ref-set-bibtex-field :howpublished "Karl-Voit")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
@@ -1704,7 +1704,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-arxiv ()
   "Generate BiBTeX for ArXiv publication."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "arxiv\\.org/abs" link)
       (when-let ((doi (org-capture-ref-query-dom :class "metatable" :class "link-https link-external" :attr 'data-doi)))
         (org-capture-ref-set-bibtex-field :doi doi)
@@ -1718,7 +1718,7 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-archive-book ()
   "Generate BiBTeX to archive.org book page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "archive\\.org/details/" link)
       (when-let ((isbns (org-capture-ref-query-dom :join "\n" :class "metadata-expandable-list" :class "metadata-definition" :attr '(itemprop . "isbn"))))
         (mapc (lambda (isbn)
@@ -1735,14 +1735,14 @@ The value will be inactive org timestamp."
 
 (defun org-capture-ref-get-bibtex-google-scholar-bibtex-page ()
   "Harvest bibtex entry from Google Scholar bibtex page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "scholar\\.googleusercontent\\.com/scholar\\.bib" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-clean-bibtex (org-capture-ref-query-dom) 'no-hooks))))
 
 (defun org-capture-ref-get-bibtex-google-books ()
   "Harvest bibtex entry from Google Books page."
-  (let ((link (org-capture-ref-get-bibtex-field :url)))
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "books\\.google" link)
       (when-let ((metadata (org-capture-ref-query-dom :id "metadata_content_table" :apply #'dom-texts)))
         (when (string-match "[0-9]\\{10\\}" metadata)
