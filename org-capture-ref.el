@@ -74,6 +74,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-springer
                                     org-capture-ref-get-bibtex-wiley
                                     org-capture-ref-get-bibtex-tandfonline
+                                    org-capture-ref-get-bibtex-ieee
                                     org-capture-ref-get-bibtex-semanticscholar
                                     org-capture-ref-get-bibtex-sciencedirect-article
                                     org-capture-ref-get-bibtex-sciencemag-careers-article
@@ -1480,6 +1481,19 @@ The value will be inactive org timestamp."
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'citation_author))
         (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta 'citation_journal_title))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta 'citation_online_date :apply #'org-capture-ref-extract-year-from-string))
+        (org-capture-ref-set-bibtex-field :pages (org-capture-ref-query-dom :meta 'citation_firstpage))))))
+
+(defun org-capture-ref-get-bibtex-ieee ()
+  "Generate BiBTeX for IEEE publication."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "ieeexplore\\.ieee\\.org" link)
+      (org-capture-ref-set-bibtex-field :doi (org-capture-ref-query-dom :class "stats-document-abstract-doi" :tag 'a))
+      (unless (org-capture-ref-get-bibtex-from-first-doi)
+        (org-capture-ref-set-bibtex-field :type "article")
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :class "authors-info" :tag 'a))
+        (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :class "stats-document-abstract-publishedIn"))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "doc-abstract-pubdate" :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :pages (org-capture-ref-query-dom :meta 'citation_firstpage))))))
 
 (defun org-capture-ref-get-bibtex-semanticscholar ()
