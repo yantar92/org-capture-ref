@@ -302,7 +302,7 @@ Target section of the `doct' docstring for details."
   :type 'list
   :group 'org-capture-ref)
 
-;; Customisation for default functions
+;;;; Customisation for default functions
 
 (defcustom org-capture-ref-field-rules `((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
 				   "citation_doi\" content=\"\\([^\"]*?\\)\""
@@ -677,7 +677,7 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
 
 ;;; Predefined functions
 
-;; Getting html buffer
+;;;; Getting html buffer
 
 (defun org-capture-ref-get-buffer-from-html-file-in-query ()
   "Use buffer from file defined in `:html' field of `org-protocol' query."
@@ -694,6 +694,7 @@ See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
     (when link
       (url-retrieve-synchronously link))))
 
+;;;; Getting bibtex using known web APIs
 (defun org-capture-ref--get-bibtex-string-from-isbn (isbn)
   "Get BiBTeX record for given ISBN.
 Use https://www.ottobib.com to retrieve the BiBTeX record."
@@ -1807,6 +1808,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 
 ;; Getting BiBTeX from elfeed entries
 
+;;;; Capturing from elfeed
 (defun org-capture-ref-get-bibtex-generic-elfeed (entry)
   "Parse generic elfeed capture and generate bibtex entry."
   (require 'elfeed-db)
@@ -1871,6 +1873,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 ;; Getting BiBTeX from Emacs buffer
 
+;;;; Capturing from Emacs buffers
 (defun org-capture-ref-get-bibtex-bibtex-mode ()
   "Get BiBTeX entry at point from bibtex buffer."
   (when (eq major-mode 'bibtex-mode)
@@ -1904,23 +1907,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
       (org-capture-ref-set-bibtex-field :link (format "notmuch:thread:%s" (plist-get thread-info :thread)))
       (throw :finish t))))
 
-(defun org-capture-ref-update-bibtex-at-org-heading ()
-  "Update BiBTeX entry from Org heading at point."
-  (when (and (eq major-mode 'org-mode)
-             (org-at-heading-p))
-    (let ((bibtex-string (org-bibtex-headline)))
-      (if (not bibtex-string)
-          (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string
-                                   "^\\(?:\\[\\[\\)?\\(.+?\\)\\(?:\\[\\[\\)?$"
-                                   "\\1"
-                                   (or (org-entry-get (point) "URL")
-                                       (org-entry-get (point) "SOURCE"))))
-        (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
-        (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
-          (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value)))
-      (org-capture-ref-get-bibtex-org-heading))))
-
-;; Generating cite key
+;;;; Generating cite key
 
 (defun org-capture-ref-generate-key-from-link ()
   "Generate citation key from LINK."
@@ -1989,7 +1976,7 @@ The overridden autokey customisations are:
                             (org-capture-ref-generate-key-from-url)
                             (org-capture-ref-generate-key-from-link))))))))
 
-;; Formatting BibTeX entry
+;;;; Formatting BibTeX entry
 
 (defun org-capture-ref-get-formatted-bibtex-default ()
   "Default BiBTeX formatter."
@@ -2282,7 +2269,6 @@ capture template."
                    (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 ;;; Updating existing entry
-
 (defun org-capture-ref-get-bibtex-org-heading ()
   "Generate BiBTeX for an org heading at point."
   (when (and (eq 'org-mode major-mode)
@@ -2296,6 +2282,22 @@ capture template."
         (name (org-capture-ref-set-bibtex-field (intern (format ":%s" (downcase name))) (cdr prop)))))
     (org-capture-ref-set-bibtex-field :org-props (org-entry-properties))
     (org-capture-ref-set-bibtex-field :org-hd-marker (save-restriction (org-back-to-heading) (point-marker)))))
+
+(defun org-capture-ref-update-bibtex-at-org-heading ()
+  "Update BiBTeX entry from Org heading at point."
+  (when (and (eq major-mode 'org-mode)
+             (org-at-heading-p))
+    (let ((bibtex-string (org-bibtex-headline)))
+      (if (not bibtex-string)
+          (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string
+                                   "^\\(?:\\[\\[\\)?\\(.+?\\)\\(?:\\]\\]\\)?$"
+                                   "\\1"
+                                   (or (org-entry-get (point) "URL")
+                                       (org-entry-get (point) "SOURCE"))))
+        (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
+        (when (string= (org-capture-ref-get-bibtex-field :key) "nil")
+          (org-capture-ref-set-bibtex-field :key org-capture-ref-placeholder-value)))
+      (org-capture-ref-get-bibtex-org-heading))))
 
 (defvar org-capture-ref-update-heading-history nil)
 
@@ -2431,7 +2433,6 @@ capture template."
                         (_ nil)))
                     (setq prop next-prop)))))))
       (org-capture-ref-reset-state))))
-
 ;;; Formatting Org entry
 
 (defun org-capture-ref-headline-format ()
