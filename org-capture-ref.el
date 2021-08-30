@@ -413,6 +413,33 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 `%s' is replaced by the url.
 The value must be an alist of `org-capture-ref-check-regexp-method' and the corresponding regexp.")
 
+(defcustom org-capture-ref-collection-types '("playlist"
+                               "author"
+                               "proceedings"
+                               "book"
+                               "bookseries"
+                               "collection")
+  "List of bibtex item types (or typealt) that can contain subordinate
+  items."
+  :type '(list string)
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-fetch-collections t
+  "Whe non-nil and `org-capture-ref-capture-template-set-p' is set, try
+capture items from currently captured URL with :type or :typealt
+from `org-capture-ref-collection-types'"
+  :type 'boolean
+  :group 'org-capture-ref)
+
+(defcustom org-capture-ref-fetch-collection-functions '( org-capture-ref-capture-collection-youtube)
+  "Functions used to capture contents of the current collection.
+
+Each function will be called without arguments in sequence.
+Each function is expected to call relevant capture functions like
+`org-capture-ref-capture-url' with side-effects."
+  :type 'hook
+  :group 'org-capture-ref)
+
 (defcustom org-capture-ref-warn-when-using-generic-parser t
   "Non-nil means warn user if some fields are trying to be parsed using generic parser.
 `debug' means show all the details."
@@ -870,7 +897,36 @@ The value will be inactive org timestamp."
                  (org-insert-time-stamp (current-time) t t)
                  (buffer-substring-no-properties (point-min) (point-max)))))
     (org-capture-ref-set-bibtex-field :created stamp)))
+;;;; Capturing collections (playlist, author pages, book seried, etc)
+(defun org-capture-ref-fetch-collection-maybe ()
+  "Capture additional entries belonging to current entry that is from
+`org-capture-ref-collection-types'.
 
+This does nothing when `org-capture-ref-capture-template-set-p' is nil."
+  (when (and org-capture-ref-capture-template-set-p
+             org-capture-ref-fetch-collections
+             (not org-note-abort)
+             (or (memq (org-capture-ref-get-bibtex-field :type) org-capture-ref-collection-types)
+                 (memq (org-capture-ref-get-bibtex-field :typealt) org-capture-ref-collection-types)))
+    (run-hooks 'org-capture-ref-fetch-collection-functions)))
+
+(defun org-capture-ref-capture-collection-youtube ()
+  "Capture a series of URLs from a list of channel videos."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "youtube\\.com/\\(?:c\\|user\\)/[^/]+\\(/videos\\|/featured\\)?" link)
+      (unless (string= "/videos" (match-string 1 link))
+        (setq link (replace-match "/videos" nil nil link 1)))
+      (let ((urls (mapcar
+                   (-partial #'concat "https://www.youtube.com")
+                   (s-split "\n" (org-capture-ref-query-dom :join "\n" :class "ytd-grid-renderer" :id "video-title" :attr 'href)))))
+        (when (equal (list "https://www.youtube.com") urls)
+          (org-capture-ref-message "Failed to parse Youtube page. Is it not captured from browser?" :error))
+        (mapc (lambda (url)
+                (ignore-errors
+                  (org-capture-ref-capture-url url)))
+              urls)))))
+
+;;;; Capturing individual web-pages
 (defun org-capture-ref-get-bibtex-weixin ()
   "Parse BiBTeX for Wechat article."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
@@ -2530,6 +2586,7 @@ used inside capture template."
   (unwind-protect
       (progn
 	(org-capture-ref-reset-state)
+        (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-fetch-collection-maybe 100)
 	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX..."))
         ;; Early check if the entry is already captured.
         (org-capture-ref-check-bibtex)
