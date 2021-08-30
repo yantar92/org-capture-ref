@@ -1164,7 +1164,7 @@ The value will be inactive org timestamp."
       (org-capture-ref-unless-set '(:url :author :title :year)
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
-          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^user-info__nickname user-info__nickname_small$"))
+          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "article__head-wrapper" :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
             (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
@@ -1172,9 +1172,9 @@ The value will be inactive org timestamp."
               (setq authors (s-join ", " authors))
               (org-capture-ref-set-bibtex-field :author authors)))
 	  ;; Find title
-          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^post__title-text$"))
+          (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title))
 	  ;; Find year
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :class "^post__time$"))))))))
+          (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "tm-article-snippet__datetime-published" :attr 'datetime :apply #'org-capture-ref-extract-year-from-string)))))))
 
 (defun org-capture-ref-get-bibtex-samlib-book ()
   "Generate BiBTeX for a samlib.ru book page."
