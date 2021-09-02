@@ -107,6 +107,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-reddit-comment
                                     org-capture-ref-get-bibtex-reddit
                                     org-capture-ref-get-bibtex-youtube-watch
+                                    org-capture-ref-get-bibtex-youtube-channel
                                     org-capture-ref-get-bibtex-habr
                                     org-capture-ref-get-bibtex-weixin
                                     org-capture-ref-get-bibtex-samlib-book
@@ -1206,6 +1207,17 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'name))
 	;; Find year
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :meta 'datePublished :apply #'org-capture-ref-extract-year-from-string))))))
+
+(defun org-capture-ref-get-bibtex-youtube-channel ()
+  "Parse Youtube channel link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "youtube\\.com/channel/[^/]+" link)
+      (org-capture-ref-set-bibtex-field :url (match-string 0 link))
+      (org-capture-ref-set-bibtex-field :typealt "author")
+      (org-capture-ref-set-capture-info :link link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'name)))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
