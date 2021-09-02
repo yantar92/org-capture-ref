@@ -908,16 +908,19 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
   (when (and org-capture-ref-capture-template-set-p
              org-capture-ref-fetch-collections
              (not org-note-abort)
-             (or (memq (org-capture-ref-get-bibtex-field :type) org-capture-ref-collection-types)
-                 (memq (org-capture-ref-get-bibtex-field :typealt) org-capture-ref-collection-types)))
+             (or (member (org-capture-ref-get-bibtex-field :type) org-capture-ref-collection-types)
+                 (member (org-capture-ref-get-bibtex-field :typealt) org-capture-ref-collection-types)))
     (run-hooks 'org-capture-ref-fetch-collection-functions)))
 
 (defun org-capture-ref-capture-collection-youtube ()
   "Capture a series of URLs from a list of channel videos."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "youtube\\.com/\\(?:c\\|user\\)/[^/]+\\(/videos\\|/featured\\)?" link)
+    (when (string-match "youtube\\.com/\\(?:c\\|channel\\|user\\)/[^/]+\\(/videos\\|/featured\\)?" link)
       (unless (string= "/videos" (match-string 1 link))
-        (setq link (replace-match "/videos" nil nil link 1)))
+        (if (match-string 1 link)
+            (setq link (replace-match "/videos" nil nil link 1))
+          (setq link (concat link "/videos")))
+        (org-capture-ref-set-new-url link))
       (let ((urls (mapcar
                    (-partial #'concat "https://www.youtube.com")
                    (s-split "\n" (org-capture-ref-query-dom :join "\n" :class "ytd-grid-renderer" :id "video-title" :attr 'href)))))
