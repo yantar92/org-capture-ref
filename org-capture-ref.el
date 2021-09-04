@@ -381,6 +381,7 @@ The full names are replaced in the hadline by
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-journal-abbreviations '(("Nature Materials" . "NatureMat")
+                                    ("Annual Review of Materials Research" . "AnnRevMatRes")
                                     ("Transactions of the Japan Institute of Metals" . "JIM")
                                     ("Physical Review Materials" . "PRMat")
                                     ("Physical Review Letters" . "PRL")
