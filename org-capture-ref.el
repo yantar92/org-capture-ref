@@ -1215,13 +1215,16 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-youtube-channel ()
   "Parse Youtube channel link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "youtube\\.com/channel/[^/]+" link)
-      (org-capture-ref-set-bibtex-field :url (match-string 0 link))
+    (when (string-match "\\(https://www\\.youtube\\.com/channel/[^/]+\\)\\(?:/featured\\)?$" link)
+      (org-capture-ref-set-bibtex-field :url (match-string 1 link))
       (org-capture-ref-set-bibtex-field :typealt "author")
       (org-capture-ref-set-capture-info :link link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'name)))))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "channel-name"
+                                            :class "ytd-channel-name"
+                                            :id "text"
+                                            :apply #'car)))))
 
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
