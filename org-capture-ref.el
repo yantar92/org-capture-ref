@@ -970,14 +970,15 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-reddit ()
   "Parse reddit link and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\([^/]+\\)\\)?" link)
+    (when (string-match "\\(?:old\\.\\)?\\(?:reddit\\.com\\|libredd\\.it\\)\\(?:/r/\\([^/]+\\)\\(/[^/]+\\)?\\)?" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "old\\.reddit\\.com" "reddit.com" link))
       (if (match-string 1 link)
 	  (org-capture-ref-unless-set '(:title :howpublished :author)
             (org-capture-ref-set-bibtex-field :howpublished (format "Reddit:%s" (match-string 1 link)))
-            (org-capture-ref-set-bibtex-field :author (format "/u/%s" (org-capture-ref-query-dom :class "content" :class "top-matter" :class "author")))
-            (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "content" :class "tagline" :tag 'time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
+            (when (match-string 2 link)
+              (org-capture-ref-set-bibtex-field :author (format "/u/%s" (org-capture-ref-query-dom :class "content" :class "top-matter" :class "author")))
+              (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "content" :class "tagline" :tag 'time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string)))
             (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title)))
 	(org-capture-ref-set-bibtex-field :howpublished "Reddit"))
       ;; Generic parser works ok.
