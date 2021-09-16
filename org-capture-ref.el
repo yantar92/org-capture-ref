@@ -2136,7 +2136,8 @@ avaible in :query -> :qutebrowser-fifo capture info."
   "Check if REGEXP exists in org files using `org-capture-ref-check-regexp-method'.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (pcase org-capture-ref-check-regexp-method
-    (`grep (org-capture-ref-check-regexp-grep (s-replace-all  '(("\\\\\\." . "\\\\.")
+    (`grep (org-capture-ref-check-regexp-grep (s-replace-all  '(("\\|" . "|")
+                                                 ("\\\\\\." . "\\\\.")
                                                  ("'" . ".") ; We use ' as external quotes.
                                                  ("\\(" . "(")
                                                  ("\\)" . ")")
@@ -2262,7 +2263,7 @@ It is assumed that `:url' is captured into :SOURCE: property.
 Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (org-capture-ref-get-bibtex-field :url)
-    (org-capture-ref-check-regexp (format "^:\\(Source\\|URL\\):[ \t]+\\[*%s\\]*$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+    (org-capture-ref-check-regexp (format "^:\\(Source\\|URL\\):[ \t]+%s$" (regexp-quote (org-capture-ref-get-bibtex-field :url))) (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-doi ()
   "Check if `:doi' already exists.
