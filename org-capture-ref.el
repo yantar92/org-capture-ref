@@ -163,6 +163,7 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
   :type 'hook
   :group 'org-capture-ref)
 (defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions '(org-capture-ref-get-bibtex-bibtex-mode
+                                                     org-capture-ref-get-bibtex-eaf-browser
                                                      org-capture-ref-get-bibtex-notmuch-show-mode
                                                      org-capture-ref-get-bibtex-notmuch-search-mode
                                                      org-capture-ref-update-bibtex-at-org-heading)
@@ -1903,6 +1904,18 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
                 (bibtex-string (buffer-substring-no-properties beg end)))
       (org-capture-ref-clean-bibtex bibtex-string 'no-hooks)
       (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-eaf-browser ()
+  "Get BiBTeX entry from EAF buffer."
+  (when (featurep 'eaf)
+    (when (and (eq major-mode 'eaf-mode)
+               (equal "browser" eaf--buffer-app-name))
+      (let ((html-file (make-temp-file "org-capture-ref-"))
+            (html (eaf-call-sync "call_function" eaf--buffer-id "get_html")))
+        (with-temp-file html-file
+          (insert html))
+        (plist-put (plist-get org-capture-ref--store-link-plist :query) :html html-file)
+        (org-capture-ref-set-bibtex-field :url eaf--buffer-url)))))
 
 (defun org-capture-ref-get-bibtex-notmuch-show-mode ()
   "Get BiBTeX entry at point from notmuch show buffer."
