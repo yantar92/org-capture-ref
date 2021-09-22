@@ -772,31 +772,32 @@ Existing BiBTeX fields are not modified."
   (org-capture-ref-unless-set (mapcar #'car org-capture-ref-field-rules)
     (when org-capture-ref-warn-when-using-generic-parser
       (org-capture-ref-message "Capturing using generic parser..." 'warning))
-    (with-current-buffer (org-capture-ref-get-buffer)
-      (cl-loop for (key . rules) in org-capture-ref-field-rules do
-               (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
-                 (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
-	           (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
-                 (cl-loop for rule in rules do
-                          (pcase rule
-                            ((pred listp)
-                             (let ((val (apply #'org-capture-ref-query-dom rule)))
-                               (unless (string-empty-p val)
-                                 (org-capture-ref-set-bibtex-field key val)
-                                 (cl-return))))
-                            ((pred stringp)
-	                     (goto-char (point-min))
-	                     (when (re-search-forward rule nil t)
-		               (org-capture-ref-set-bibtex-field key
-                                                  (decode-coding-string (match-string 1)
-                                                                        (or (get-char-property 0 'charset (match-string 1))
-                                                                            'utf-8)))
-		               (cl-return)))
-                            (_ (error "Invalid `org-capture-ref-field-rules' rule: %s" rule))))
-                 (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
-	           (if (org-capture-ref-get-bibtex-field :key)
-		       (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
-	             (org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning))))))))
+    (when (org-capture-ref-get-buffer)
+      (with-current-buffer (org-capture-ref-get-buffer)
+        (cl-loop for (key . rules) in org-capture-ref-field-rules do
+                 (unless (org-capture-ref-get-bibtex-field key 'consider-placeholder)
+                   (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
+	             (org-capture-ref-message (format "Capturing using generic parser... searching %s..." key)))
+                   (cl-loop for rule in rules do
+                            (pcase rule
+                              ((pred listp)
+                               (let ((val (apply #'org-capture-ref-query-dom rule)))
+                                 (unless (string-empty-p val)
+                                   (org-capture-ref-set-bibtex-field key val)
+                                   (cl-return))))
+                              ((pred stringp)
+	                       (goto-char (point-min))
+	                       (when (re-search-forward rule nil t)
+		                 (org-capture-ref-set-bibtex-field key
+                                                    (decode-coding-string (match-string 1)
+                                                                          (or (get-char-property 0 'charset (match-string 1))
+                                                                              'utf-8)))
+		                 (cl-return)))
+                              (_ (error "Invalid `org-capture-ref-field-rules' rule: %s" rule))))
+                   (when (eq org-capture-ref-warn-when-using-generic-parser 'debug)
+	             (if (org-capture-ref-get-bibtex-field :key)
+		         (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
+	               (org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning)))))))))
 
 (defun org-capture-ref-mark-links-with-known-absent-doi ()
   "Prevent `org-capture-ref-get-bibtex-from-first-doi' from searching DOI in website text.
