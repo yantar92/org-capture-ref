@@ -166,6 +166,7 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
                                                      org-capture-ref-get-bibtex-eaf-browser
                                                      org-capture-ref-get-bibtex-notmuch-show-mode
                                                      org-capture-ref-get-bibtex-notmuch-search-mode
+                                                     org-capture-ref-get-bibtex-notmuch-tree-mode
                                                      org-capture-ref-update-bibtex-at-org-heading)
   "Functions used to generate BibTeX entry from Emacs buffer at point defined in `:buffer-marker' field of the `org-protocol' capture query.
 
@@ -1917,13 +1918,34 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
         (plist-put (plist-get org-capture-ref--store-link-plist :query) :html html-file)
         (org-capture-ref-set-bibtex-field :url eaf--buffer-url)))))
 
+(defun org-capture-ref--get-email-howpublished (string)
+  "Parse STRING containing To: and CC: fields to produce `:howpublished'."
+  (cond
+   ((string-match-p "emacs-devel@gnu.org" string) "ML:Emacs devel")
+   ((string-match-p "emacs-orgmode@gnu.org" string) "ML:Org mode")
+   (t "Email")))
+
+(defun org-capture-ref--notmuch-get-info (message-id)
+  "Get sexp for MESSAGE-ID."
+  (with-temp-buffer
+    (insert "(list ")
+    (call-process notmuch-command nil t nil "show" "--format=sexp" message-id)
+    (insert ")")
+    (let ((data (caadr (read (buffer-string)))))
+      (while (not (eq ':id (car data)))
+        (setf data (car data)))
+      data)))
+
 (defun org-capture-ref-get-bibtex-notmuch-show-mode ()
   "Get BiBTeX entry at point from notmuch show buffer."
   (when (eq major-mode 'notmuch-show-mode)
     (org-capture-ref-set-bibtex-field :author (notmuch-show-get-from))
     (org-capture-ref-set-bibtex-field :title (notmuch-show-get-subject))
     (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (notmuch-show-get-date)))
-    (org-capture-ref-set-bibtex-field :howpublished "Email")
+    (org-capture-ref-set-bibtex-field :howpublished (org-capture-ref--get-email-howpublished
+                                      (format "%s %s"
+                                              (notmuch-show-get-to)
+                                              (notmuch-show-get-cc))))
     (org-capture-ref-set-bibtex-field :typealt "email")
     (org-capture-ref-set-bibtex-field :link (format "notmuch:%s" (notmuch-show-get-message-id)))
     (throw :finish t)))
@@ -1932,11 +1954,47 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Get BiBTeX entry at point from thread in notmuch search buffer."
   (when (eq major-mode 'notmuch-search-mode)
     (when-let ((thread-info (notmuch-search-get-result)))
-      (org-capture-ref-set-bibtex-field :author (plist-get thread-info :authors))
+      (org-capture-ref-set-bibtex-field :author (replace-regexp-in-string "[,|] " " and " (plist-get thread-info :authors)))
       (org-capture-ref-set-bibtex-field :title (plist-get thread-info :subject))
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (current-time-string (plist-get thread-info :timestamp))))
-      (org-capture-ref-set-bibtex-field :howpublished "Email")
-      (org-capture-ref-set-bibtex-field :typealt "email")
+      (org-capture-ref-set-bibtex-field :howpublished (org-capture-ref--get-email-howpublished
+                                        (let ((message-info (org-capture-ref--notmuch-get-info
+                                                             (format "thread:%s" (plist-get thread-info :thread)))))
+                                          (format "%s %s"
+                                                  (plist-get (plist-get message-info :headers)
+                                                             :To)
+                                                  (plist-get (plist-get message-info :headers)
+                                                             :Cc)))))
+      (org-capture-ref-set-bibtex-field :typealt "email_thread")
+      (org-capture-ref-set-bibtex-field :link (format "notmuch:thread:%s" (plist-get thread-info :thread)))
+      (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-notmuch-tree-mode ()
+  "Get BiBTeX entry at point from thread in notmuch tree buffer."
+  (when (eq major-mode 'notmuch-tree-mode)
+    (when-let* ((id (notmuch-tree-get-message-id))
+                (message-emails (let ((message-info (org-capture-ref--notmuch-get-info id)))
+                                  (format "%s %s"
+                                          (plist-get (plist-get message-info :headers)
+                                                     :To)
+                                          (plist-get (plist-get message-info :headers)
+                                                     :Cc))))
+                (thread-id (with-temp-buffer
+                             (call-process notmuch-command nil t nil "search" "--output=threads" id)
+                             (goto-char (point-min))
+                             (buffer-substring 1 (line-end-position))))
+                (thread-info (with-temp-buffer
+                               (insert "(list ")
+                               (call-process notmuch-command nil t nil "search" "--format=sexp" thread-id)
+                               (insert ")")
+                               (caadr (read (buffer-string))))))
+      (org-capture-ref-set-bibtex-field :author (replace-regexp-in-string "[,|] " " and " (plist-get thread-info :authors)))
+      (org-capture-ref-set-bibtex-field :title (plist-get thread-info :subject))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (current-time-string (plist-get thread-info :timestamp))))
+      ;; Number of messages
+      (org-capture-ref-set-bibtex-field :pages (format "%S" (plist-get thread-info :total)))
+      (org-capture-ref-set-bibtex-field :howpublished (org-capture-ref--get-email-howpublished message-emails))
+      (org-capture-ref-set-bibtex-field :typealt "email_thread")
       (org-capture-ref-set-bibtex-field :link (format "notmuch:thread:%s" (plist-get thread-info :thread)))
       (throw :finish t))))
 
