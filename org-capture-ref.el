@@ -843,6 +843,8 @@ Return nil if DOI record is not found."
 		                   (cl-letf (((symbol-function 'browse-url) #'ignore))
 		                     (doi-utils-doi-to-bibtex-string doi))
                                  (t nil)))))
+        (when (string-match "^[^ ]+ not supported yet.*" bibtex-string)
+          (org-capture-ref-message (format "Retrieving DOI record %s ... failed. %S" doi (match-string 0 bibtex-string)) 'error))
         (if (not bibtex-string)
             (prog1 nil
               (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
