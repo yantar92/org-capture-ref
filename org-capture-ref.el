@@ -125,6 +125,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-karl-voit
                                     org-capture-ref-get-bibtex-imdb-movie
                                     org-capture-ref-get-bibtex-orgmode-ml
+                                    org-capture-ref-get-bibtex-list-gnu-ml
                                     org-capture-ref-get-bibtex-steam
                                     org-capture-ref-get-bibtex-google-books
                                     ;; OpenGraph parser
@@ -1181,12 +1182,14 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^commit-info$" :tag 'tr :apply #'car :tag 'td :apply #'cadr :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "git.savannah.gnu.org:%s" commit-repo))
         (throw :finish t)))))
+
 (defun org-capture-ref-get-bibtex-gnu-org ()
   "Parse gnu.org page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "gnu\\.org" link)
       (org-capture-ref-unless-set '(:title))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "^top$")))))
+
 (defun org-capture-ref-get-bibtex-nullprogram ()
   "Parse nullprogram.com blog and generate bibtex entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
@@ -1771,17 +1774,35 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-orgmode-ml ()
-  "Generate BiBTeX for a Org-mode mailing list page."
+  "Generate BiBTeX for an Org-mode mailing list page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match "orgmode\\.org/list/\\([^/]+\\)" link)
       (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "email")
       (org-capture-ref-set-bibtex-field :howpublished "ML:Org mode")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :key (match-string 1 link))
+      (org-capture-ref-set-bibtex-field :link (format "notmuch:id:%s" (match-string 1 link)))
       (let ((body-text (org-capture-ref-query-dom :id "^b$")))
         (org-capture-ref-set-bibtex-field :author (and (string-match "^From: \\(.+\\)$" body-text) (match-string 1 body-text)))
         (org-capture-ref-set-bibtex-field :title (and (string-match "^Subject: \\(.+\\)$" body-text) (match-string 1 body-text)))
         (org-capture-ref-set-bibtex-field :year (and (string-match "^Date: .+?\\([0-9]\\{4\\}\\)" body-text) (match-string 1 body-text))))
+      (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-list-gnu-ml ()
+  "Generate BiBTeX for a lists.gnu.org mailing list page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "lists\\.gnu\\.org/archive/html/\\([^/]+\\)/.+msg.+" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "email")
+      (org-capture-ref-set-bibtex-field :howpublished (org-capture-ref--get-email-howpublished (match-string 1 link)))
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (org-capture-ref-set-bibtex-field :key (org-capture-ref-query-dom :tag 'form :tag 'input :attr '(name . "d") :attr 'value))
+      (org-capture-ref-set-bibtex-field :link (format "notmuch:id:%s" (org-capture-ref-get-bibtex-field :key)))
+      (let ((body-text (org-capture-ref-query-dom :tag 'table :tag 'tbody)))
+        (org-capture-ref-set-bibtex-field :author (and (string-match "From\\(?:[ \n]*\\):\\(?:[ \n]*\\)\\(.+\\)$" body-text) (match-string 1 body-text)))
+        (org-capture-ref-set-bibtex-field :title (and (string-match "Subject\\(?:[ \n]*\\):\\(?:[ \n]*\\)\\(.+\\)$" body-text) (match-string 1 body-text)))
+        (org-capture-ref-set-bibtex-field :year (and (string-match "Date\\(?:[ \n]*\\):\\(?:[ \n]*\\).+?\\([0-9]\\{4\\}\\)" body-text) (match-string 1 body-text))))
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-arxiv ()
@@ -1925,7 +1946,9 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   "Parse STRING containing To: and CC: fields to produce `:howpublished'."
   (cond
    ((string-match-p "emacs-devel@gnu.org" string) "ML:Emacs devel")
+   ((string-match-p "emacs-devel" string) "ML:Emacs devel")
    ((string-match-p "emacs-orgmode@gnu.org" string) "ML:Org mode")
+   ((string-match-p "emacs-orgmode" string) "ML:Org mode")
    (t "Email")))
 
 (defun org-capture-ref--notmuch-get-info (message-id)
