@@ -2221,6 +2221,7 @@ avaible in :query -> :qutebrowser-fifo capture info."
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (pcase org-capture-ref-check-regexp-method
     (`grep (org-capture-ref-check-regexp-grep (s-replace-all  '(("\\|" . "|")
+                                                 ("|" . "")
                                                  ("\\\\\\." . "\\\\.")
                                                  ("'" . ".") ; We use ' as external quotes.
                                                  ("\\(" . "(")
@@ -2373,7 +2374,11 @@ Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (and (member (org-capture-ref-get-bibtex-field :type) '("article"))
              (org-capture-ref-get-bibtex-field :title))
-    (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote (org-capture-ref-get-bibtex-field :title))) (org-capture-ref-get-capture-template-info :immediate-finish))))
+    (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote
+                                       (replace-regexp-in-string
+                                        "[|]+" ""
+                                        (org-capture-ref-get-bibtex-field :title))))
+                   (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-author-title ()
   "Check if `:author' and `:title' already exists in some heading title.
