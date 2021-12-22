@@ -2068,7 +2068,7 @@ The overridden autokey customisations are:
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
                                           (concat
                                            (replace-regexp-in-string
-                                            " " bibtex-autokey-titleword-separator
+                                            "\\(?: \\|\\\\&\\)+" bibtex-autokey-titleword-separator
                                             (or (org-capture-ref-get-bibtex-field :publisher)
                                                 (org-capture-ref-get-bibtex-field :howpublished)))
                                            bibtex-autokey-titleword-separator)
