@@ -564,8 +564,8 @@ equal to the strin in the cons.
              dom
            (unless (and (listp dom) (or (listp (car dom)) (stringp (car dom)))) (setq dom (list dom)))
            (if (stringp (car dom))
-               (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p dom)))
-             (s-join separator (mapcar #'s-trim (delete-if #'string-empty-p (mapcar #'dom-texts dom))))))
+               (s-join separator (mapcar #'s-trim (delete "" dom)))
+             (s-join separator (mapcar #'s-trim (delete "" (mapcar #'dom-texts dom))))))
          'utf-8)))))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
