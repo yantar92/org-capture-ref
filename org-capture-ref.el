@@ -2147,9 +2147,7 @@ The overridden autokey customisations are:
   "Escape % chars to avoid confusing org-capture."
   (goto-char 1)
   (while (re-search-forward "%[^%]" nil 'noerror)
-    (goto-char (match-beginning 0))
-    (insert "\\")
-    (goto-char (match-end 0))))
+    (replace-match "")))
 
 (defvar org-capture-ref-bibtex-author-garbage-symbols '("*" "§" "¶")
   "Garbage that sometimes appear in author bibtex entries for scientific articles.")
