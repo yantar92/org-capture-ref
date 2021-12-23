@@ -7,11 +7,12 @@ More precisely, relevant metadata, like author, title, publisher, publication da
 Unlike =org-ref=, this package is designed to be used together with [[https://orgmode.org/manual/Capture.html#Capture][org-capture]]. The package is created assuming that the links/articles/books are captured from web sources using the following methods:
 - [[https://orgmode.org/manual/The-capture-protocol.html#The-capture-protocol][org-protocol]] from system browser
 - org-protocol from [[https://github.com/skeeto/elfeed/][elfeed]]
+- org-capture from Emacs buffers
 
 The generated BiBTeX for web links can be directly inserted into a =.bib= file and handled by org-ref just like any other book/paper.
 Alternatively (recommended), the metadata can be kept in org-mode entries as the main bibliography source (and tangled into the .bib file if needed). An example of such setup can be found in [[http://cachestocaches.com/2020/3/org-mode-annotated-bibliography/][this blog post]].
 
-The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate. The duplicate can also be updated according to the newly extracted metadata. For example, a research publication published online does not initially contain the journal volume number. The captured online publication can be later update as the publication page is updated.
+The package also tries to make sure that no duplicate links are captured. If a duplicate is found, there is an option to display the location of the duplicate. The duplicate can also be updated according to the newly extracted metadata. For example, a research publication published online does not initially contain the journal volume number. The captured online publication can be later updated as the publication page is updated.
 
 Below are examples of captured web links. The links are captured as todo-entries in org-mode with BiBTeX stored and code block within the entry.
 
@@ -34,7 +35,7 @@ Scientific article
 
 ** Installation
 
-The package is currently not on Melpa/Elpa now. It is possible to install package directly downloading the =.el= files from Github or using package managers with git support:
+The package is currently not on Melpa/Elpa. It is possible to install package directly downloading the =.el= files from Github or using package managers with git support:
 
 *** Using [[https://github.com/raxod502/straight.el/][straight.el]]
 
