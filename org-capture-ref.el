@@ -314,7 +314,6 @@ Target section of the `doct' docstring for details."
 				   "content=\"\\([^\"]*?\\)\" name=\"citation_doi"
 				   "objectDOI\" : \"\\([^\"]*?\\)\""
 				   "doi = '\\([^']*?\\)'"))
-                          (:journal . ((:meta "citation_journal_title")))
                           (:year . ((:meta "citation_publication_date" :apply ,#'org-capture-ref-extract-year-from-string)
                                     "class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
                           (:author . ((:meta "author")
