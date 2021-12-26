@@ -83,8 +83,6 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-arxiv
                                     org-capture-ref-get-bibtex-ams-cn
                                     org-capture-ref-get-bibtex-ohiolink
-                                    org-capture-ref-mark-links-with-known-absent-doi
-                                    org-capture-ref-get-bibtex-from-first-doi
 				    ;; Site-specific parsing
                                     org-capture-ref-get-bibtex-google-scholar-bibtex-page
                                     org-capture-ref-get-bibtex-wikipedia-book
@@ -130,6 +128,9 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-google-books
                                     ;; OpenGraph parser
                                     org-capture-ref-parse-opengraph
+                                    ;; Try to guess DOI and fetch the
+                                    ;; DOI's BiBTeX.
+                                    org-capture-ref-get-bibtex-from-first-doi
 				    ;; Generic parser
 				    org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
@@ -798,29 +799,6 @@ Existing BiBTeX fields are not modified."
 	             (if (org-capture-ref-get-bibtex-field :key)
 		         (org-capture-ref-message (format "Capturing using generic parser... searching %s... found" key))
 	               (org-capture-ref-message (format "Capturing using generic parser... searching %s... failed" key) 'warning)))))))))
-
-(defun org-capture-ref-mark-links-with-known-absent-doi ()
-  "Prevent `org-capture-ref-get-bibtex-from-first-doi' from searching DOI in website text.
-
-Some websites contain DOI references in the articles/blogs. However,
-the actual website page does not have DOI.
-`org-capture-ref-get-bibtex-from-first-doi' can sometimes give
-false-positive results in such websites."
-  (when (s-match (regexp-opt '("reddit.com"
-			       "youtube.com"
-                               "lesswrong.com"
-                               "zettelkasten.de"
-                               "github.com"
-                               "author.today"
-                               "wikipedia.org"
-                               "app.dimensions.ai"
-                               "scholar.google.com"
-                               "gwern.net"
-                               "habr.com"))
-                 (or (org-capture-ref-get-capture-info :link)
-                     (org-capture-ref-get-bibtex-field :url)
-                     ""))
-    (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)))
 
 (defvar org-capture-ref--doi-record-cache (make-hash-table :test #'equal)
   "Hash table storing downloaded DOI records.")
