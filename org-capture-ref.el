@@ -70,6 +70,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 				    org-capture-ref-get-bibtex-from-elfeed-data
                                     ;; DOI retrieval
                                     org-capture-ref-get-bibtex-doi
+                                    org-capture-ref-get-bibtex-isbn
                                     org-capture-ref-get-bibtex-aps
                                     org-capture-ref-get-bibtex-springer
                                     org-capture-ref-get-bibtex-wiley
@@ -1813,6 +1814,13 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
       (org-capture-ref-get-bibtex-from-first-doi))))
 
+(defun org-capture-ref-get-bibtex-isbn ()
+  "Generate BiBTeX for an ottobib.com link."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "ottobib\\.com/isbn/\\([0-9a-z-_/.]+\\)" link)
+      (org-capture-ref-set-bibtex-field :isbn (match-string 1 link))
+      (org-capture-ref-get-bibtex-from-isbn))))
+
 (defun org-capture-ref-get-bibtex-google-scholar-bibtex-page ()
   "Harvest bibtex entry from Google Scholar bibtex page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
@@ -2777,6 +2785,21 @@ With `\\[universal-argument] \\[universal-argument]' argument, update heading at
          :org-hd-marker (when (eq interactive-capture '(16))
                           (point-marker))
          :url (format "https://doi.org/%s" doi))))
+
+(defun org-capture-ref-capture-isbn (isbn &optional interactive-capture)
+  "Capture ISBN using `org-capture-ref-capture-template'.
+With prefix argument, use interactive version of the template.
+With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
+  (interactive "sISBN: \nP")
+  (unless org-capture-ref-capture-template-set-p
+    (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
+  (org-protocol-capture
+   (list :template (if interactive-capture
+                       (car org-capture-ref-capture-keys)
+                     (cadr org-capture-ref-capture-keys))
+         :org-hd-marker (when (eq interactive-capture '(16))
+                          (point-marker))
+         :url (format "https://ottobib.com/isbn/%s" isbn))))
 
 (defun org-capture-ref-capture-at-point (interactive-capture)
   "Capture object at point using `org-capture-ref-capture-template'
