@@ -285,7 +285,7 @@ Target section of the `doct' docstring for details."
                                 :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
                                 :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
 					         (s-join "\n"
-						         '("- [ ] download and attach pdf"
+						         '("- [ ] [[elisp:(browse-url (url-encode-url (format \"https://sci-hub.se/%s\" (org-entry-get nil \"DOI\"))))][downlaod and attach pdf]]"
 						           "- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
 						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
 						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
