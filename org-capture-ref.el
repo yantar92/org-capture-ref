@@ -1227,7 +1227,10 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-unless-set '(:url :author :title :year)
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
-          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "article__head-wrapper" :class "user-info__username"))
+          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom
+                                      :class "tm-article-presenter__header"
+                                      :class "tm-article-snippet__author"
+                                      :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
             (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
