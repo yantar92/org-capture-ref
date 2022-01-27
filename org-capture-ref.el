@@ -1240,7 +1240,13 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 	  ;; Find title
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title))
 	  ;; Find year
-          (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "tm-article-snippet__datetime-published" :attr 'datetime :apply #'org-capture-ref-extract-year-from-string)))))))
+          (org-capture-ref-set-bibtex-field
+           :year
+           (org-capture-ref-query-dom
+            :class "tm-article-snippet__datetime-published"
+            :tag 'time
+            :attr 'datetime
+            :apply #'org-capture-ref-extract-year-from-string)))))))
 
 (defun org-capture-ref-get-bibtex-samlib-book ()
   "Generate BiBTeX for a samlib.ru book page."
