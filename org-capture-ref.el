@@ -2149,7 +2149,7 @@ The overridden autokey customisations are:
         (bibtex-autokey-prefix-string (if (string= (org-capture-ref-get-bibtex-field :type) "misc")
                                           (concat
                                            (replace-regexp-in-string
-                                            "\\(?:\\s-\\|\\\\&\\)+" bibtex-autokey-titleword-separator
+                                            "\\(?:\\s-\\|\\\\&\\|\\s.\\)+" bibtex-autokey-titleword-separator
                                             (or (org-capture-ref-get-bibtex-field :publisher)
                                                 (org-capture-ref-get-bibtex-field :howpublished)))
                                            bibtex-autokey-titleword-separator)
@@ -2165,7 +2165,9 @@ The overridden autokey customisations are:
       (cl-letf (((symbol-function 'bibtex-autokey-get-year) (condition-case err
                                                                 `(lambda () ,(bibtex-autokey-get-year))
                                                               (t (lambda () "")))))
-        (concat (bibtex-generate-autokey)
+        (concat (replace-regexp-in-string
+                 "\\(?:\\s-\\|\\\\&\\|\\s.\\)+" ""
+                 (bibtex-generate-autokey))
                 ;; Add unique hash to avoid collisions.
                 bibtex-autokey-titleword-separator
                 (format "%.3s"
