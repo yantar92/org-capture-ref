@@ -1303,7 +1303,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "habr\\.com" link)
+    (when (s-match "\\(?:habr\\.com\\|geektimes\\.ru\\)" link)
       ;; Unify company blog articles and normal articles
       (setq link (replace-regexp-in-string "company/[^/]+/blog/" "post/" link))
       (setq link (replace-regexp-in-string "/\\?[^/]+$" "/" link))
