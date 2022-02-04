@@ -2828,7 +2828,12 @@ used inside capture template."
             (org-capture-ref-get-bibtex-org-heading)
             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)))
 	(org-capture-ref-check-bibtex)
-	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done")))
+	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done"))
+        (org-capture-ref-message
+         (format "Captured: %s"
+                 (string-trim-right (org-capture-ref-get-org-entry)
+                                    (rx (seq "\n" (* anychar)))))
+         'info))
     (when (buffer-live-p org-capture-ref--buffer) (kill-buffer org-capture-ref--buffer)))
   "")
 
