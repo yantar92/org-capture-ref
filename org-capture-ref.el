@@ -2292,7 +2292,8 @@ The overridden autokey customisations are:
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
   "Show message in qutebrowser assuming that qutebrowser fifo is
 avaible in :query -> :qutebrowser-fifo capture info."
-  (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :qutebrowser-fifo))))
+  (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :qutebrowser-fifo)))
+              (msg (replace-regexp-in-string "'" "՚" msg)))
     (pcase severity
       (`error (start-process-shell-command "Send message to qutebrowser"
 					   nil
