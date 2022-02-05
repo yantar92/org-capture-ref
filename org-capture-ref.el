@@ -839,7 +839,8 @@ See https://ogp.me/ for details."
           (howpublished (org-capture-ref-query-opengraph 'site_name)))
       (unless (org-capture-ref-get-bibtex-field :title t)
         (org-capture-ref-set-bibtex-field :title title))
-      (org-capture-ref-set-bibtex-field :url url)
+      ;; FIXME: This might be relative URL.  That one is somewhat tricky.
+      ;; (org-capture-ref-set-bibtex-field :url url)
       (org-capture-ref-set-bibtex-field :howpublished howpublished)
       (pcase (org-capture-ref-query-opengraph 'type)
         ("article"
