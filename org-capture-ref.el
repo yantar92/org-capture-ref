@@ -2252,7 +2252,7 @@ The overridden autokey customisations are:
   (while (re-search-forward "%[^%]" nil 'noerror)
     (replace-match "")))
 
-(defvar org-capture-ref-bibtex-author-garbage-symbols '("*" "§" "¶")
+(defvar org-capture-ref-bibtex-author-garbage-symbols '("*" "§" "¶" "‡")
   "Garbage that sometimes appear in author bibtex entries for scientific articles.")
 
 (defun org-capture-ref-remove-garbage-symbols-from-authors ()
