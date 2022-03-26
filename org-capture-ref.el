@@ -2937,5 +2937,14 @@ With prefix argument, use interactive version of the template."
                      (cadr org-capture-ref-capture-keys))
          :buffer-marker (point-marker))))
 
+(defun org-capture-ref-get-bibtex-from-url (url)
+  "Generate BiBTeX from URL without capture."
+  (org-capture-ref-set-new-url url)
+  (org-capture-ref-get-bibtex)
+  (unless (org-capture-ref-get-bibtex-field :key)
+    (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
+  (org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
+  (org-capture-ref-get-bibtex-field :bibtex-string))
+
 (provide 'org-capture-ref)
 ;;; org-capture-ref.el ends here
