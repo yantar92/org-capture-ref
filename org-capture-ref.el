@@ -1933,7 +1933,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-isbn ()
   "Generate BiBTeX for an ottobib.com link."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "ottobib\\.com/isbn/\\([0-9a-z-_/.]+\\)" link)
+    (when (string-match "ottobib\\.com/isbn/\\([0-9a-z-‐_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :isbn (match-string 1 link))
       (org-capture-ref-get-bibtex-from-isbn))))
 
