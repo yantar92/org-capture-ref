@@ -1015,10 +1015,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :class "rich_media_title"))
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "rich_media_meta rich_media_meta_nickname" :tag 'a))
-      (with-current-buffer (org-capture-ref-get-buffer)
-	(goto-char (point-min))
-        (when (re-search-forward "=\"\\([0-9]\\{4\\}\\)-[0-9]\\{2\\}-[0-9]\\{2\\}\"")
-          (org-capture-ref-set-bibtex-field :year (match-string 1)))))))
+      (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :id "publish_time"))))))
 
 (defun org-capture-ref-get-bibtex-wiki ()
   "Parse Wikipedia page and generate bibtex entry."
