@@ -2183,7 +2183,7 @@ The overridden autokey customisations are:
                                                                 `(lambda () ,(bibtex-autokey-get-year))
                                                               (t (lambda () "")))))
         (concat (replace-regexp-in-string
-                 "\\(?:\\s-\\|\\\\&\\|\\s.\\)+" ""
+                 "\\(?:\\s-\\|\\\\&\\|\\s.\\|�\\)+" ""
                  (bibtex-generate-autokey))
                 ;; Add unique hash to avoid collisions.
                 bibtex-autokey-titleword-separator
