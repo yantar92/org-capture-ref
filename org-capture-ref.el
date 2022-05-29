@@ -791,27 +791,16 @@ https://www.rssboard.org/rss-autodiscovery, but BASE is ignored."
 ;;;; Getting bibtex using known web APIs
 (defun org-capture-ref--get-bibtex-string-from-isbn (isbn)
   "Get BiBTeX record for given ISBN.
-Use https://www.ottobib.com to retrieve the BiBTeX record."
-  (let ((url (concat "https://www.ottobib.com/isbn/" isbn "/bibtex"))
-	data)
-    (with-current-buffer
-	(url-retrieve-synchronously
-	 ;; (concat "http://dx.doi.org/" doi)
-	 url)
-      (setq data (buffer-substring url-http-end-of-headers (point-max)))
-      (cond
-       ((or (string-match "<title>Error: DOI Not Found</title>" data)
-	    (string-match "Resource not found" data)
-	    (string-match "Status *406" data)
-	    (string-match "400 Bad Request" data))
-	(error "Something went wrong.  We got this response:
-%s" data))
-       ;; everything seems ok with the data
-       (t
-        (let ((bibtex (org-capture-ref-query-dom :dom (libxml-parse-html-region (point-min) (point-max)) :tag 'textarea)))
-          (if (seq-empty-p bibtex)
-              (error "ISBN record %s not found" isbn)
-            bibtex)))))))
+Use https://www.ebook.de to retrieve the BiBTeX record."
+  (let ((url (concat "https://www.ebook.de/de/tools/isbn2bibtex?isbn=" isbn))
+	bibtex)
+    (with-current-buffer (url-retrieve-synchronously url)
+      (goto-char (point-min))
+      (when (re-search-forward "@[a-zA-Z]+{.+\\(\n\s+[^\n]+\\)+}$" nil t)
+	(setq bibtex (match-string 0)))
+      (if (seq-empty-p bibtex)
+          (error "ISBN record %s not found" isbn)
+        bibtex))))
 
 ;; Getting BiBTeX
 
@@ -954,8 +943,8 @@ The generated value will be the website name."
   (unless (org-capture-ref-get-bibtex-field :howpublished)
     (let ((url (or (org-capture-ref-get-bibtex-field :url))))
       (when url
-        (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
-        (org-capture-ref-set-bibtex-field :howpublished (capitalize (match-string 1 url)))))))
+        (when (string-match "\\(?:https?://\\)?\\(?:www\\.\\)?\\([^/]+\\)\\.[^/]+/?" url)
+          (org-capture-ref-set-bibtex-field :howpublished (capitalize (match-string 1 url))))))))
 
 (defun org-capture-ref-set-default-type ()
   "Set `:type' of the BiBTeX entry to `org-capture-ref-default-type'."
@@ -1928,9 +1917,9 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-get-bibtex-from-first-doi))))
 
 (defun org-capture-ref-get-bibtex-isbn ()
-  "Generate BiBTeX for an ottobib.com link."
+  "Generate BiBTeX for an isbn: link."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "ottobib\\.com/isbn/\\([0-9a-z-‐_/.]+\\)" link)
+    (when (string-match "https://www\\.ebook\\.de/de/tools/isbn2bibtex\\?isbn=\\([0-9a-z-‐_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :isbn (match-string 1 link))
       (org-capture-ref-get-bibtex-from-isbn))))
 
@@ -2920,7 +2909,7 @@ With `\\[universal-argument] \\[universal-argument]' argument, update heading at
                      (cadr org-capture-ref-capture-keys))
          :org-hd-marker (when (eq interactive-capture '(16))
                           (point-marker))
-         :url (format "https://ottobib.com/isbn/%s" isbn))))
+         :url (format "https://www.ebook.de/de/tools/isbn2bibtex?isbn=%s" isbn))))
 
 (defun org-capture-ref-capture-at-point (interactive-capture)
   "Capture object at point using `org-capture-ref-capture-template'
