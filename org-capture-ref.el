@@ -333,8 +333,7 @@ The regexps are searched one by one in the html buffer and the group 1 match is 
   :group 'org-capture-ref
   :type '(alist :key-type symbol :value-type (set string (set symbol string))))
 
-(defcustom org-capture-ref-demand-doi-list '("aps\\.org"
-                              "nature\\.com"
+(defcustom org-capture-ref-demand-doi-list '("nature\\.com"
                               "aip\\.scitation\\.org"
                               "worldscientific\\.com"
                               "cambridge\\.org")
@@ -1603,9 +1602,18 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-aps ()
   "Generate BiBTeX for APS publication."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (string-match "aps\\.org/doi/\\([0-9a-z-_/.]+\\)" link)
+    (when (string-match "aps\\.org/\\(?:doi\\|.+abstract\\)/\\([0-9a-z-_/.]+\\)" link)
       (org-capture-ref-set-bibtex-field :doi (match-string 1 link))
-      (org-capture-ref-get-bibtex-from-first-doi))))
+      (if (org-capture-ref-get-bibtex-from-first-doi)
+          (throw :finish t)
+        (org-capture-ref-set-bibtex-field :type (org-capture-ref-query-opengraph 'type))
+        (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'citation_title))
+        (org-capture-ref-set-bibtex-field :year (org-capture-ref-extract-year-from-string (org-capture-ref-query-dom :meta 'citation_date)))
+        (org-capture-ref-set-bibtex-field :journal (org-capture-ref-query-dom :meta 'citation_journal_title))
+        (org-capture-ref-set-bibtex-field :pages (org-capture-ref-query-dom :meta 'citation_firstpage))
+        (org-capture-ref-set-bibtex-field :volume (org-capture-ref-query-dom :meta 'citation_volume))
+        (org-capture-ref-set-bibtex-field :issue (org-capture-ref-query-dom :meta 'citation_issue))
+        (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'citation_author))))))
 
 (defun org-capture-ref-get-bibtex-springer ()
   "Generate BiBTeX for Springer publication."
