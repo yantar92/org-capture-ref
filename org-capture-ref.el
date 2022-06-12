@@ -395,6 +395,7 @@ The full names are replaced in the hadline by
                                     ("Physical Review Letters" . "PRL")
                                     ("Materials Science and Engineering: A" . "MSEA")
                                     ("Acta Materialia" . "ActaMat")
+                                    ("Acta Metallurgica" . "ActaMat")
                                     ("Scripta Materialia" . "ScriptaMat")
                                     ("Journal of Materials Research" . "JMR")
                                     ("Advanced Engineering Materials" . "AdvEngMat")
