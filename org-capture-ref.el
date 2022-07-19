@@ -197,6 +197,7 @@ These functions will only be called if `:buffer-marker' field is present in `:qu
                                 org-capture-ref-clear-nil-bibtex-entries
                                 org-capture-ref-normalize-type
                                 org-capture-ref-replace-%
+                                org-capture-ref-replace-@
                                 org-capture-ref-remove-garbage-symbols-from-authors
                                 org-capture-ref-capitalize-author)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
@@ -2255,6 +2256,14 @@ The overridden autokey customisations are:
   (goto-char 1)
   (while (re-search-forward "%[^%]" nil 'noerror)
     (replace-match "")))
+
+(defun org-capture-ref-replace-@ ()
+  "Remove @ chars to avoid confusing BibTeX parser."
+  (goto-char 1)
+  ;; Skip the @type line.
+  (beginning-of-line 2)
+  (while (re-search-forward "^\\([ \t]*\\)@" nil 'noerror)
+    (replace-match "\\1 ")))
 
 (defvar org-capture-ref-bibtex-author-garbage-symbols '("*" "§" "¶" "‡")
   "Garbage that sometimes appear in author bibtex entries for scientific articles.")
