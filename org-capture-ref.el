@@ -503,9 +503,9 @@ This calls `org-capture-ref-get-buffer-functions'."
     (unless (buffer-live-p buffer) (org-capture-ref-message (format "<org-capture-ref> Failed to get live link buffer. Got %s" buffer) 'error))
     (setq org-capture-ref--buffer-dom nil)
     (with-current-buffer buffer
-      (goto-char (point-min))
       (let ((case-fold-search t))
-        (when (re-search-forward "Checking your browser before accessing" nil t)
+        (goto-char (point-min))
+        (when (re-search-forward "\\(Checking your browser before accessing\\|::CLOUDFLARE_ERROR_1000S_BOX::\\)" nil t)
           (org-capture-ref-message "URL is behind cloudflare firewall. Try to refresh/open the page in browser to whilelist current IP" 'error))))
     (setq org-capture-ref--buffer buffer)))
 
