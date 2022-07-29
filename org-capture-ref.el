@@ -401,7 +401,11 @@ The full names are replaced in the hadline by
                                     ("Journal of Materials Research" . "JMR")
                                     ("Advanced Engineering Materials" . "AdvEngMat")
                                     ("Philosophical Magazine" . "PhilMag")
-                                    ("International Journal of Plasticity" . "IJP"))
+                                    ("International Journal of Plasticity" . "IJP")
+                                    ("physica status solidi (a)" . "PhysStatusSolidi(a)")
+                                    ("Applied Physics Letters" . "APL")
+                                    ("Philosophical Magazine Letters" . "PhilMagLett")
+                                    ("Journal of Applied Physics" . "JAP"))
   "List of personal journal abbreviations.  See `org-capture-ref-use-journal-abbreviations'."
   :type '(list (cons string string))
   :group 'org-capture-ref)
