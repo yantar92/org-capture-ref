@@ -509,7 +509,7 @@ This calls `org-capture-ref-get-buffer-functions'."
     (with-current-buffer buffer
       (let ((case-fold-search t))
         (goto-char (point-min))
-        (when (re-search-forward "\\(Checking your browser before accessing\\|::CLOUDFLARE_ERROR_1000S_BOX::\\)" nil t)
+        (when (re-search-forward "\\(Checking your browser before accessing\\|::CLOUDFLARE_ERROR_1000S_BOX::\\|https://report-uri\\.cloudflare\\.com/cdn-cgi/beacon/expect-ct\\)" nil t)
           (org-capture-ref-message "URL is behind cloudflare firewall. Try to refresh/open the page in browser to whilelist current IP" 'error))))
     (setq org-capture-ref--buffer buffer)))
 
