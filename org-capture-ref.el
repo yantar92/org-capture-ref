@@ -1018,7 +1018,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
     (when (string-match "\\(?:https?://\\)?\\([^.]+\\)\\.wikipedia\\.org" link)
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author org-capture-ref-placeholder-value)
-      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string " +- +Wikipedia" "" (org-capture-ref-get-capture-info :description)))
+      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title))
       (org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :howpublished (format "Wikipedia(%s)" (match-string 1 link)))
       (throw :finish t))))
