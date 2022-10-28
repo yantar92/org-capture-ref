@@ -1,4 +1,4 @@
-;; org-capture-ref.el --- Extract bibtex info from captured websites  -*- lexical-binding: t; -*-
+;;; org-capture-ref.el --- Extract bibtex info from captured websites  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Ihor Radchenko
 
