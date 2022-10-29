@@ -2085,6 +2085,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
    ((string-match-p "emacs-devel" string) "ML:Emacs devel")
    ((string-match-p "emacs-orgmode@gnu.org" string) "ML:Org mode")
    ((string-match-p "emacs-orgmode" string) "ML:Org mode")
+   ((string-match-p "@debbugs.gnu.org" string) "Debbugs")
    (t "Email")))
 
 (defun org-capture-ref--notmuch-get-info (message-id)
