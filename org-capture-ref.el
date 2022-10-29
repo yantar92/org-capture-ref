@@ -128,6 +128,7 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
                                     org-capture-ref-get-bibtex-imdb-movie
                                     org-capture-ref-get-bibtex-orgmode-ml
                                     org-capture-ref-get-bibtex-list-gnu-ml
+                                    org-capture-ref-get-bibtex-debbugs
                                     org-capture-ref-get-bibtex-steam
                                     org-capture-ref-get-bibtex-google-books
                                     ;; OpenGraph parser
@@ -1889,6 +1890,32 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :author (and (string-match "^From: \\(.+\\)$" body-text) (match-string 1 body-text)))
         (org-capture-ref-set-bibtex-field :title (and (string-match "^Subject: \\(.+\\)$" body-text) (match-string 1 body-text)))
         (org-capture-ref-set-bibtex-field :year (and (string-match "^Date: .+?\\([0-9]\\{4\\}\\)" body-text) (match-string 1 body-text))))
+      (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-debbugs ()
+  "Generate BiBTeX for an Debbugs page."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "debbugs\\.gnu\\.org/cgi/bugreport.cgi\\?bug=\\(.+\\)" link)
+      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :typealt "email")
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      (let ((package (org-capture-ref-query-dom :join ", " :class "pkginfo" :class "submitter")))
+        (org-capture-ref-set-bibtex-field :howpublished (format "Debbugs:%s" package)))
+      (org-capture-ref-set-bibtex-field :key (format "debbugs-%s" (match-string 1 link)))
+      (let ((title (org-capture-ref-query-dom :tag 'title)))
+        (org-capture-ref-set-bibtex-field
+         :title
+         (if (string-match "^#[0-9]+ - \\(.+\\) - GNU bug report logs$" title)
+             (match-string 1 title)
+           title)))
+      (let ((buginfo-text (org-capture-ref-query-dom :class "buginfo")))
+        (org-capture-ref-set-bibtex-field
+         :author
+         (and (string-match "^Reported by: +\\(.+\\)$" buginfo-text)
+              (replace-regexp-in-string
+               " +<at> +" "@"
+               (match-string 1 buginfo-text))))
+        (org-capture-ref-set-bibtex-field :year (and (string-match "^ *Date: .+?\\([0-9]\\{4\\}\\)" buginfo-text) (match-string 1 buginfo-text))))
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-list-gnu-ml ()
