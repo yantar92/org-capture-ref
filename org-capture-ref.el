@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (f "0.20.0") (asoc "0.6.1") (org "9.3") (org-ref "1.1.1") (doct "3.1.0"))
+;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") (org-ref "1.1.1") (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,6 @@
 (require 'dash)
 (require 's)
 (require 'f)
-(require 'asoc)
 ;;; Customization:
 
 (defgroup org-capture-ref nil
@@ -2891,10 +2890,8 @@ Overridden customisations:
   (custom-reevaluate-setting 'org-capture-ref-capture-template)
   (let ((templates (doct org-capture-ref-capture-template)))
     (dolist (template templates)
-      (asoc-put! org-capture-templates
-	         (car template)
-	         (cdr  template)
-	         'replace))))
+      (setf (alist-get (car template) org-capture-templates)
+            (cdr template)))))
 
 (defun org-capture-ref-capture-url (url &optional interactive-capture)
   "Capture URL using `org-capture-ref-capture-template'.
