@@ -88,7 +88,7 @@ Below is example configuration defining org capture template using org-capture-r
 
 3. Using [[https://github.com/quelpa/quelpa][quelpa]]
     #+begin_src emacs-lisp
-    (quelpa '(asoc.el :repo "troyp/asoc.el" :fetcher github))
+    (quelpa '(asoc :repo "troyp/asoc.el" :fetcher github))
     (quelpa 's)
     (quelpa 'doct)
     #+end_src
