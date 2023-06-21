@@ -183,23 +183,22 @@ The functions must follow the same rules as `org-capture-ref-get-bibtex-function
 These functions will only be called if `:buffer-marker' field is present in `:query' field of the `org-store-link-plist'."
   :type 'hook
   :group 'org-capture-ref)
-(defcustom org-capture-ref-clean-bibtex-hook '(org-capture-ref-create-key-maybe
-                                org-capture-ref-remove-double-comma
-                                org-ref-bibtex-format-url-if-doi
-				orcb-key-comma
-				orcb-&
-				orcb-%
-				orcb-clean-year
-				orcb-clean-doi
-				orcb-clean-pages
-				org-capture-ref-sort-bibtex-entry
-				orcb-fix-spacing
-                                org-capture-ref-clear-nil-bibtex-entries
-                                org-capture-ref-normalize-type
-                                org-capture-ref-replace-%
-                                org-capture-ref-replace-@
-                                org-capture-ref-remove-garbage-symbols-from-authors
-                                org-capture-ref-capitalize-author)
+(defcustom org-capture-ref-clean-bibtex-hook
+  '(org-capture-ref-create-key-maybe
+    org-capture-ref-remove-double-comma
+    org-capture-ref-add-missing-comma
+    orcb-&
+    orcb-%
+    orcb-clean-doi
+    orcb-clean-pages
+    org-capture-ref-sort-bibtex-entry
+    orcb-fix-spacing
+    org-capture-ref-clear-nil-bibtex-entries
+    org-capture-ref-normalize-type
+    org-capture-ref-replace-%
+    org-capture-ref-replace-@
+    org-capture-ref-remove-garbage-symbols-from-authors
+    org-capture-ref-capitalize-author)
   "Normal hook containing functions used to cleanup BiBTeX entry string.
 
 Each function is called with point at undefined position inside buffer
@@ -2357,6 +2356,16 @@ The overridden autokey customisations are:
   "Remove malformatted \",\" from entry."
   (let ((inhibit-message t))
     (replace-regexp ",,\n" ",\n")))
+
+;; Derived from `orcb-key-comma'.
+(defun org-capture-ref-add-missing-comma ()
+  "Ensure comma at the end of the first line."
+  (bibtex-beginning-of-entry)
+  ;; some entries do not have a key or comma in first line. We check and add it,
+  ;; if needed.
+  (unless (re-search-forward ", *$" (line-end-position) t)
+    (end-of-line)
+    (insert ",")))
 
 (defun org-capture-ref-create-key-maybe ()
   "Generate BiBTeX key if it is missing."
