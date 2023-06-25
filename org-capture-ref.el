@@ -187,15 +187,12 @@ These functions will only be called if `:buffer-marker' field is present in `:qu
   '(org-capture-ref-create-key-maybe
     org-capture-ref-remove-double-comma
     org-capture-ref-add-missing-comma
-    orcb-&
-    orcb-%
     orcb-clean-doi
     orcb-clean-pages
     org-capture-ref-sort-bibtex-entry
     orcb-fix-spacing
     org-capture-ref-clear-nil-bibtex-entries
     org-capture-ref-normalize-type
-    org-capture-ref-replace-%
     org-capture-ref-replace-@
     org-capture-ref-remove-garbage-symbols-from-authors
     org-capture-ref-capitalize-author)
