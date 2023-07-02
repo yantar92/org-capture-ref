@@ -187,7 +187,7 @@ These functions will only be called if `:buffer-marker' field is present in `:qu
   '(org-capture-ref-create-key-maybe
     org-capture-ref-remove-double-comma
     org-capture-ref-add-missing-comma
-    orcb-clean-doi
+    org-capture-ref-clean-doi
     orcb-clean-pages
     org-capture-ref-sort-bibtex-entry
     orcb-fix-spacing
@@ -2393,6 +2393,20 @@ The overridden autokey customisations are:
                                page-dashes
                                inherit-booktitle)))
     (org-ref-sort-bibtex-entry)))
+
+(defun org-capture-ref-clean-doi ()
+  "Remove http://dx.doi.org/ or https://doi.org in the doi field.
+Taken from `orcb-clean-doi'."
+  (let ((doi (bibtex-autokey-get-field "doi")))
+    (when (or (string-match "^http://dx.doi.org/" doi)
+	      (string-match "^https://doi.org/" doi))
+      (setq doi (replace-match "" nil nil doi))
+      (bibtex-beginning-of-entry)
+      (goto-char (car (cdr (bibtex-search-forward-field "doi" t))))
+      (bibtex-kill-field)
+      (bibtex-make-field "doi")
+      (backward-char)
+      (insert doi))))
 
 (defun org-capture-ref-replace-% ()
   "Escape % chars to avoid confusing org-capture."
