@@ -2646,11 +2646,17 @@ Show the matching entry unless `:immediate-finish' is set in the
 capture template."
   (when (and (member (org-capture-ref-get-bibtex-field :type) '("article"))
              (org-capture-ref-get-bibtex-field :title))
-    (org-capture-ref-check-regexp (format "^\\*+.+%s" (regexp-quote
-                                       (replace-regexp-in-string
-                                        "[|]+" ""
-                                        (org-capture-ref-get-bibtex-field :title))))
-                   (org-capture-ref-get-capture-template-info :immediate-finish))))
+    (org-capture-ref-check-regexp
+     (format (concat "^\\*+.+%s"
+		     ;; Heuristics: to short titles may easily clash.
+		     ;; Only use exact matches for short titles.
+		     (when (< (length (org-capture-ref-get-bibtex-field :title)) 15)
+                       "$"))
+	     (regexp-quote
+	      (replace-regexp-in-string
+	       "[|]+" ""
+	       (org-capture-ref-get-bibtex-field :title))))
+     (org-capture-ref-get-capture-template-info :immediate-finish))))
 
 (defun org-capture-ref-check-author-title ()
   "Check if `:author' and `:title' already exists in some heading title.
