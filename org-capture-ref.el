@@ -188,9 +188,9 @@ These functions will only be called if `:buffer-marker' field is present in `:qu
     org-capture-ref-remove-double-comma
     org-capture-ref-add-missing-comma
     org-capture-ref-clean-doi
-    orcb-clean-pages
+    org-capture-ref-clean-pages
     org-capture-ref-sort-bibtex-entry
-    orcb-fix-spacing
+    org-capture-ref-fix-spacing
     org-capture-ref-clear-nil-bibtex-entries
     org-capture-ref-normalize-type
     org-capture-ref-replace-@
@@ -2394,9 +2394,9 @@ The overridden autokey customisations are:
                                inherit-booktitle)))
     (org-ref-sort-bibtex-entry)))
 
+;; Taken from `orcb-clean-doi'.
 (defun org-capture-ref-clean-doi ()
-  "Remove http://dx.doi.org/ or https://doi.org in the doi field.
-Taken from `orcb-clean-doi'."
+  "Remove http://dx.doi.org/ or https://doi.org in the doi field."
   (let ((doi (bibtex-autokey-get-field "doi")))
     (when (or (string-match "^http://dx.doi.org/" doi)
 	      (string-match "^https://doi.org/" doi))
@@ -2407,6 +2407,25 @@ Taken from `orcb-clean-doi'."
       (bibtex-make-field "doi")
       (backward-char)
       (insert doi))))
+
+;; Copied from `orcb-clean-pages'.
+(defun org-capture-ref-clean-pages ()
+  "Check for empty pages, and put eid in its place if it exists."
+  (let ((pages (bibtex-autokey-get-field "pages"))
+	(eid (bibtex-autokey-get-field "eid")))
+    (when (and (not (string= "" eid))
+	       (or (string= "" pages)))
+      (bibtex-set-field "pages" eid))))
+
+;; Derived from `orcb-fix-spacing'.
+(defun org-capture-ref-fix-spacing ()
+  "Delete whitespace."
+  ;; 1. delete whitespace
+  (delete-trailing-whitespace)
+  ;; 2. delete consecutive empty lines
+  (goto-char (point-max))
+  (while (re-search-backward "\n\n\n+" nil 'move)
+    (replace-match "\n\n")))
 
 (defun org-capture-ref-replace-% ()
   "Escape % chars to avoid confusing org-capture."
