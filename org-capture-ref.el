@@ -169,12 +169,14 @@ The functions must follow the same rules as `org-capture-ref-get-bibtex-function
 These functions will only be called if `:elfeed-data' field is present in `:query' field of the `org-store-link-plist'."
   :type 'hook
   :group 'org-capture-ref)
-(defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions '(org-capture-ref-get-bibtex-bibtex-mode
-                                                     org-capture-ref-get-bibtex-eaf-browser
-                                                     org-capture-ref-get-bibtex-notmuch-show-mode
-                                                     org-capture-ref-get-bibtex-notmuch-search-mode
-                                                     org-capture-ref-get-bibtex-notmuch-tree-mode
-                                                     org-capture-ref-update-bibtex-at-org-heading)
+(defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions
+  '(org-capture-ref-get-bibtex-bibtex-mode
+    org-capture-ref-get-bibtex-eaf-browser
+    org-capture-ref-get-bibtex-eww
+    org-capture-ref-get-bibtex-notmuch-show-mode
+    org-capture-ref-get-bibtex-notmuch-search-mode
+    org-capture-ref-get-bibtex-notmuch-tree-mode
+    org-capture-ref-update-bibtex-at-org-heading)
   "Functions used to generate BibTeX entry from Emacs buffer at point defined in `:buffer-marker' field of the `org-protocol' capture query.
 
 This variable is only used if `org-capture-ref-get-bibtex-from-emacs-buffer' is listed in `org-capture-ref-get-bibtex-functions'.
@@ -2179,6 +2181,18 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
           (insert html))
         (plist-put (plist-get org-capture-ref--store-link-plist :query) :html html-file)
         (org-capture-ref-set-bibtex-field :url eaf--buffer-url)))))
+
+(defun org-capture-ref-get-bibtex-eww ()
+  "Get BiBTeX entry from EWW buffer."
+  (when (and (eq major-mode 'eww-mode)
+	     (plist-get eww-data :url))
+    (let ((html-file (make-temp-file "org-capture-ref-"))
+          (html (plist-get eww-data :source))
+          (coding-system-for-write 'utf-8))
+      (with-temp-file html-file
+        (insert html))
+      (plist-put (plist-get org-capture-ref--store-link-plist :query) :html html-file)
+      (org-capture-ref-set-bibtex-field :url (plist-get eww-data :url)))))
 
 (defun org-capture-ref--get-email-howpublished (string)
   "Parse STRING containing To: and CC: fields to produce `:howpublished'."
