@@ -191,7 +191,7 @@ These functions will only be called if `:buffer-marker' field is present in `:qu
     org-capture-ref-add-missing-comma
     org-capture-ref-clean-doi
     org-capture-ref-clean-pages
-    org-capture-ref-sort-bibtex-entry
+    org-capture-ref-clean-bibtex-entry
     org-capture-ref-fix-spacing
     org-capture-ref-clear-nil-bibtex-entries
     org-capture-ref-normalize-type
@@ -2398,15 +2398,16 @@ The overridden autokey customisations are:
   (re-search-forward "@[a-z]+{" nil t)
   (replace-match (downcase (match-string 0))))
 
-(defun org-capture-ref-sort-bibtex-entry ()
-  "Call `org-ref-sort-bibtex-entry' without hooks."
+(defun org-capture-ref-clean-bibtex-entry ()
+  "Call `bibtex-clean-entry' without hooks."
   (let (bibtex-clean-entry-hook
 	(bibtex-entry-format '(opts-or-alts
 			       numerical-fields
-                               whitespace
-                               page-dashes
-                               inherit-booktitle)))
-    (org-ref-sort-bibtex-entry)))
+			       whitespace
+			       page-dashes
+			       inherit-booktitle
+			       sort-fields)))
+    (bibtex-clean-entry)))
 
 ;; Taken from `orcb-clean-doi'.
 (defun org-capture-ref-clean-doi ()
