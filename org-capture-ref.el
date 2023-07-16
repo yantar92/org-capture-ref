@@ -3056,7 +3056,11 @@ Overridden customisations:
                                                   ((pred stringp) tag)
                                                   (field (org-capture-ref-get-bibtex-field field))))
                                               org-capture-ref-headline-tags))))))
-      (replace-regexp-in-string "^\\*+ *" "" (substring-no-properties (buffer-string))))))
+      ;; Cleanup potentially confusing syntax.
+      (replace-regexp-in-region "^\\*+ *" "")
+      ;; Cleanup capture template-sensitive text.
+      (replace-regexp-in-region "%[tTuUiaAlLcxkKnfF^?]" "\\\\&")
+      (buffer-string))))
 
 (defun org-capture-ref-set-capture-template ()
   "Set default capture template according to `org-capture-ref-capture-template'."
