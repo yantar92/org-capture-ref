@@ -2473,7 +2473,7 @@ The overridden autokey customisations are:
   (pcase severity
     (`error (user-error "%s" msg))
     (`warning (message "%s" msg))
-    (_ (message msg))))
+    (_ (message "%s" msg))))
 
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
   "Show message in qutebrowser assuming that qutebrowser fifo is
