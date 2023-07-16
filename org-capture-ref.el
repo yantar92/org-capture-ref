@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") (org-ref "1.1.1") (doct "3.1.0"))
+;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") persid (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,9 +30,7 @@
 ;;; Code:
 
 (require 'org-capture)
-(require 'org-ref-url-utils)
-(require 'org-ref-core)
-(require 'org-ref-bibtex)
+(require 'persid)
 (require 'bibtex)
 (require 'dom)
 (require 'dash)
@@ -898,19 +896,6 @@ https://www.rssboard.org/rss-autodiscovery, but BASE is ignored."
                   :attr 'href)))
     (unless (seq-empty-p rss-url)
       (org-capture-ref-set-bibtex-field :rss rss-url))))
-;;;; Getting bibtex using known web APIs
-(defun org-capture-ref--get-bibtex-string-from-isbn (isbn)
-  "Get BiBTeX record for given ISBN.
-Use https://www.ebook.de to retrieve the BiBTeX record."
-  (let ((url (concat "https://www.ebook.de/de/tools/isbn2bibtex?isbn=" isbn))
-	bibtex)
-    (with-current-buffer (url-retrieve-synchronously url)
-      (goto-char (point-min))
-      (when (re-search-forward "@[a-zA-Z]+{.+\\(\n\s+[^\n]+\\)+}$" nil t)
-	(setq bibtex (match-string 0)))
-      (if (seq-empty-p bibtex)
-          (error "ISBN record %s not found" isbn)
-        bibtex))))
 
 ;; Getting BiBTeX
 
@@ -994,7 +979,6 @@ Existing BiBTeX fields are not modified."
 
 (defun org-capture-ref-get-bibtex-from-first-doi ()
   "Generate BiBTeX using first DOI record found in html or `:doi' field.
-Use `doi-utils-doi-to-bibtex-string' to retrieve the BiBTeX record.
 Return nil if DOI record is not found."
   (when (and (not (org-capture-ref-get-bibtex-field :doi 'consider-placeholder))
 	     (alist-get :doi org-capture-ref-field-rules))
@@ -1006,9 +990,7 @@ Return nil if DOI record is not found."
       (org-capture-ref-message (format "Retrieving DOI record %s ..." doi))
       (let ((bibtex-string (or (gethash doi org-capture-ref--doi-record-cache)
                                (condition-case err
-		                   ;; Ignore errors and avoid opening the DOI url.
-		                   (cl-letf (((symbol-function 'browse-url) #'ignore))
-		                     (doi-utils-doi-to-bibtex-string doi))
+				   (persid-bibtex-from (format "doi:%s" doi))
                                  (t nil)))))
         (when (and bibtex-string (string-match "^[^ ]+ not supported yet.*" bibtex-string))
           (org-capture-ref-message (format "Retrieving DOI record %s ... failed. %S" doi (match-string 0 bibtex-string)) 'error))
@@ -1028,8 +1010,7 @@ Return nil if DOI record is not found."
     (when isbn
       (org-capture-ref-message (format "Retrieving ISBN record %s ..." isbn))
       (let ((bibtex-string (condition-case err
-			       ;; Ignore errors and avoid opening the ISBN url.
-			       (org-capture-ref--get-bibtex-string-from-isbn isbn)
+			       (persid-bibtex-from (format "isbn:%s" doi))
                              (t (org-capture-ref-message (format "%s" (error-message-string err)) 'warning)))))
         (unless bibtex-string (org-capture-ref-set-bibtex-field :isbn nil 'force))
         (if (not bibtex-string)
