@@ -31,6 +31,7 @@
 
 (require 'org-capture)
 (require 'persid)
+(require 'url-util)
 (require 'bibtex)
 (require 'dom)
 (require 'dash)
@@ -990,7 +991,8 @@ Return nil if DOI record is not found."
       (org-capture-ref-message (format "Retrieving DOI record %s ..." doi))
       (let ((bibtex-string (or (gethash doi org-capture-ref--doi-record-cache)
                                (condition-case err
-				   (persid-bibtex-from (format "doi:%s" doi))
+				   (url-unhex-string ; CrossRef may sometimes encode staff like URL.
+				    (persid-bibtex-from (format "doi:%s" doi)))
                                  (t nil)))))
         (when (and bibtex-string (string-match "^[^ ]+ not supported yet.*" bibtex-string))
           (org-capture-ref-message (format "Retrieving DOI record %s ... failed. %S" doi (match-string 0 bibtex-string)) 'error))
