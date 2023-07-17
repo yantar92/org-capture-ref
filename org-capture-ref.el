@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") persid (doct "3.1.0"))
+;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") (persid) (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -139,33 +139,41 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
 				    org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
 
-Each function will be called without arguments in sequence.
-The functions are expected to use `org-capture-ref-set-bibtex-field'
-and `org-capture-ref-set-capture-info'. to set the required bibtex
-fields. `org-capture-ref-get-bibtex-field' and `org-capture-ref-get-capture-info' can
-be used to retrieve information about the captured link.
-Any function can throw an error and abort the capture process.
-Any function can throw `:finish'. All the remaining functions from
-this list will not be called then.
+Each function will be called without arguments in sequence. The
+functions are expected to use `org-capture-ref-set-bibtex-field' and
+`org-capture-ref-set-capture-info'. to set the required bibtex fields.
+`org-capture-ref-get-bibtex-field' and
+`org-capture-ref-get-capture-info' can be used to retrieve information
+about the captured link. Any function can throw an error and abort the
+capture process. Any function can throw `:finish'. All the remaining
+functions from this list will not be called then.
 
 Any function can mark a field as not defined for the captured link.
-This is done by setting that field to `org-capture-ref-placeholder-value'.
-The following parsers will then be aware that there is no need to search for the field."
+This is done by setting that field to
+`org-capture-ref-placeholder-value'. The following parsers will then
+be aware that there is no need to search for the field."
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-get-bibtex-from-elfeed-functions '(org-capture-ref-get-bibtex-generic-elfeed
-                                               org-capture-ref-get-bibtex-nature-elfeed
-					       org-capture-ref-get-bibtex-habr-elfeed
-                                               org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
-                                               org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished
-                                               org-capture-ref-get-bibtex-ted-elfeed)
-  "Functions used to generate BibTeX entry from elfeed entry data defined in `:elfeed-data' field of the `org-protocol' capture query.
+(defcustom org-capture-ref-get-bibtex-from-elfeed-functions
+  '(org-capture-ref-get-bibtex-generic-elfeed
+    org-capture-ref-get-bibtex-nature-elfeed
+    org-capture-ref-get-bibtex-habr-elfeed
+    org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author
+    org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished
+    org-capture-ref-get-bibtex-ted-elfeed)
+  "Functions used to generate BibTeX entry from elfeed entry data.
+The data is defined in `:elfeed-data' field of the `org-protocol'
+capture query.
 
-This variable is only used if `org-capture-ref-get-bibtex-from-elfeed-data' is listed in `org-capture-ref-get-bibtex-functions'.
-The functions must follow the same rules as `org-capture-ref-get-bibtex-functions', but will be called with a single argument - efleed entry object.
+This variable is only used if
+`org-capture-ref-get-bibtex-from-elfeed-data' is listed in
+`org-capture-ref-get-bibtex-functions'. The functions must follow the
+same rules as `org-capture-ref-get-bibtex-functions', but will be
+called with a single argument - efleed entry object.
 
-These functions will only be called if `:elfeed-data' field is present in `:query' field of the `org-store-link-plist'."
+These functions will only be called if `:elfeed-data' field is present
+in `:query' field of the `org-store-link-plist'."
   :type 'hook
   :group 'org-capture-ref)
 (defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions
@@ -176,12 +184,18 @@ These functions will only be called if `:elfeed-data' field is present in `:quer
     org-capture-ref-get-bibtex-notmuch-search-mode
     org-capture-ref-get-bibtex-notmuch-tree-mode
     org-capture-ref-update-bibtex-at-org-heading)
-  "Functions used to generate BibTeX entry from Emacs buffer at point defined in `:buffer-marker' field of the `org-protocol' capture query.
+  "Functions used to generate BibTeX entry from Emacs buffer.
+The buffer is at point or defined in `:buffer-marker' field of the
+`org-protocol' capture query.
 
-This variable is only used if `org-capture-ref-get-bibtex-from-emacs-buffer' is listed in `org-capture-ref-get-bibtex-functions'.
-The functions must follow the same rules as `org-capture-ref-get-bibtex-functions' and will be called with point at location to be captured.
+This variable is only used if
+`org-capture-ref-get-bibtex-from-emacs-buffer' is listed in
+`org-capture-ref-get-bibtex-functions'. The functions must follow the
+same rules as `org-capture-ref-get-bibtex-functions' and will be
+called with point at location to be captured.
 
-These functions will only be called if `:buffer-marker' field is present in `:query' field of the `org-store-link-plist'."
+These functions will only be called if `:buffer-marker' field is
+present in `:query' field of the `org-store-link-plist'."
   :type 'hook
   :group 'org-capture-ref)
 (defcustom org-capture-ref-clean-bibtex-hook
@@ -269,7 +283,7 @@ or a symbol representing the metadata to be used as a tag."
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-capture-target `(:file ,(f-join org-directory "inbox.org"))
-  "Capture template target specification to be used in `org-capture-ref-capture-template'.
+  "Capture target for `org-capture-ref-capture-template'.
 The specification will be inserted as is into a `doct' template. See
 Target section of the `doct' docstring for details."
   :type 'sexp
@@ -280,33 +294,35 @@ Target section of the `doct' docstring for details."
   :type '(list string string)
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-capture-template `( :group "org-capture-ref template"
- 			        :type entry
-                                ,@org-capture-ref-capture-target
- 			        :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
-                                :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
-                                :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
-					         (s-join "\n"
-						         '("- [ ] [[elisp:(browse-url (url-encode-url (format \"https://sci-hub.se/%s\" (org-entry-get nil \"DOI\"))))][downlaod and attach pdf]]"
-						           "- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
-						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
-						           "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
-                                                           "- [ ] check if bibtex entry has missing fields"
-                                                           "- [ ] Consider subscribing to new citations"))
-                                               ""))
-                                :org-entry (lambda () (org-capture-ref-get-org-entry))
-			        :template
-                                ("%{fetch-bibtex}* TODO %?%{space}%{org-entry}"
-                                 "%{extra}")
-			        :children (("Interactive org-capture-ref template"
-					    :keys ,(car org-capture-ref-capture-keys)
-                                            :space " ")
-				           ("Silent org-capture-ref template"
-					    :keys ,(cadr org-capture-ref-capture-keys)
-                                            :space ""
-					    :immediate-finish t)))
-  "Default capture template. The template is a template defined using
-  `doct' syntax. See docstring of `doct' for details."
+(defcustom org-capture-ref-capture-template
+  `( :group "org-capture-ref template"
+     :type entry
+     ,@org-capture-ref-capture-target
+     :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
+     :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
+     :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
+		      (s-join "\n"
+			      '("- [ ] [[elisp:(browse-url (url-encode-url (format \"https://sci-hub.se/%s\" (org-entry-get nil \"DOI\"))))][downlaod and attach pdf]]"
+				"- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
+				"- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
+				"- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
+				"- [ ] check if bibtex entry has missing fields"
+				"- [ ] Consider subscribing to new citations"))
+		    ""))
+     :org-entry (lambda () (org-capture-ref-get-org-entry))
+     :template
+     ("%{fetch-bibtex}* TODO %?%{space}%{org-entry}"
+      "%{extra}")
+     :children (("Interactive org-capture-ref template"
+		 :keys ,(car org-capture-ref-capture-keys)
+		 :space " ")
+		("Silent org-capture-ref template"
+		 :keys ,(cadr org-capture-ref-capture-keys)
+		 :space ""
+		 :immediate-finish t)))
+  "Default capture template.
+The template is a template defined using `doct' syntax. See docstring
+of `doct' for details."
   :type 'list
   :group 'org-capture-ref)
 
@@ -325,9 +341,13 @@ Target section of the `doct' docstring for details."
 				      "\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
                           (:title . ((:meta "citation_title")
                                      "<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
-  "Alist holding rules used by `org-capture-ref-parse-generic' to populate common BiBTeX fields from html.
-Keys of the alist are the field names (example: `:author') and the values are lists of regexps or `org-capture-ref-query-dom' rules.
-The regexps are searched one by one in the html buffer and the group 1 match is used as value in the BiBTeX field."
+  "Alist holding rules to populate common BiBTeX fields from html.
+Used by `org-capture-ref-parse-generic'
+
+Keys of the alist are the field names (example: `:author') and the
+values are lists of regexps or `org-capture-ref-query-dom' rules. The
+regexps are searched one by one in the html buffer and the group 1
+match is used as value in the BiBTeX field."
   :group 'org-capture-ref
   :type '(alist :key-type symbol :value-type (set string (set symbol string))))
 
@@ -545,21 +565,23 @@ This variable affects `org-capture-ref-check-url' and `org-capture-ref-check-lin
 `%s' is replaced by the url.
 The value must be an alist of `org-capture-ref-check-regexp-method' and the corresponding regexp.")
 
-(defcustom org-capture-ref-collection-types '("playlist"
-                               "author"
-                               "proceedings"
-                               "book"
-                               "bookseries"
-                               "collection")
-  "List of bibtex item types (or typealt) that can contain subordinate
-  items."
+(defcustom org-capture-ref-collection-types
+  '("playlist"
+    "author"
+    "proceedings"
+    "book"
+    "bookseries"
+    "collection")
+  "List of bibtex item types (or typealt) that can contain subordinate items."
   :type '(list string)
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-fetch-collections t
-  "Whe non-nil and `org-capture-ref-capture-template-set-p' is set, try
-capture items from currently captured URL with :type or :typealt
-from `org-capture-ref-collection-types'"
+  "When non-nil, try capture items from currently captured URL.
+
+Only takes effect when `org-capture-ref-capture-template-set-p' is set
+and when :type or :typealt are listed in
+`org-capture-ref-collection-types'."
   :type 'boolean
   :group 'org-capture-ref)
 
@@ -573,7 +595,7 @@ Each function is expected to call relevant capture functions like
   :group 'org-capture-ref)
 
 (defcustom org-capture-ref-warn-when-using-generic-parser t
-  "Non-nil means warn user if some fields are trying to be parsed using generic parser.
+  "Non-nil means warn user when using generic metadata parser.
 `debug' means show all the details."
   :type 'boolean
   :group 'org-capture-ref)
@@ -624,20 +646,29 @@ This calls `org-capture-ref-get-buffer-functions'."
 
 (defun org-capture-ref-query-dom (&rest query)
   "Query a dom element text from the website.
+
 QUERY format:
-:dom|:return-dom|:tag|:class|:id|:attr|:join|:meta|:apply value [:tag|:class|:id|:attr|:join value|:apply]...
-Value is a symbol, regexp, or regexp when matching for tag,
-class, or id respectively.
-Value can be either a symbol or a cons (symbol . string) for :attr. If
-value is a symbol, return the value of attribute represented by that
-symbol. If value is the cons search dom elements with attribute value
-equal to the strin in the cons.
+ :dom|:return-dom|:tag|:class|:id|:attr|:join|:meta|:apply value
+ [:tag|:class|:id|:attr|:join value|:apply]...
+
+Value is a symbol, regexp, or regexp when matching for tag, class, or
+id respectively. Value can be either a symbol or a cons (symbol .
+string) for :attr. If value is a symbol, return the value of attribute
+represented by that symbol. If value is the cons search dom elements
+with attribute value equal to the strin in the cons.
+
 :join sets a string to join multiple match. \" \" by default.
+
 :dom sets dom to parse (default: org-capture-ref-get-dom).
-:return-dom forces return value to be a DOM element instead of string when non-nil.
+
+:return-dom forces return value to be a DOM element instead of string
+when non-nil.
+
 :meta runs query to html metadata. All other query fields (except
 :join) are ignored then. :meta must be the first symbol in the query.
-:apply applies provided function symbol to the result of preceding query."
+
+:apply applies provided function symbol to the result of preceding
+query."
   (save-match-data
     (let ((dom (if (eq ':dom (car query))
                    (prog1 (cadr query)
@@ -728,7 +759,7 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
     (if (string-empty-p ans) nil ans)))
 
 (defun org-capture-ref-extract-year-from-string (string-or-dom)
-  "Extract year from date string or DOM element."
+  "Extract year from STRING-OR-DOM date string or DOM element."
   (let ((string (cond
                  ((stringp string-or-dom) string-or-dom)
                  ((stringp (car string-or-dom)) (mapconcat #'identity string-or-dom ""))
@@ -737,7 +768,7 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
       (match-string 0 string))))
 
 (defun org-capture-ref-parse-timestamp (time)
-  "Parse ISO8601 timestamp string.
+  "Parse ISO8601 TIME string.
 
 See https://en.wikipedia.org/wiki/ISO_8601.
 
@@ -802,9 +833,9 @@ Bypass VAL check when FORCE is non-nil."
 (defun org-capture-ref-set-capture-info (key val)
   "Set KEY in capture info to VAL.
   
-The KEY set here will be passed down to org-capture via
-`org-store-link-plist'.
-See docstring of `org-capture-ref--store-link-plist' for possible KEYs."
+The KEY set here will be passed down to `org-capture' via
+`org-store-link-plist'. See docstring of
+`org-capture-ref--store-link-plist' for possible KEYs."
   (plist-put org-capture-ref--store-link-plist key val))
 
 ;;; Predefined functions
@@ -901,7 +932,7 @@ https://www.rssboard.org/rss-autodiscovery, but BASE is ignored."
 ;; Getting BiBTeX
 
 (defun org-capture-ref-get-bibtex-from-emacs-buffer ()
-  "Run `org-capture-ref-get-bibtex-from-emacs-buffer-functions'.'"
+  "Run `org-capture-ref-get-bibtex-from-emacs-buffer-functions'."
   (let ((mk (org-capture-ref-get-capture-info '(:query :buffer-marker))))
     (when mk
       (org-with-point-at mk
@@ -1057,8 +1088,8 @@ The value will be inactive org timestamp."
     (org-capture-ref-set-bibtex-field :created stamp)))
 ;;;; Capturing collections (playlist, author pages, book seried, etc)
 (defun org-capture-ref-fetch-collection-maybe ()
-  "Capture additional entries belonging to current entry that is from
-`org-capture-ref-collection-types'.
+  "Capture additional entries belonging to current entry.
+Only consider entries of `org-capture-ref-collection-types'.
 
 This does nothing when `org-capture-ref-capture-template-set-p' is nil."
   (when (and org-capture-ref-capture-template-set-p
@@ -2079,7 +2110,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 
 ;;;; Capturing from elfeed
 (defun org-capture-ref-get-bibtex-generic-elfeed (entry)
-  "Parse generic elfeed capture and generate bibtex entry."
+  "Parse generic elfeed ENTRY and generate bibtex."
   (require 'elfeed-db)
   (unless (org-capture-ref-get-bibtex-field :url)
     (org-capture-ref-set-bibtex-field :url (elfeed-entry-link entry)))
@@ -2098,7 +2129,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
     (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date entry)))))
 
 (defun org-capture-ref-get-bibtex-habr-elfeed (entry)
-  "Fix title in habr elfeed entries.
+  "Fix title in habr elfeed ENTRY.
 This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed'."
   ;; Habr RSS adds indication if post is translated or from sandbox,
   ;; but it is not the case in the website. Unifying to make it
@@ -2111,7 +2142,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
     (throw :finish t)))
 
 (defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (_)
-  "Populate author for https://rgoswami.me"
+  "Populate author for <https://rgoswami.me>."
   (when (s-match "rgoswami\\.me" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :author "Rohit Goswami")))
 
@@ -2426,7 +2457,7 @@ The overridden autokey customisations are:
     (replace-match "\n\n")))
 
 (defun org-capture-ref-replace-% ()
-  "Escape % chars to avoid confusing org-capture."
+  "Escape % chars to avoid confusing `org-capture'."
   (goto-char 1)
   (while (re-search-forward "%[^%]" nil 'noerror)
     (replace-match "")))
@@ -2471,15 +2502,16 @@ The overridden autokey customisations are:
 ;;; Message functions
 
 (defun org-capture-ref-message-emacs (msg &optional severity)
-  "Show message in Emacs."
+  "Show message MSG in Emacs according to SEVERITY."
   (pcase severity
     (`error (user-error "%s" msg))
     (`warning (message "%s" msg))
     (_ (message "%s" msg))))
 
 (defun org-capture-ref-message-qutebrowser (msg &optional severity)
-  "Show message in qutebrowser assuming that qutebrowser fifo is
-avaible in :query -> :qutebrowser-fifo capture info."
+  "Show message MSG in qutebrowser according to SEVERITY.
+Assume that qutebrowser fifo is avaible in :query -> :qutebrowser-fifo
+capture info."
   (when-let  ((fifo (org-capture-ref-get-capture-info '(:query :qutebrowser-fifo)))
               (msg (replace-regexp-in-string "'" "՚" msg)))
     (pcase severity
@@ -2494,7 +2526,7 @@ avaible in :query -> :qutebrowser-fifo capture info."
 				      (format "echo \"message-info '%s'\" >> %s" msg fifo))))))
 
 (defun org-capture-ref-message (msg &optional severity)
-  "Send messages via `org-capture-ref-message-functions'."
+  "Send message MSG with SEVERITY via `org-capture-ref-message-functions'."
   (run-hook-with-args 'org-capture-ref-message-functions msg severity))
 
 ;;; Verifying BiBTeX to be suitable for Org environment
@@ -2522,9 +2554,9 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-regexp-method: %s" org-capture-ref-check-regexp-method) 'error))))
 
 (defvar org-capture-ref--org-agenda-files-cached nil
-  "Cached value of `org-agenda-files' from previous run.")
+  "Cached value of variable `org-agenda-files' from previous run.")
 (defvar org-capture-ref--org-agenda-files-and-archives-cached nil
-  "Cached value of `org-agenda-files' + archives from previous run.")
+  "Cached value of variable `org-agenda-files' + archives from previous run.")
 (defun org-capture-ref-check-regexp-grep (regexp &optional dont-show-match-p)
   "Check if REGEXP exists in org files using grep.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
@@ -2905,14 +2937,27 @@ First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
   
 The following keys are recognized by generic parser (though all
 available keys can be accessed by user-defined parsers):
-:link                 Captured link
-:description          Page title, as given to `org-capture'
-:query                Query provided to `org-protocol-capture'. The following special fields are recognized:
-  :html               Path to html file containing the page. Providing
-                      this will speed up processing since there will be no need to download
-                      the link contents.
-  :qutebrowser-fifo   Path to FIFO communicating with qutebrowser instance
-  :elfeed-data        Elfeed entry containing the information about captured URL.")
+
+`:link'
+Captured link
+
+`:description'
+Page title, as given to `org-capture'
+
+`:query'
+Query provided to `org-protocol-capture'.
+
+The following special fields are recognized:
+
+`:html'
+Path to html file containing the page. Providing this will speed up
+processing since there will be no need to download the link contents.
+
+`:qutebrowser-fifo'
+Path to FIFO communicating with qutebrowser instance.
+
+`:elfeed-data'
+Elfeed entry containing the information about captured URL.")
 
 (defvar org-capture-ref--bibtex-alist nil
   "Alist containing bibtex fields for the webpage being captured.
@@ -3038,7 +3083,8 @@ The entry will not have leading stars.
 The function uses `org-bibtex-write' internally. Relevant
 customisations may apply.
 Overridden customisations:
-- `org-bibtex-headline-format-function' = `org-capture-ref-headline-format-function'
+- `org-bibtex-headline-format-function' =
+  `org-capture-ref-headline-format-function'
 - `org-bibtex-key-property' = \"ID\"."
   (require 'ol-bibtex)
   (with-temp-buffer
@@ -3077,8 +3123,12 @@ Overridden customisations:
 
 (defun org-capture-ref-capture-url (url &optional interactive-capture)
   "Capture URL using `org-capture-ref-capture-template'.
-With `\\[universal-argument]' argument, use interactive version of the template.
-With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
+
+With `\\[universal-argument]' argument, use interactive version of the
+template. With `\\[universal-argument] \\[universal-argument]' argument,
+update heading at point.
+
+When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
   (interactive (list (read-string "URL: " (thing-at-point 'url t))
                      current-prefix-arg))
   (unless org-capture-ref-capture-template-set-p
@@ -3093,8 +3143,11 @@ With `\\[universal-argument] \\[universal-argument]' argument, update heading at
 
 (defun org-capture-ref-capture-doi (doi &optional interactive-capture)
   "Capture DOI using `org-capture-ref-capture-template'.
-With prefix argument, use interactive version of the template.
-With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
+With prefix argument, use interactive version of the template. With
+`\\[universal-argument] \\[universal-argument]' argument, update heading
+at point.
+
+When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
   (interactive "sDOI: \nP")
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
@@ -3108,8 +3161,11 @@ With `\\[universal-argument] \\[universal-argument]' argument, update heading at
 
 (defun org-capture-ref-capture-isbn (isbn &optional interactive-capture)
   "Capture ISBN using `org-capture-ref-capture-template'.
-With prefix argument, use interactive version of the template.
-With `\\[universal-argument] \\[universal-argument]' argument, update heading at point."
+With prefix argument, use interactive version of the template. With
+`\\[universal-argument] \\[universal-argument]' argument, update heading
+at point.
+
+When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
   (interactive "sISBN: \nP")
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
@@ -3122,8 +3178,8 @@ With `\\[universal-argument] \\[universal-argument]' argument, update heading at
          :url (format "https://www.ebook.de/de/tools/isbn2bibtex?isbn=%s" isbn))))
 
 (defun org-capture-ref-capture-at-point (interactive-capture)
-  "Capture object at point using `org-capture-ref-capture-template'
-With prefix argument, use interactive version of the template."
+  "Capture object at point using `org-capture-ref-capture-template'.
+When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
   (interactive "P")
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
