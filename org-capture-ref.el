@@ -3054,7 +3054,8 @@ used inside capture template."
         (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-fetch-collection-maybe 100)
 	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX..."))
         ;; Early check if the entry is already captured.
-        (org-capture-ref-check-bibtex)
+        (unless (org-capture-ref-get-capture-info '(:query :force))
+          (org-capture-ref-check-bibtex))
 	(org-capture-ref-get-bibtex)
         (unless (org-capture-ref-get-bibtex-field :key)
 	  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
@@ -3067,7 +3068,8 @@ used inside capture template."
             (org-back-to-heading)
             (org-capture-ref-get-bibtex-org-heading)
             (add-hook 'org-capture-after-finalize-hook #'org-capture-ref-update-heading-maybe 100)))
-	(org-capture-ref-check-bibtex)
+	(unless (org-capture-ref-get-capture-info '(:query :force))
+          (org-capture-ref-check-bibtex))
 	(unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Capturing BiBTeX... done"))
         (org-capture-ref-message
          (format "Captured: %s"
@@ -3179,15 +3181,19 @@ When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
 
 (defun org-capture-ref-capture-at-point (interactive-capture)
   "Capture object at point using `org-capture-ref-capture-template'.
-When INTERACTIVE-CAPTURE is non-nil, use interactive capture template."
+With prefix argument INTERACTIVE-CAPTURE `\\[universal-argument]' use
+interactive capture template. With `\\[universal-argument]
+\\[universal-argument]' argument, force new capture, even when
+duplicate is found (presumably, as false-positive)."
   (interactive "P")
   (unless org-capture-ref-capture-template-set-p
     (user-error "Please, set default capture template with `org-capture-ref-set-capture-template'"))
   (org-protocol-capture
-   (list :template (if interactive-capture
+   (list :template (if (eq interactive-capture '(4))
                        (car org-capture-ref-capture-keys)
                      (cadr org-capture-ref-capture-keys))
-         :buffer-marker (point-marker))))
+         :buffer-marker (point-marker)
+         :force t)))
 
 (defun org-capture-ref-get-bibtex-from-url (url)
   "Generate BiBTeX from URL without capture."
