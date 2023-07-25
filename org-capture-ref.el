@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (f "0.20.0") (org "9.3") (persid) (doct "3.1.0"))
+;; Package-Requires: ((s "1.12.0") (org "9.3") (persid) (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,6 @@
 (require 'dom)
 (require 'dash)
 (require 's)
-(require 'f)
 ;;; Customization:
 
 (defgroup org-capture-ref nil
@@ -282,7 +281,7 @@ or a symbol representing the metadata to be used as a tag."
   :type '(repeat (choice string symbol))
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-capture-target `(:file ,(f-join org-directory "inbox.org"))
+(defcustom org-capture-ref-capture-target `(:file ,(file-name-concat org-directory "inbox.org"))
   "Capture target for `org-capture-ref-capture-template'.
 The specification will be inserted as is into a `doct' template. See
 Target section of the `doct' docstring for details."
