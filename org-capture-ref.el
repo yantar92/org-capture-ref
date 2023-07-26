@@ -300,13 +300,14 @@ Target section of the `doct' docstring for details."
      :fetch-bibtex (lambda () (org-capture-ref-process-capture)) ; this must run first
      :link-type (lambda () (org-capture-ref-get-bibtex-field :type))
      :extra (lambda () (if (org-capture-ref-get-bibtex-field :journal)
-		      (s-join "\n"
-			      '("- [ ] [[elisp:(browse-url (url-encode-url (format \"https://sci-hub.se/%s\" (org-entry-get nil \"DOI\"))))][downlaod and attach pdf]]"
-				"- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
-				"- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
-				"- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
-				"- [ ] check if bibtex entry has missing fields"
-				"- [ ] Consider subscribing to new citations"))
+		      (string-join
+		       '("- [ ] [[elisp:(browse-url (url-encode-url (format \"https://sci-hub.se/%s\" (org-entry-get nil \"DOI\"))))][downlaod and attach pdf]]"
+			 "- [ ] [[elisp:org-attach-open][read paper capturing interesting references]]"
+			 "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.semanticscholar.org/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check citing articles]]"
+			 "- [ ] [[elisp:(browse-url (url-encode-url (format \"https://www.connectedpapers.com/search?q=%s\" (org-entry-get nil \"TITLE\"))))][check related articles]]"
+			 "- [ ] check if bibtex entry has missing fields"
+			 "- [ ] Consider subscribing to new citations")
+                       "\n")
 		    ""))
      :org-entry (lambda () (org-capture-ref-get-org-entry))
      :template
@@ -797,8 +798,8 @@ query."
              dom
            (unless (and (listp dom) (or (listp (car dom)) (stringp (car dom)))) (setq dom (list dom)))
            (if (stringp (car dom))
-               (s-join separator (mapcar #'s-trim (delete "" dom)))
-             (s-join separator (mapcar #'s-trim (delete "" (mapcar #'dom-texts dom))))))
+               (string-join (mapcar #'s-trim (delete "" dom)) separator)
+             (string-join (mapcar #'s-trim (delete "" (mapcar #'dom-texts dom))) separator)))
          'utf-8)))))
 
 (defun org-capture-ref-query-opengraph (key &optional separator)
@@ -808,13 +809,14 @@ See https://ogp.me/ for possible KEY values.
 SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
   (when (symbolp key) (setq key (symbol-name key)))
   (setq key (s-concat "og:" key))
-  (let ((ans (s-join (or separator " and ")
-                     (mapcar (lambda (node) (dom-attr node 'content))
-                             (dom-search (org-capture-ref-get-dom)
-                                         (lambda (node)
-                                           (and (eq (car node) 'meta)
-                                                (or (string= key (dom-attr node 'property))
-                                                    (string= key (dom-attr node 'name))))))))))
+  (let ((ans (string-join
+              (mapcar (lambda (node) (dom-attr node 'content))
+                      (dom-search (org-capture-ref-get-dom)
+                                  (lambda (node)
+                                    (and (eq (car node) 'meta)
+                                         (or (string= key (dom-attr node 'property))
+                                             (string= key (dom-attr node 'name)))))))
+              (or separator " and "))))
     (if (string-empty-p ans) nil ans)))
 
 (defun org-capture-ref-query-meta (key &optional separator)
@@ -822,14 +824,15 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
 The KEY can be a symbol or string.
 SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
   (when (symbolp key) (setq key (symbol-name key)))
-  (let ((ans (s-join (or separator " and ")
-                     (mapcar (lambda (node) (replace-regexp-in-string " +" " " (dom-attr node 'content)))
-                             (dom-search (org-capture-ref-get-dom)
-                                         (lambda (node)
-                                           (and (eq (car node) 'meta)
-                                                (or (string= key (dom-attr node 'property))
-                                                    (string= key (dom-attr node 'itemprop)) ;; i.e. for Youtube video duration
-                                                    (string= key (dom-attr node 'name))))))))))
+  (let ((ans (string-join
+              (mapcar (lambda (node) (replace-regexp-in-string " +" " " (dom-attr node 'content)))
+                      (dom-search (org-capture-ref-get-dom)
+                                  (lambda (node)
+                                    (and (eq (car node) 'meta)
+                                         (or (string= key (dom-attr node 'property))
+                                             (string= key (dom-attr node 'itemprop)) ;; i.e. for Youtube video duration
+                                             (string= key (dom-attr node 'name)))))))
+              (or separator " and "))))
     (if (string-empty-p ans) nil ans)))
 
 (defun org-capture-ref-extract-year-from-string (string-or-dom)
@@ -1526,15 +1529,16 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-unless-set '(:url :author :title :year)
 	(with-current-buffer (org-capture-ref-get-buffer)
 	  ;; Find authors
-          (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom
-                                      :class "tm-article-presenter__header"
-                                      :class "tm-article-snippet__author"
-                                      :class "user-info__username"))
+          (org-capture-ref-set-bibtex-field
+           :author (org-capture-ref-query-dom
+		    :class "tm-article-presenter__header"
+		    :class "tm-article-snippet__author"
+		    :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
             (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
               (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
-              (setq authors (s-join ", " authors))
+              (setq authors (string-join authors ", "))
               (org-capture-ref-set-bibtex-field :author authors)))
 	  ;; Find title
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :meta 'og:title))
@@ -2192,13 +2196,15 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
     (let ((authors (plist-get (elfeed-entry-meta entry) :authors)))
       (setq authors (mapcar #'cadr authors))
       (if authors
-	  (org-capture-ref-set-bibtex-field :author (s-join ", " authors))
+	  (org-capture-ref-set-bibtex-field :author (string-join authors ", "))
 	;; fallback to feed title
 	(org-capture-ref-set-bibtex-field :author (elfeed-feed-title (elfeed-entry-feed entry))))))
   (unless (org-capture-ref-get-bibtex-field :title)
     (org-capture-ref-set-bibtex-field :title (elfeed-entry-title entry)))
   (unless (org-capture-ref-get-bibtex-field :keywords)
-    (org-capture-ref-set-bibtex-field :keywords (s-join ", " (plist-get (elfeed-entry-meta entry) :categories))))
+    (org-capture-ref-set-bibtex-field
+     :keywords
+     (string-join (plist-get (elfeed-entry-meta entry) :categories) ", ")))
   (unless (org-capture-ref-get-bibtex-field :year)
     (org-capture-ref-set-bibtex-field :year (format-time-string "%Y" (elfeed-entry-date entry)))))
 
