@@ -808,7 +808,7 @@ The KEY can be a symbol or string not prefixed with og:.
 See https://ogp.me/ for possible KEY values.
 SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
   (when (symbolp key) (setq key (symbol-name key)))
-  (setq key (s-concat "og:" key))
+  (setq key (concat "og:" key))
   (let ((ans (string-join
               (mapcar (lambda (node) (dom-attr node 'content))
                       (dom-search (org-capture-ref-get-dom)
@@ -1598,17 +1598,20 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :id "^work-names-unit$" :attr '(itemprop . "author")))
-      (org-capture-ref-set-bibtex-field :title (s-concat (org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
-                                          (let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
-                                            (cond
-                                             ((seq-empty-p extra-title)
-                                              "")
-                                             ((string-match (rx (or "год" "цикл")) extra-title)
-                                              "")
-                                             ((string-match (rx "Другие названия: " (group (1+ nonl))) extra-title)
-                                              (format " / %s" (match-string 1 extra-title)))
-                                             (t
-                                              (format " / %s" extra-title))))))
+      (org-capture-ref-set-bibtex-field
+       :title
+       (concat
+	(org-capture-ref-query-dom :join " / " :id "^work-names-unit$" :attr '(itemprop . "name"))
+	(let ((extra-title (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'car)))
+	  (cond
+	   ((seq-empty-p extra-title)
+	    "")
+	   ((string-match (rx (or "год" "цикл")) extra-title)
+	    "")
+	   ((string-match (rx "Другие названия: " (group (1+ nonl))) extra-title)
+	    (format " / %s" (match-string 1 extra-title)))
+	   (t
+	    (format " / %s" extra-title))))))
       (when (let ((case-fold-search nil)) (string-match-p "Цикл" (org-capture-ref-query-dom :id "^work-names-unit$" :tag 'p :apply #'cadr)))
         (org-capture-ref-set-bibtex-field :title (format "Series: %s" (org-capture-ref-get-bibtex-field :title)))
         (org-capture-ref-set-bibtex-field :type "misc")
