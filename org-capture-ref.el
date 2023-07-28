@@ -903,7 +903,7 @@ FIELD must be a symbol like `:author'.
 See `org-capture-ref--bibtex-alist' for common field names.
 If VAL is empty string, do not do anything.
 Bypass VAL check when FORCE is non-nil."
-  (when (stringp val) (setq val (s-trim val)))
+  (when (stringp val) (setq val (string-trim val)))
   (unless (and (not force) (or (and (stringp val) (string-empty-p val)) (not val)))
     (setf (alist-get field org-capture-ref--bibtex-alist) val)))
 
@@ -1723,7 +1723,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
         (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;]+?\\)\\(?:(\\|More details...\\|Original title\\)\\)" details)
-          (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (s-trim (match-string 2 details))))
+          (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (string-trim (match-string 2 details))))
           (org-capture-ref-set-bibtex-field :year (match-string 1 details))))
       (throw :finish t))))
 
@@ -2454,7 +2454,7 @@ The overridden autokey customisations are:
    (s-format org-capture-ref-default-bibtex-template
 	     (lambda (key &optional _)
 	       (or (and (org-capture-ref-get-bibtex-field (intern key))
-                        (s-trim (replace-regexp-in-string "[{}]" "" (org-capture-ref-get-bibtex-field (intern key)))))
+                        (string-trim (replace-regexp-in-string "[{}]" "" (org-capture-ref-get-bibtex-field (intern key)))))
 		   ""))
 	     org-capture-ref--bibtex-alist)))
 
