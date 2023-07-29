@@ -1106,7 +1106,7 @@ Return nil if DOI record is not found."
           (org-capture-ref-message (format "Retrieving DOI record %s ... failed. %S" doi (match-string 0 bibtex-string)) 'error))
         (if (not bibtex-string)
             (prog1 nil
-              (if (-any-p (lambda (regexp) (s-match regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
+              (if (-any-p (lambda (regexp) (string-match-p regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                   (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceeding with fallback options." doi) 'warning)))
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving DOI record... done"))
@@ -1518,7 +1518,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-habr ()
   "Parse Habrahabr link and generate BiBTeX entry."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "\\(?:habr\\.com\\|geektimes\\.ru\\)" link)
+    (when (string-match-p "\\(?:habr\\.com\\|geektimes\\.ru\\)" link)
       ;; Unify company blog articles and normal articles
       (setq link (replace-regexp-in-string "company/[^/]+/blog/" "post/" link))
       (setq link (replace-regexp-in-string "/\\?[^/]+$" "/" link))
@@ -1556,7 +1556,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (and (string-match "\\(?:samlib\\|budclub\\)\\.ru/\\(?:editors/\\)?[a-z]/[^/]+/\\(.+html\\)" link)
                (match-string 1 link)
-               (not (s-match "index\\(title\\)?" (match-string 1 link))))
+               (not (string-match-p "index\\(title\\)?" (match-string 1 link))))
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "budclub" "samlib" link))
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Samlib")
@@ -1573,7 +1573,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-fantlab-author ()
   "Generate BiBTeX for a fantlab.ru author page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "fantlab\\.ru/autor" link)
+    (when (string-match-p "fantlab\\.ru/autor" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "misc")
       (org-capture-ref-set-bibtex-field :typealt "author")
@@ -1590,7 +1590,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-fantlab-work ()
   "Generate BiBTeX for a fantlab.ru book page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "fantlab\\.ru/work" link)
+    (when (string-match-p "fantlab\\.ru/work" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
@@ -1622,7 +1622,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-fantlab-edition ()
   "Generate BiBTeX for a fantlab.ru book edition page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "fantlab\\.ru/edition" link)
+    (when (string-match-p "fantlab\\.ru/edition" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :howpublished "Fantlab")
       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-dom :class "^titles-block-center$" :class "^isbn$"))
@@ -1639,7 +1639,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-fanfics-me ()
   "Generate BiBTeX for an fanfics.me/fic* book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "fanfics\\.me/fic" link)
+    (when (string-match-p "fanfics\\.me/fic" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Fanfics.me")
@@ -1655,7 +1655,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-authortoday-work ()
   "Generate BiBTeX for an author.today/work book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "author\\.today/work" link)
+    (when (string-match-p "author\\.today/work" link)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "?[^?]+$" "" link))
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
@@ -1678,7 +1678,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-authortoday-post ()
   "Generate BiBTeX for an author.today/post post."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "author\\.today/\\(?:post\\|review\\)" link)
+    (when (string-match-p "author\\.today/\\(?:post\\|review\\)" link)
       (org-capture-ref-set-bibtex-field :url (replace-regexp-in-string "?[^?]+$" "" link))
       (org-capture-ref-set-bibtex-field :howpublished "Author.Today")
       (org-capture-ref-set-bibtex-field :publisher "Author.Today")
@@ -1692,7 +1692,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-ficbook ()
   "Generate BiBTeX for an ficbook.net book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "ficbook\\.net" link)
+    (when (string-match-p "ficbook\\.net" link)
       (when (string-match "^.+ficbook\\.net/readfic/[^/#]+" link)
         (setq link (match-string 0 link)))
       (org-capture-ref-set-bibtex-field :url link)
@@ -1711,7 +1711,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-goodreads ()
   "Generate BiBTeX for Goodreads book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "goodreads\\.com/book" link)
+    (when (string-match-p "goodreads\\.com/book" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
       (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-meta 'books:isbn))
@@ -1730,7 +1730,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-amazon ()
   "Generate BiBTeX for Amazon book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "amazon\\." link)
+    (when (string-match-p "amazon\\." link)
       (org-capture-ref-set-bibtex-field :url link)
       (when-let ((isbn-line (seq-find (lambda (str) (s-contains-p "ISBN-10" str))
                                       (mapcar #'dom-texts
@@ -1755,12 +1755,12 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
           (org-capture-ref-set-bibtex-field :isbn (match-string 1 isbn-line))))
       (unless (org-capture-ref-get-bibtex-from-isbn)
         ;; Parse books
-        (when (or (s-match ": Books$" (org-capture-ref-query-dom :meta "title"))
-                  (s-match ": Audible Audiobooks$" (org-capture-ref-query-dom :meta "title")))
+        (when (or (string-match-p ": Books$" (org-capture-ref-query-dom :meta "title"))
+                  (string-match-p ": Audible Audiobooks$" (org-capture-ref-query-dom :meta "title")))
           (org-capture-ref-set-bibtex-field :type "book")
           (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
           (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^productTitle$"))
-          (org-capture-ref-set-bibtex-field :author (when (s-matches-p "Author" (org-capture-ref-query-dom :class "author" :class "contribution"))
+          (org-capture-ref-set-bibtex-field :author (when (string-match-p "Author" (org-capture-ref-query-dom :class "author" :class "contribution"))
                                        (let ((author (org-capture-ref-query-dom :class "author" :class "contributorNameID")))
                                          (if (string-empty-p author)
                                              (org-capture-ref-query-dom :id "bylineInfo" :class "author" :class "a-link-normal" :tag 'a :apply #'car)
@@ -1780,7 +1780,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 (defun org-capture-ref-get-bibtex-steam ()
   "Generate BiBTeX for Steam page."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
-    (when (s-match "store\\.steampowered\\.com/app/" link)
+    (when (string-match-p "store\\.steampowered\\.com/app/" link)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "misc")
       (org-capture-ref-set-bibtex-field :typealt "game")
@@ -2217,7 +2217,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   ;; Habr RSS adds indication if post is translated or from sandbox,
   ;; but it is not the case in the website. Unifying to make it
   ;; consistent.
-  (when (s-match "habr\\.com" (org-capture-ref-get-bibtex-field :url))
+  (when (string-match-p "habr\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
     (org-capture-ref-get-bibtex-generic-elfeed entry)
@@ -2226,12 +2226,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 (defun org-capture-ref-get-bibtex-rgoswami-elfeed-fix-author (_)
   "Populate author for <https://rgoswami.me>."
-  (when (s-match "rgoswami\\.me" (org-capture-ref-get-bibtex-field :url))
+  (when (string-match-p "rgoswami\\.me" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :author "Rohit Goswami")))
 
 (defun org-capture-ref-get-bibtex-reddit-elfeed-fix-howpublished (_)
   "Mention subreddit in :howpublished."
-  (when (s-match "\\(old\\.\\)?reddit\\.com" (org-capture-ref-get-bibtex-field :url))
+  (when (string-match-p "\\(old\\.\\)?reddit\\.com" (org-capture-ref-get-bibtex-field :url))
     (org-capture-ref-set-bibtex-field :howpublished
 		       (format "%s:%s"
 			       (org-capture-ref-get-bibtex-field :howpublished)
