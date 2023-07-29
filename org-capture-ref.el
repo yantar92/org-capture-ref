@@ -3276,7 +3276,7 @@ duplicate is found (presumably, as false-positive)."
                        (car org-capture-ref-capture-keys)
                      (cadr org-capture-ref-capture-keys))
          :buffer-marker (point-marker)
-         :force t)))
+         :force (eq interactive-capture '(16)))))
 
 (defun org-capture-ref-get-bibtex-from-url (url)
   "Generate BiBTeX from URL without capture."
