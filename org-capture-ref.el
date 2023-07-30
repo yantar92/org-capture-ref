@@ -1187,7 +1187,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-new-url link))
       (let ((urls (mapcar
                    (-partial #'concat "https://www.youtube.com")
-                   (s-split "\n" (org-capture-ref-query-dom :join "\n" :class "ytd-grid-renderer" :id "video-title" :attr 'href)))))
+                   (string-split (org-capture-ref-query-dom :join "\n" :class "ytd-grid-renderer" :id "video-title" :attr 'href) "\n"))))
         (when (equal (list "https://www.youtube.com") urls)
           (org-capture-ref-message "Failed to parse Youtube page. Is it not captured from browser?" :error))
         (mapc (lambda (url)
@@ -1536,7 +1536,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 		    :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
-            (let ((authors (s-split "," (s-collapse-whitespace (s-replace "\n" "" (match-string 1))))))
+            (let ((authors (string-split (s-collapse-whitespace (s-replace "\n" "" (match-string 1))) ",")))
               (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
               (setq authors (string-join authors ", "))
               (org-capture-ref-set-bibtex-field :author authors)))
@@ -2155,7 +2155,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (mapc (lambda (isbn)
                 (org-capture-ref-set-bibtex-field :isbn isbn)
                 (org-capture-ref-get-bibtex-from-isbn))
-              (s-split "\n" isbns))))))
+              (string-split isbns "\n"))))))
 
 (defun org-capture-ref-get-bibtex-doi ()
   "Generate BiBTeX for an actual doi.org link."
@@ -2897,8 +2897,8 @@ capture template."
                           (?n nil)
                           (?m (pcase (car prop)
                                 ("TAGS"
-                                 (let ((old-tags (s-split ":" (org-entry-get nil (car prop)) t))
-                                       (new-tags (s-split ":" (cdr prop) t)))
+                                 (let ((old-tags (string-split (org-entry-get nil (car prop)) ":" t))
+                                       (new-tags (string-split (cdr prop) ":" t)))
                                    (org-set-tags (cl-remove-duplicates (seq-filter #'identity (append old-tags new-tags)) :test #'string=))))
                                 (_ (error "Unhandled case"))))
                           (?c (setq org-capture-ref-update-heading-history (list (org-entry-get nil (car prop)) (cdr prop)))
@@ -2973,12 +2973,12 @@ capture template."
 First author, last author [Journal|School|Publisher|Howpublished] (Year) Title"
   (format "%s%s%s%s"
 	  (or (when (org-capture-ref-get-bibtex-field :author)
-                (let* ((authors (s-split " +and +" (string-clean-whitespace (org-capture-ref-get-bibtex-field :author))))
+                (let* ((authors (string-split (string-clean-whitespace (org-capture-ref-get-bibtex-field :author)) " +and +"))
 		       (author-surnames (mapcar (lambda (author)
                                                   (cond
                                                    ((string-match (rx (group (1+ (not whitespace))) ",") author)
                                                     (match-string 1 author))
-                                                   (t (car (last (s-split " +" author))))))
+                                                   (t (car (last (string-split author " +"))))))
 						authors)))
                   (unless (string= "article" (org-capture-ref-get-bibtex-field :type))
                     (setq author-surnames (mapcar
