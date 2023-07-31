@@ -1308,9 +1308,11 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-author user-mention$"))
-        (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
-                                           (s-truncate 10 commit-number)
-                                           (org-capture-ref-query-dom :class "commit-title")))
+        (org-capture-ref-set-bibtex-field
+         :title
+         (format "Commit(%s): %s"
+                 (truncate-string-to-width commit-number 10 nil nil t)
+                 (org-capture-ref-query-dom :class "commit-title")))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'relative-time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" commit-repo))
         (throw :finish t)))))
@@ -1337,7 +1339,13 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
           (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
           ;; Find author
           (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id comment-id :class "author"))
-          (org-capture-ref-set-bibtex-field :title (format "comment on issue#%s: %s" issue-number (s-truncate fill-column (car (s-lines (org-capture-ref-query-dom :id comment-id :class "comment-body"))))))
+          (org-capture-ref-set-bibtex-field
+           :title
+           (format "comment on issue#%s: %s"
+		   issue-number
+                   (truncate-string-to-width
+                    (car (s-lines (org-capture-ref-query-dom :id comment-id :class "comment-body")))
+                    fill-column nil nil t)))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id comment-id :class "timestamp" :tag 'relative-time :attr 'datetime :apply #'car :apply #'org-capture-ref-extract-year-from-string))
           (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
           (throw :finish t))
@@ -1432,9 +1440,11 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-author-name$"))
-        (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
-                                           (s-truncate 10 commit-number)
-                                           (org-capture-ref-query-dom :class "^commit-title$")))
+        (org-capture-ref-set-bibtex-field
+         :title
+         (format "Commit(%s): %s"
+                 (truncate-string-to-width commit-number 10 nil nil t)
+                 (org-capture-ref-query-dom :class "^commit-title$")))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^header-main-content$" :class "^js-timeago$" :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "GitLab:%s" commit-repo))
         (throw :finish t)))))
@@ -1448,9 +1458,11 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
         ;; Find author
         (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :class "^commit-info$" :tag 'tr :apply #'car :tag 'td :apply #'car))
-        (org-capture-ref-set-bibtex-field :title  (format "Commit(%s): %s"
-                                           (s-truncate 10 commit-number)
-                                           (org-capture-ref-query-dom :class "^commit-subject$")))
+        (org-capture-ref-set-bibtex-field
+         :title
+         (format "Commit(%s): %s"
+                 (truncate-string-to-width commit-number 10 nil nil t)
+                 (org-capture-ref-query-dom :class "^commit-subject$")))
         (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :class "^commit-info$" :tag 'tr :apply #'car :tag 'td :apply #'cadr :apply #'org-capture-ref-extract-year-from-string))
         (org-capture-ref-set-bibtex-field :howpublished (format "git.savannah.gnu.org:%s" commit-repo))
         (throw :finish t)))))
