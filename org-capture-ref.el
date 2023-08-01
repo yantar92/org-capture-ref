@@ -1344,7 +1344,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
            (format "comment on issue#%s: %s"
 		   issue-number
                    (truncate-string-to-width
-                    (car (s-lines (org-capture-ref-query-dom :id comment-id :class "comment-body")))
+                    (car (string-lines (org-capture-ref-query-dom :id comment-id :class "comment-body")))
                     fill-column nil nil t)))
           (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :id comment-id :class "timestamp" :tag 'relative-time :attr 'datetime :apply #'car :apply #'org-capture-ref-extract-year-from-string))
           (org-capture-ref-set-bibtex-field :howpublished (format "Github:%s" issue-repo))
@@ -2682,7 +2682,7 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 						  (save-excursion
 						    (goto-line line-num)
                                                     (point-marker))))))
-					  (s-lines ans))))))))
+					  (string-lines ans))))))))
     (setq matches (remove nil matches))
     (when matches
       (unless dont-show-match-p
