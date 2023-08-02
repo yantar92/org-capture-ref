@@ -1548,7 +1548,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 		    :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
-            (let ((authors (string-split (s-collapse-whitespace (s-replace "\n" "" (match-string 1))) ",")))
+            (let ((authors (string-split (string-clean-whitespace (s-replace "\n" "" (match-string 1))) ",")))
               (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
               (setq authors (string-join authors ", "))
               (org-capture-ref-set-bibtex-field :author authors)))
