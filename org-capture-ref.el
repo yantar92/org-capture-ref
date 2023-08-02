@@ -4,7 +4,7 @@
 
 ;; Author: Ihor Radchenko <yantar92@gmail.com>
 ;; Version: 0.3
-;; Package-Requires: ((s "1.12.0") (org "9.3") (persid) (doct "3.1.0"))
+;; Package-Requires: ((s "1.12.0") (org "9.3") (persid) (compat) (doct "3.1.0"))
 ;; Keywords: tex, multimedia, bib
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@
 ;;; Code:
 
 (require 'org-capture)
+(require 'compat)
 (require 'persid)
 (require 'url-util)
 (require 'bibtex)
