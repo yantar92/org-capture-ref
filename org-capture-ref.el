@@ -1549,7 +1549,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 		    :class "user-info__username"))
 	  (goto-char (point-min))
 	  (when (re-search-forward "\"article_authors\": \\[\\([^]]+\\)" nil t)
-            (let ((authors (string-split (string-clean-whitespace (s-replace "\n" "" (match-string 1))) ",")))
+            (let ((authors (string-split (string-clean-whitespace (string-replace "\n" "" (match-string 1))) ",")))
               (setq authors (mapcar (apply-partially #'s-replace-regexp "^[ ]*\"\\(.+\\)\"[ ]*$" "\\1") authors))
               (setq authors (string-join authors ", "))
               (org-capture-ref-set-bibtex-field :author authors)))
@@ -1733,7 +1733,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-get-bibtex-from-isbn))
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "metacol" :id "bookAuthors" :join " and " :class "^authorName$"))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
-      (let ((details (s-replace-regexp "  +" " " (s-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
+      (let ((details (s-replace-regexp "  +" " " (string-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
         (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;]+?\\)\\(?:(\\|More details...\\|Original title\\)\\)" details)
           (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (string-trim (match-string 2 details))))
