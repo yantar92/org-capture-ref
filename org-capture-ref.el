@@ -1733,7 +1733,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
         (org-capture-ref-get-bibtex-from-isbn))
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "metacol" :id "bookAuthors" :join " and " :class "^authorName$"))
       (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
-      (let ((details (s-replace-regexp "  +" " " (string-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
+      (let ((details (replace-regexp-in-string "  +" " " (string-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
         
         (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;]+?\\)\\(?:(\\|More details...\\|Original title\\)\\)" details)
           (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (string-trim (match-string 2 details))))
@@ -2231,7 +2231,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
   ;; but it is not the case in the website. Unifying to make it
   ;; consistent.
   (when (string-match-p "habr\\.com" (org-capture-ref-get-bibtex-field :url))
-    (org-capture-ref-set-bibtex-field :title (s-replace-regexp "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))
+    (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string "^\\[[^]]+\\][ ]*" "" (org-capture-ref-get-bibtex-field :title)))
     (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
     (org-capture-ref-get-bibtex-generic-elfeed entry)
     (org-capture-ref-get-bibtex-habr)
