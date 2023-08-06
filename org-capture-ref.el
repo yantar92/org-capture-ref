@@ -684,9 +684,9 @@ Each function is expected to call relevant capture functions like
 (defmacro org-capture-ref-unless-set (fields &rest body)
   "Run BODY unless all BiBTeX FIELDS are set."
   (declare (debug (sexp body)) (indent 1))
-  `(unless (-all-p (lambda (key)
-		     (org-capture-ref-get-bibtex-field key 'consider-placeholder))
-		   ,fields)
+  `(unless (cl-every (lambda (key)
+		       (org-capture-ref-get-bibtex-field key 'consider-placeholder))
+		     ,fields)
      ,@body))
 
 (defun org-capture-ref-set-new-url (url)
