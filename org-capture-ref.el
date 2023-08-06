@@ -56,87 +56,89 @@ These functions will be called only when `org-capture-ref-get-buffer' is invoked
   :type 'hook
   :group 'org-capture-ref)
 
-(defcustom org-capture-ref-get-bibtex-functions '( org-capture-ref-set-default-type
-                                    org-capture-ref-set-access-date
-                                    org-capture-ref-set-access-date-timestamp
-                                    ;; Handle capturing from Emacs buffers
-                                    org-capture-ref-get-bibtex-from-emacs-buffer
-                                    ;; Pull generic data from capture
-                                    org-capture-ref-get-bibtex-url-from-capture-data
-				    org-capture-ref-get-bibtex-howpublished-from-url
-                                    ;; RSS parser
-                                    org-capture-ref-get-rss
-                                    ;; Elfeed parsers
-				    org-capture-ref-get-bibtex-from-elfeed-data
-                                    ;; DOI retrieval
-                                    org-capture-ref-get-bibtex-doi
-                                    org-capture-ref-get-bibtex-isbn
-                                    org-capture-ref-get-bibtex-aps
-                                    org-capture-ref-get-bibtex-springer
-                                    org-capture-ref-get-bibtex-wiley
-                                    org-capture-ref-get-bibtex-tandfonline
-                                    org-capture-ref-get-bibtex-ieee
-                                    org-capture-ref-get-bibtex-semanticscholar
-                                    org-capture-ref-get-bibtex-sciencedirect-article
-                                    org-capture-ref-get-bibtex-sciencemag-careers-article
-                                    org-capture-ref-get-bibtex-nature-careers-article
-                                    org-capture-ref-get-bibtex-proquest
-                                    org-capture-ref-get-bibtex-arxiv
-                                    org-capture-ref-get-bibtex-ams-cn
-                                    org-capture-ref-get-bibtex-ohiolink
-				    ;; Site-specific parsing
-                                    org-capture-ref-get-bibtex-wordpress
-                                    org-capture-ref-get-bibtex-google-scholar-bibtex-page
-                                    org-capture-ref-get-bibtex-wikipedia-book
-                                    org-capture-ref-get-bibtex-wiki
-                                    org-capture-ref-get-bibtex-goodreads
-                                    org-capture-ref-get-bibtex-amazon
-                                    org-capture-ref-get-bibtex-github-commit
-                                    org-capture-ref-get-bibtex-github-issue
-                                    org-capture-ref-get-bibtex-github-pull-request
-                                    org-capture-ref-get-bibtex-github-repo
-                                    org-capture-ref-get-bibtex-github-file
-                                    org-capture-ref-get-bibtex-gitlab-commit
-                                    org-capture-ref-get-bibtex-gitlab-repo
-                                    org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
-                                    org-capture-ref-get-bibtex-gnu-org
-                                    org-capture-ref-get-bibtex-gnu-org-manual
-                                    org-capture-ref-get-bibtex-nullprogram
-                                    org-capture-ref-get-bibtex-srht-repo
-                                    org-capture-ref-get-bibtex-reddit-wiki
-                                    org-capture-ref-get-bibtex-reddit-planetemacs
-                                    org-capture-ref-get-bibtex-reddit-comment
-                                    org-capture-ref-get-bibtex-reddit
-                                    org-capture-ref-get-bibtex-youtube-watch
-                                    org-capture-ref-get-bibtex-youtube-channel
-                                    org-capture-ref-get-bibtex-habr
-                                    org-capture-ref-get-bibtex-weixin
-                                    org-capture-ref-get-bibtex-samlib-book
-                                    org-capture-ref-get-bibtex-fanfics-me
-                                    org-capture-ref-get-bibtex-authortoday-reader
-                                    org-capture-ref-get-bibtex-authortoday-work
-                                    org-capture-ref-get-bibtex-authortoday-post
-                                    org-capture-ref-get-bibtex-fantlab-author
-                                    org-capture-ref-get-bibtex-fantlab-work
-                                    org-capture-ref-get-bibtex-fantlab-edition
-                                    org-capture-ref-get-bibtex-ficbook
-                                    org-capture-ref-get-bibtex-lesswrong
-                                    org-capture-ref-get-bibtex-archive-book
-                                    org-capture-ref-get-bibtex-stallman
-                                    org-capture-ref-get-bibtex-karl-voit
-                                    org-capture-ref-get-bibtex-imdb-movie
-                                    org-capture-ref-get-bibtex-orgmode-ml
-                                    org-capture-ref-get-bibtex-list-gnu-ml
-                                    org-capture-ref-get-bibtex-debbugs
-                                    org-capture-ref-get-bibtex-steam
-                                    org-capture-ref-get-bibtex-google-books
-                                    ;; OpenGraph parser
-                                    org-capture-ref-parse-opengraph
-                                    ;; Try to guess DOI and fetch the
-                                    ;; DOI's BiBTeX.
-                                    org-capture-ref-get-bibtex-from-first-doi
-				    ;; Generic parser
-				    org-capture-ref-parse-generic)
+(defcustom org-capture-ref-get-bibtex-functions
+  '( org-capture-ref-set-default-type
+     org-capture-ref-set-access-date
+     org-capture-ref-set-access-date-timestamp
+     ;; Handle capturing from Emacs buffers
+     org-capture-ref-get-bibtex-from-emacs-buffer
+     ;; Pull generic data from capture
+     org-capture-ref-get-bibtex-url-from-capture-data
+     org-capture-ref-get-bibtex-howpublished-from-url
+     ;; RSS parser
+     org-capture-ref-get-rss
+     ;; Elfeed parsers
+     org-capture-ref-get-bibtex-from-elfeed-data
+     ;; DOI retrieval
+     org-capture-ref-get-bibtex-doi
+     org-capture-ref-get-bibtex-isbn
+     org-capture-ref-get-bibtex-aps
+     org-capture-ref-get-bibtex-springer
+     org-capture-ref-get-bibtex-wiley
+     org-capture-ref-get-bibtex-tandfonline
+     org-capture-ref-get-bibtex-ieee
+     org-capture-ref-get-bibtex-semanticscholar
+     org-capture-ref-get-bibtex-sciencedirect-article
+     org-capture-ref-get-bibtex-sciencemag-careers-article
+     org-capture-ref-get-bibtex-nature-careers-article
+     org-capture-ref-get-bibtex-proquest
+     org-capture-ref-get-bibtex-arxiv
+     org-capture-ref-get-bibtex-ams-cn
+     org-capture-ref-get-bibtex-ohiolink
+     ;; Site-specific parsing
+     org-capture-ref-get-bibtex-wordpress
+     org-capture-ref-get-bibtex-google-scholar-bibtex-page
+     org-capture-ref-get-bibtex-wikipedia-book
+     org-capture-ref-get-bibtex-wiki
+     org-capture-ref-get-bibtex-goodreads
+     org-capture-ref-get-bibtex-amazon
+     org-capture-ref-get-bibtex-github-commit
+     org-capture-ref-get-bibtex-github-issue
+     org-capture-ref-get-bibtex-github-pull-request
+     org-capture-ref-get-bibtex-github-repo
+     org-capture-ref-get-bibtex-github-file
+     org-capture-ref-get-bibtex-gitlab-commit
+     org-capture-ref-get-bibtex-gitlab-repo
+     org-capture-ref-get-bibtex-git-savannah-gnu-org-commit
+     org-capture-ref-get-bibtex-gnu-org
+     org-capture-ref-get-bibtex-gnu-org-manual
+     org-capture-ref-get-bibtex-nullprogram
+     org-capture-ref-get-bibtex-srht-repo
+     org-capture-ref-get-bibtex-reddit-wiki
+     org-capture-ref-get-bibtex-reddit-planetemacs
+     org-capture-ref-get-bibtex-reddit-comment
+     org-capture-ref-get-bibtex-reddit
+     org-capture-ref-get-bibtex-bilibili
+     org-capture-ref-get-bibtex-youtube-watch
+     org-capture-ref-get-bibtex-youtube-channel
+     org-capture-ref-get-bibtex-habr
+     org-capture-ref-get-bibtex-weixin
+     org-capture-ref-get-bibtex-samlib-book
+     org-capture-ref-get-bibtex-fanfics-me
+     org-capture-ref-get-bibtex-authortoday-reader
+     org-capture-ref-get-bibtex-authortoday-work
+     org-capture-ref-get-bibtex-authortoday-post
+     org-capture-ref-get-bibtex-fantlab-author
+     org-capture-ref-get-bibtex-fantlab-work
+     org-capture-ref-get-bibtex-fantlab-edition
+     org-capture-ref-get-bibtex-ficbook
+     org-capture-ref-get-bibtex-lesswrong
+     org-capture-ref-get-bibtex-archive-book
+     org-capture-ref-get-bibtex-stallman
+     org-capture-ref-get-bibtex-karl-voit
+     org-capture-ref-get-bibtex-imdb-movie
+     org-capture-ref-get-bibtex-orgmode-ml
+     org-capture-ref-get-bibtex-list-gnu-ml
+     org-capture-ref-get-bibtex-debbugs
+     org-capture-ref-get-bibtex-steam
+     org-capture-ref-get-bibtex-google-books
+     ;; OpenGraph parser
+     org-capture-ref-parse-opengraph
+     ;; Try to guess DOI and fetch the
+     ;; DOI's BiBTeX.
+     org-capture-ref-get-bibtex-from-first-doi
+     ;; Generic parser
+     org-capture-ref-parse-generic)
   "Functions used to generate bibtex entry for captured link.
 
 Each function will be called without arguments in sequence. The
@@ -1493,6 +1495,27 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (org-capture-ref-set-bibtex-field :year (org-capture-ref-query-dom :tag 'time :attr 'datetime :apply #'org-capture-ref-extract-year-from-string))
       (org-capture-ref-set-bibtex-field :howpublished "null program")
       (throw :finish t))))
+
+(defun org-capture-ref-get-bibtex-bilibili ()
+  "Parse Youtube watch link and generate bibtex entry."
+  (when-let ((link (org-capture-ref-get-bibtex-field :url)))
+    (when (string-match "bilibili\\.com/video" link)
+      (org-capture-ref-set-bibtex-field :url link)
+      (org-capture-ref-set-bibtex-field :typealt "video")
+      (org-capture-ref-set-capture-info :link link)
+      (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
+      ;; Find author
+      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-meta 'author))
+      ;; Find title.  Drop "bilibili" name.
+      (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string "_哔哩哔哩_bilibili" "" (org-capture-ref-query-meta 'title)))
+      ;; Find year
+      (org-capture-ref-set-bibtex-field
+       :year
+       (org-capture-ref-query-dom :class "video-info-container"
+				  :class "video-info-detail"
+                                  :class "pubdate"
+                                  :class "pubdate-text"
+                                  :apply #'org-capture-ref-extract-year-from-string)))))
 
 (defun org-capture-ref-get-bibtex-youtube-watch ()
   "Parse Youtube watch link and generate bibtex entry."
