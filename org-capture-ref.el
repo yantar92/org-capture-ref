@@ -1109,7 +1109,7 @@ Return nil if DOI record is not found."
           (org-capture-ref-message (format "Retrieving DOI record %s ... failed. %S" doi (match-string 0 bibtex-string)) 'error))
         (if (not bibtex-string)
             (prog1 nil
-              (if (-any-p (lambda (regexp) (string-match-p regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
+              (if (cl-find-if (lambda (regexp) (string-match-p regexp (org-capture-ref-get-bibtex-field :url))) org-capture-ref-demand-doi-list)
                   (org-capture-ref-message (format "Retrieving DOI record %s ... failed, but demanded for %s" doi (org-capture-ref-get-bibtex-field :url)) 'error)
                 (org-capture-ref-message (format "Retrieving DOI record %s ... failed. Proceeding with fallback options." doi) 'warning)))
           (unless org-capture-ref-quiet-verbosity (org-capture-ref-message "Retrieving DOI record... done"))
