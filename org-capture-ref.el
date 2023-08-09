@@ -1189,7 +1189,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
           (setq link (concat link "/videos")))
         (org-capture-ref-set-new-url link))
       (let ((urls (mapcar
-                   (-partial #'concat "https://www.youtube.com")
+                   (lambda (&rest strings) (apply #'concat "https://www.youtube.com" strings))
                    (string-split (org-capture-ref-query-dom :join "\n" :class "ytd-grid-renderer" :id "video-title" :attr 'href) "\n"))))
         (when (equal (list "https://www.youtube.com") urls)
           (org-capture-ref-message "Failed to parse Youtube page. Is it not captured from browser?" :error))
