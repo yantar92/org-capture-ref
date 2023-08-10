@@ -770,23 +770,23 @@ query."
                  (prog1 (org-capture-ref-query-meta (cadr query) (or (plist-get query :join) separator))
                    (setq query (cddr query))))
                 (:tag
-                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-tag dom (cadr query))) dom))
+                 (prog1 (mapcan (lambda (dom) (dom-by-tag dom (cadr query))) dom)
                    (setq query (cddr query))))
                 (:class
-                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-class dom (cadr query))) dom))
+                 (prog1 (mapcan (lambda (dom) (dom-by-class dom (cadr query))) dom)
                    (setq query (cddr query))))
                 (:id
-                 (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-by-id dom (cadr query))) dom))
+                 (prog1 (mapcan (lambda (dom) (dom-by-id dom (cadr query))) dom)
                    (setq query (cddr query))))
                 (:attr
                  (pcase (cadr query)
                    ((and (pred consp)
                          (app car name)
                          (app cdr value))
-                    (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-search dom (lambda (node) (string= value (dom-attr node name))))) dom))
+                    (prog1 (mapcan (lambda (dom) (dom-search dom (lambda (node) (string= value (dom-attr node name))))) dom)
                       (setq query (cddr query))))
                    ((pred symbolp)
-                    (prog1 (-flatten-n 1 (mapcar (lambda (dom) (dom-attr dom (cadr query))) dom))
+                    (prog1 (mapcan (lambda (dom) (dom-attr dom (cadr query))) dom)
                       (setq query (cddr query))))
                    (_ (error "Invalid :attr query: %s" (cadr query)))))
                 (:join
