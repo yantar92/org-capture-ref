@@ -35,7 +35,6 @@
 (require 'url-util)
 (require 'bibtex)
 (require 'dom)
-(require 'dash)
 (require 's)
 ;;; Customization:
 
