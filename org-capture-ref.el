@@ -2659,15 +2659,19 @@ capture info."
   "Check if REGEXP exists in org files using `org-capture-ref-check-regexp-method'.
 If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all matches."
   (pcase org-capture-ref-check-regexp-method
-    (`grep (org-capture-ref-check-regexp-grep (s-replace-all  '(("\\|" . "|")
-                                                 ("|" . "")
-                                                 ("\\\\\\." . "\\\\.")
-                                                 ("'" . ".") ; We use ' as external quotes.
-                                                 ("\\(" . "(")
-                                                 ("\\)" . ")")
-                                                 )
-                                               regexp)
-                               dont-show-match-p))
+    (`grep (org-capture-ref-check-regexp-grep
+	    (seq-reduce
+             (lambda (str repl-pair)
+               (replace-regexp-in-string
+		(regexp-quote (car repl-pair)) (cdr repl-pair) str))
+             '(("\\|" . "|")
+               ("|" . "")
+               ("\\\\\\." . "\\\\.")
+               ("'" . ".") ; We use ' as external quotes.
+               ("\\(" . "(")
+               ("\\)" . ")"))
+             regexp)
+            dont-show-match-p))
     (`org-search-view (org-capture-ref-check-regexp-search-view regexp dont-show-match-p))
     (_ (org-capture-ref-message (format "Invalid value of org-capture-ref-check-regexp-method: %s" org-capture-ref-check-regexp-method) 'error))))
 
