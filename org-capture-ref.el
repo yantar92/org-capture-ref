@@ -2486,12 +2486,12 @@ The overridden autokey customisations are:
   "Default BiBTeX formatter."
   (replace-regexp-in-string
    (format "^.+{\\(%s\\)?},$" org-capture-ref-placeholder-value) ""
-   (s-format org-capture-ref-default-bibtex-template
-	     (lambda (key &optional _)
-	       (or (and (org-capture-ref-get-bibtex-field (intern key))
-                        (string-trim (replace-regexp-in-string "[{}]" "" (org-capture-ref-get-bibtex-field (intern key)))))
-		   ""))
-	     org-capture-ref--bibtex-alist)))
+   (replace-regexp-in-string
+    "\\${\\([^}]+\\)}"
+    (lambda (match)
+      (let* ((key (intern-soft (match-string 1 match))))
+	(or (org-capture-ref-get-bibtex-field key) "")))
+    org-capture-ref-default-bibtex-template)))
 
 ;; Cleaning up BiBTeX entry
 
