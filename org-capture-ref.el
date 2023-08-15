@@ -2490,7 +2490,8 @@ The overridden autokey customisations are:
     (lambda (match)
       (let* ((key (intern-soft (match-string 1 match))))
 	(or (org-capture-ref-get-bibtex-field key) "")))
-    org-capture-ref-default-bibtex-template)))
+    org-capture-ref-default-bibtex-template
+    nil 'literal)))
 
 ;; Cleaning up BiBTeX entry
 
