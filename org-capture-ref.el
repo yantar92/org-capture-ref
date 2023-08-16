@@ -2513,9 +2513,12 @@ The overridden autokey customisations are:
 (defun org-capture-ref-create-key-maybe ()
   "Generate BiBTeX key if it is missing."
   (goto-char 1)
-  (unless (looking-at-p bibtex-entry-head)
+  (unless (looking-at-p (concat bibtex-entry-head "[, \t]*$"))
     (when (looking-at bibtex-any-entry-maybe-empty-head)
-      (line-end-position)
+      (if (not (match-string 2))
+	  (end-of-line)
+        (goto-char (match-beginning 2))
+        (delete-region (point) (line-end-position)))
       (insert (org-capture-ref-generate-key)))))
 
 (defun org-capture-ref-clear-nil-bibtex-entries ()
