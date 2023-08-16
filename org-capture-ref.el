@@ -177,7 +177,8 @@ in `:query' field of the `org-store-link-plist'."
   :type 'hook
   :group 'org-capture-ref)
 (defcustom org-capture-ref-get-bibtex-from-emacs-buffer-functions
-  '(org-capture-ref-get-bibtex-bibtex-mode
+  '(org-capture-ref-get-url-at-point
+    org-capture-ref-get-bibtex-bibtex-mode
     org-capture-ref-get-bibtex-eaf-browser
     org-capture-ref-get-bibtex-eww
     org-capture-ref-get-bibtex-notmuch-show-mode
@@ -1014,7 +1015,8 @@ https://www.rssboard.org/rss-autodiscovery, but BASE is ignored."
   (let ((mk (org-capture-ref-get-capture-info '(:query :buffer-marker))))
     (when mk
       (org-with-point-at mk
-        (run-hooks 'org-capture-ref-get-bibtex-from-emacs-buffer-functions)))))
+	(catch :finish-emacs-buffer
+          (run-hooks 'org-capture-ref-get-bibtex-from-emacs-buffer-functions))))))
 (defun org-capture-ref-get-bibtex-from-elfeed-data ()
   "Run `org-capture-ref-get-bibtex-from-elfeed-functions'."
   (let ((elfeed-entry (org-capture-ref-get-capture-info '(:query :elfeed-data))))
@@ -2312,6 +2314,12 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
           (insert html))
         (plist-put (plist-get org-capture-ref--store-link-plist :query) :html html-file)
         (org-capture-ref-set-bibtex-field :url eaf--buffer-url)))))
+
+(defun org-capture-ref-get-url-at-point ()
+  "Get BiBTeX entry from EWW buffer."
+  (when-let ((url (thing-at-point 'url)))
+    (org-capture-ref-set-capture-info :link url)
+    (throw :finish-emacs-buffer t)))
 
 (defun org-capture-ref-get-bibtex-eww ()
   "Get BiBTeX entry from EWW buffer."
