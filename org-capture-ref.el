@@ -1364,7 +1364,12 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
 	(when (string-match "\\(?:https://\\)?git\\(?:hub\\|lab\\)\\.com/\\([^/]+\\)" link)
           (org-capture-ref-set-bibtex-field :author (match-string 1 link))))
       (org-capture-ref-unless-set '(:title)
-        (org-capture-ref-set-bibtex-field :title (replace-regexp-in-string "Github +- +" "" (org-capture-ref-query-opengraph 'title)))
+        (org-capture-ref-set-bibtex-field
+         :title
+	 (replace-regexp-in-string
+          "Github +- +" ""
+          (or (org-capture-ref-query-opengraph 'title)
+              (org-capture-ref-query-dom :tag 'title))))
 	;; Year has no meaning for repo
 	(org-capture-ref-set-bibtex-field :year org-capture-ref-placeholder-value)
         (org-capture-ref-set-bibtex-field :howpublished "Github")))))
