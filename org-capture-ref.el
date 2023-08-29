@@ -2680,8 +2680,8 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
              (lambda (str repl-pair)
                (replace-regexp-in-string
 		(regexp-quote (car repl-pair)) (cdr repl-pair) str))
-             '(("\\|" . "|")
-               ("|" . "")
+             '(("\\(^\\|[^\\]\\)|" . "")
+               ("\\|" . "|")
                ("\\\\\\." . "\\\\.")
                ("'" . ".") ; We use ' as external quotes.
                ("\\(" . "(")
