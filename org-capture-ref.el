@@ -2679,13 +2679,13 @@ If DONT-SHOW-MATCH-P is non-nil, do not show the match or agenda search with all
 	    (seq-reduce
              (lambda (str repl-pair)
                (replace-regexp-in-string
-		(regexp-quote (car repl-pair)) (cdr repl-pair) str))
-             '(("\\(^\\|[^\\]\\)|" . "")
-               ("\\|" . "|")
+		(car repl-pair) (cdr repl-pair) str))
+             '(("\\(^\\|[^\\]\\)|" . ".")
+               ("\\\\|" . "|")
                ("\\\\\\." . "\\\\.")
                ("'" . ".") ; We use ' as external quotes.
-               ("\\(" . "(")
-               ("\\)" . ")"))
+               ("\\\\(" . "(")
+               ("\\\\)" . ")"))
              regexp)
             dont-show-match-p))
     (`org-search-view (org-capture-ref-check-regexp-search-view regexp dont-show-match-p))
