@@ -1753,19 +1753,31 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
   "Generate BiBTeX for Goodreads book."
   (when-let ((link (org-capture-ref-get-bibtex-field :url)))
     (when (string-match-p "goodreads\\.com/book" link)
+      (require 'json)
       (org-capture-ref-set-bibtex-field :url link)
       (org-capture-ref-set-bibtex-field :type "book")
-      (org-capture-ref-set-bibtex-field :isbn (org-capture-ref-query-meta 'books:isbn))
-      (if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
-          (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value 'force)
-        (org-capture-ref-get-bibtex-from-isbn))
-      (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :id "metacol" :id "bookAuthors" :join " and " :class "^authorName$"))
-      (org-capture-ref-set-bibtex-field :title (org-capture-ref-query-dom :id "^bookTitle"))
-      (let ((details (replace-regexp-in-string "  +" " " (string-replace "\n" " " (dom-texts (dom-by-id (org-capture-ref-get-dom) "^details$"))))))
-        
-        (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;]+?\\)\\(?:(\\|More details...\\|Original title\\)\\)" details)
-          (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (string-trim (match-string 2 details))))
-          (org-capture-ref-set-bibtex-field :year (match-string 1 details))))
+      (let ((json-metadata
+	     (json-parse-string
+	      (org-capture-ref-query-dom
+	       :tag 'script
+               :attr '(type . "application/ld+json")
+               ;; Script body
+               :apply (lambda (dom) (caddr (car dom)))))))
+	(org-capture-ref-set-bibtex-field :isbn (gethash "isbn" json-metadata))
+	(if (string= "null" (org-capture-ref-get-bibtex-field :isbn))
+            (org-capture-ref-set-bibtex-field :isbn org-capture-ref-placeholder-value 'force)
+          (org-capture-ref-get-bibtex-from-isbn))
+	(org-capture-ref-set-bibtex-field :author (mapconcat (lambda (author) (gethash "name" author)) (gethash "author" json-metadata) " and "))
+	(org-capture-ref-set-bibtex-field :title (gethash "name" json-metadata))
+	(let ((details (replace-regexp-in-string
+			"  +" " "
+                        (org-capture-ref-query-dom
+			 :class "BookDetails"
+                         :class "DescListItem"
+                         :apply (lambda (dom) (mapconcat #'dom-texts dom "\n"))))))
+          (when (string-match "Published .*?\\([0-9]\\{4\\}\\)\\(?: *by *\\([^(;\n]+\\)\\)" details)
+            (org-capture-ref-set-bibtex-field :publisher (when (match-string 2 details) (string-trim (match-string 2 details))))
+            (org-capture-ref-set-bibtex-field :year (match-string 1 details)))))
       (throw :finish t))))
 
 (defun org-capture-ref-get-bibtex-amazon ()
