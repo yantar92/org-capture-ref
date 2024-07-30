@@ -3214,7 +3214,11 @@ used inside capture template."
         (unless (org-capture-ref-get-capture-info '(:query :force))
           (org-capture-ref-check-bibtex))
 	(org-capture-ref-get-bibtex)
-        (unless (org-capture-ref-get-bibtex-field :key)
+        (unless (and (org-capture-ref-get-bibtex-field :key)
+		     ;; prevent short and trivial entries
+		     (not (string-match-p "[a-zA-Z]+_[0-9]+" (org-capture-ref-get-bibtex-field :key)))
+                     (< 10 (length (org-capture-ref-get-bibtex-field :key))))
+          (org-capture-ref-set-bibtex-field :key nil 'force)
 	  (org-capture-ref-set-bibtex-field :key (org-capture-ref-generate-key)))
 	(org-capture-ref-set-bibtex-field :bibtex-string (org-capture-ref-format-bibtex))
         ;; Set `:org-hd-marker' if it was provided during capture call.
