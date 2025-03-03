@@ -330,19 +330,26 @@ of `doct' for details."
 
 ;;;; Customisation for default functions
 
-(defcustom org-capture-ref-field-rules `((:doi . ("scheme=\"doi\" content=\"\\([^\"]*?\\)\""
-				   "citation_doi\" content=\"\\([^\"]*?\\)\""
-				   "data-doi=\"\\([^\"]*?\\)\""
-				   "content=\"\\([^\"]*?\\)\" name=\"citation_doi"
-				   "objectDOI\" : \"\\([^\"]*?\\)\""
-				   "doi = '\\([^']*?\\)'"))
-                          (:year . ((:meta "citation_publication_date" :apply ,#'org-capture-ref-extract-year-from-string)
-                                    "class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
-                          (:author . ((:meta "author")
-                                      (:meta "citation_author")
-				      "\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
-                          (:title . ((:meta "citation_title")
-                                     "<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
+(defcustom org-capture-ref-field-rules
+  `((:doi . ((:meta "citation_doi")
+	     "scheme=\"doi\" content=\"\\([^\"]*?\\)\""
+	     "data-doi=\"\\([^\"]*?\\)\""
+	     "objectDOI\" : \"\\([^\"]*?\\)\""
+             (:meta "DC.Identifier")
+	     "doi = '\\([^']*?\\)'"))
+    (:year . ((:meta "citation_publication_date" :apply ,#'org-capture-ref-extract-year-from-string)
+	      (:meta "citation_online_date" :apply ,#'org-capture-ref-extract-year-from-string)
+	      (:meta "DC.issued" :apply ,#'org-capture-ref-extract-year-from-string)
+              "class=\\(?:date.[^>]*?\\)>[^<]*?\\([0-9]\\{4\\}\\)[^<]*?</"))
+    (:author . ((:meta "author" :join " and ")
+                (:meta "citation_author" :join " and ")
+                (:meta "DC.Creator" :join " and ")
+		"\\(?:<[^>]*?class=\"author[^\"]*name\"[^>]*>\\([^<]+\\)<\\)"))
+    (:journal . ((:meta "citation_journal_title")))
+    (:publisher . ((:meta "DC.publisher")))
+    (:title . ((:meta "citation_title")
+	       (:meta "DC.title")
+               "<title.?+?>\\([[:ascii:][:nonascii:]]*?\\|.+\\)</title>")))
   "Alist holding rules to populate common BiBTeX fields from html.
 Used by `org-capture-ref-parse-generic'
 
