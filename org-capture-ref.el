@@ -838,9 +838,9 @@ SEPARATOR is separator used to concat array of KEYs (default is \" and \")."
                       (dom-search (org-capture-ref-get-dom)
                                   (lambda (node)
                                     (and (eq (car node) 'meta)
-                                         (or (string-equal-ignore-case key (dom-attr node 'property))
-                                             (string-equal-ignore-case key (dom-attr node 'itemprop)) ;; i.e. for Youtube video duration
-                                             (string-equal-ignore-case key (dom-attr node 'name)))))))
+                                         (or (string-equal-ignore-case key (or (dom-attr node 'property) ""))
+                                             (string-equal-ignore-case key (or (dom-attr node 'itemprop) "")) ;; i.e. for Youtube video duration
+                                             (string-equal-ignore-case key (or (dom-attr node 'name) "")))))))
               (or separator " and "))))
     (if (string-empty-p ans) nil ans)))
 
