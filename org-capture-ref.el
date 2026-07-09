@@ -2200,7 +2200,7 @@ This does nothing when `org-capture-ref-capture-template-set-p' is nil."
       (when-let ((doi (org-capture-ref-query-dom :class "metatable" :class "link-https link-external" :attr 'data-doi)))
         (org-capture-ref-set-bibtex-field :doi doi)
         (org-capture-ref-get-bibtex-from-first-doi))
-      (org-capture-ref-set-bibtex-field :type "misc")
+      (org-capture-ref-set-bibtex-field :type "article")
       (org-capture-ref-set-bibtex-field :howpublished "ArXiv")
       (org-capture-ref-set-bibtex-field :doi org-capture-ref-placeholder-value)
       (org-capture-ref-set-bibtex-field :author (org-capture-ref-query-dom :join " and " :meta 'citation_author))
