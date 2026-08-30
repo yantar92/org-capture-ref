@@ -2341,7 +2341,7 @@ This function is expected to be ran after `org-capture-ref-bibtex-generic-elfeed
 
 (defun org-capture-ref-get-url-at-point ()
   "Get BiBTeX entry from EWW buffer."
-  (when-let ((url (thing-at-point 'url)))
+  (when-let ((url (or (thing-at-point 'url) (get-text-property (point) 'shr-url))))
     (org-capture-ref-set-capture-info :link url)
     (throw :finish-emacs-buffer t)))
 
